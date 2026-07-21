@@ -4,7 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { getPageTypeConfig, type DynamicField } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
-import { separator, filterMenuItems, type ContextMenuItem } from '@/types/actions'
+import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 
 const store = useCanvasStore()
 const ctx = useContextMenu()

@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { separator, filterMenuItems, type ContextMenuItem } from '@/types/actions'
+import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 import { CONTAINER_TYPES, type CanvasNode, type NodeType } from '@/types/canvas'
 
 export function useContextMenu() {

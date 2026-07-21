@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { isSeparator, type ContextMenuItem } from '@/types/actions'
+import { isSeparator, type ContextMenuItem } from '@/types/contextMenu'
 
 const props = defineProps<{
   items: ContextMenuItem[]

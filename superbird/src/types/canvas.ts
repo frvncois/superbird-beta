@@ -179,7 +179,7 @@ export interface UserComponent {
 
 // --- Pages ---
 
-export type PageType = 'page' | 'post-template' | 'product-template' | 'archive-template' | 'system'
+export type PageType = 'page' | 'collection' | 'system'
 
 export interface PageTypeConfig {
   key: PageType
@@ -202,6 +202,37 @@ export interface Page {
   slug: string
   pageType: PageType
   body: CanvasNode
+}
+
+// --- Collections (user-defined content types) ---
+
+// A field's type. A field is a dynamic-field element placed on a collection's
+// template; the type is derived from the placed element.
+export type FieldType = 'text' | 'richtext' | 'image' | 'number' | 'date'
+
+// Derived by walking a collection template for nodes with `dynamicField` set.
+export interface CollectionField {
+  key: string
+  label: string
+  type: FieldType
+}
+
+export interface Collection {
+  id: string
+  name: string
+  singular: string
+  plural: string
+  basePath: string        // URL segment, e.g. "blog"
+  templatePageId: string  // the Page (pageType 'collection') this collection edits
+}
+
+export interface Entry {
+  id: string
+  collectionId: string
+  title: string
+  slug: string
+  status: 'draft' | 'published'
+  values: Record<string, string>  // keyed by field key (a node's `dynamicField`)
 }
 
 // --- Collections ---

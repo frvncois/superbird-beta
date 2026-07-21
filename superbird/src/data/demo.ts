@@ -1,4 +1,4 @@
-import type { CanvasNode, GlobalStyles, Interaction, NodeType, Page, StyleClass, UserComponent } from '@/types/canvas'
+import type { CanvasNode, Collection, Entry, GlobalStyles, Interaction, NodeType, Page, StyleClass, UserComponent } from '@/types/canvas'
 import { createNode } from '@/lib/nodeFactory'
 import { generateNodeId, generateInteractionId, generateStepId } from '@/lib/ids'
 
@@ -738,22 +738,22 @@ const productsPage = page('demo-products', 'Products', 'products', 'page', [
   comp('comp-footer', 'Footer'),
 ])
 
-// --- CMS templates (dynamic-field bindings) ---
+// --- Blog archive (a regular Page listing the Blog collection) ---
 
-const blogArchive = page('demo-blog', 'Blog Archive', 'blog', 'archive-template', [
+const blogArchive = page('demo-blog', 'Blog Archive', 'blog', 'page', [
   comp('comp-navbar', 'Navbar'),
   sec('Hero', ['page-hero', 'bg-alt'], [
     box('Inner', ['container-sm'], [
       span('Eyebrow', 'Blog', ['label', 'mb-sm']),
-      h('h1', 'Title', 'Insights & tutorials', ['heading-hero', 'mb-md'], { dynamicField: 'archive_title' }),
-      txt('Sub', 'Guides, product updates, and stories from the Superbird team.', ['text-large', 'mx-auto'], { dynamicField: 'archive_description' }),
+      h('h1', 'Title', 'Insights & tutorials', ['heading-hero', 'mb-md']),
+      txt('Sub', 'Guides, product updates, and stories from the Superbird team.', ['text-large', 'mx-auto']),
     ]),
   ]),
   sec('Posts', ['section'], [
     box('Inner', ['container'], [
       n('collection-list', 'Blog Posts', {
         classes: ['grid-3'],
-        props: { source: 'posts', limit: '6', orderBy: 'date', order: 'desc' },
+        props: { source: 'col-blog', limit: '6', orderBy: 'date', order: 'desc' },
         children: [
           n('collection-item', 'Post Item', { classes: ['card'], children: [
             img('Featured', ['img-cover'], { dynamicField: 'post_featured_image', styles: { 'margin-bottom': '16px' } }),
@@ -769,7 +769,9 @@ const blogArchive = page('demo-blog', 'Blog Archive', 'blog', 'archive-template'
   comp('comp-footer', 'Footer'),
 ])
 
-const singlePost = page('demo-single-post', 'Single Post', 'single-post', 'post-template', [
+// --- Collection templates (single-item layouts) ---
+
+const blogTemplate = page('demo-single-post', 'Blog', 'blog', 'collection', [
   comp('comp-navbar', 'Navbar'),
   sec('Article', ['section'], [
     box('Inner', ['container-sm'], [
@@ -789,7 +791,7 @@ const singlePost = page('demo-single-post', 'Single Post', 'single-post', 'post-
   comp('comp-footer', 'Footer'),
 ])
 
-const singleProduct = page('demo-single-product', 'Single Product', 'single-product', 'product-template', [
+const productsTemplate = page('demo-single-product', 'Products', 'products', 'collection', [
   comp('comp-navbar', 'Navbar'),
   sec('Product', ['section'], [
     box('Inner', ['container', 'grid-2'], [
@@ -836,6 +838,18 @@ const notFoundPage = page('demo-404', '404', '404', 'system', [
   comp('comp-footer', 'Footer'),
 ])
 
+const categoriesTemplate = page('demo-category-template', 'Categories', 'category', 'collection', [
+  comp('comp-navbar', 'Navbar'),
+  sec('Category', ['page-hero', 'bg-alt'], [
+    box('Inner', ['container-sm'], [
+      span('Eyebrow', 'Category', ['label', 'mb-sm']),
+      h('h1', 'Name', 'Category name', ['heading-hero', 'mb-md'], { dynamicField: 'cat_name' }),
+      txt('Description', 'A short description of this category.', ['text-large', 'mx-auto'], { dynamicField: 'cat_description' }),
+    ]),
+  ]),
+  comp('comp-footer', 'Footer'),
+])
+
 export const demoPages: Page[] = [
   homePage,
   featuresPage,
@@ -844,7 +858,88 @@ export const demoPages: Page[] = [
   contactPage,
   productsPage,
   blogArchive,
-  singlePost,
-  singleProduct,
   notFoundPage,
+  // Collection templates (reached via the Collections tab, not the Pages tab)
+  blogTemplate,
+  productsTemplate,
+  categoriesTemplate,
+]
+
+// ============================================================================
+// Collections & entries (in-app CMS seed)
+// ============================================================================
+
+export const demoCollections: Collection[] = [
+  { id: 'col-blog', name: 'Blog', singular: 'Post', plural: 'Posts', basePath: 'blog', templatePageId: 'demo-single-post' },
+  { id: 'col-products', name: 'Products', singular: 'Product', plural: 'Products', basePath: 'products', templatePageId: 'demo-single-product' },
+  { id: 'col-categories', name: 'Categories', singular: 'Category', plural: 'Categories', basePath: 'category', templatePageId: 'demo-category-template' },
+]
+
+export const demoEntries: Entry[] = [
+  // Blog — fields: post_title, post_categories, post_author, post_date, post_content, post_featured_image
+  {
+    id: 'entry-blog-1', collectionId: 'col-blog', title: 'How to build a modern design system', slug: 'modern-design-system', status: 'published',
+    values: {
+      post_title: 'How to build a modern design system',
+      post_categories: 'Design',
+      post_author: 'Sarah Chen',
+      post_date: 'July 15, 2026',
+      post_content: 'A design system is a collection of reusable components, guided by clear standards, that can be assembled to build any number of applications.',
+      post_featured_image: '',
+    },
+  },
+  {
+    id: 'entry-blog-2', collectionId: 'col-blog', title: 'Getting started with interactions', slug: 'getting-started-interactions', status: 'published',
+    values: {
+      post_title: 'Getting started with interactions',
+      post_categories: 'Tutorial',
+      post_author: 'Alex Rivera',
+      post_date: 'July 10, 2026',
+      post_content: 'Create stunning scroll and hover animations without writing a single line of code, right from the canvas.',
+      post_featured_image: '',
+    },
+  },
+  {
+    id: 'entry-blog-3', collectionId: 'col-blog', title: 'Superbird v2.0 is here', slug: 'superbird-v2', status: 'draft',
+    values: {
+      post_title: 'Superbird v2.0 is here',
+      post_categories: 'News',
+      post_author: 'Jordan Lee',
+      post_date: 'July 5, 2026',
+      post_content: 'We have been working hard to bring you the most powerful visual builder yet. Here is what is new.',
+      post_featured_image: '',
+    },
+  },
+  // Products — fields: product_title, product_price, product_description, product_sku, product_gallery, product_add_to_cart
+  {
+    id: 'entry-product-1', collectionId: 'col-products', title: 'Premium Theme Bundle', slug: 'premium-theme-bundle', status: 'published',
+    values: {
+      product_title: 'Premium Theme Bundle',
+      product_price: '$99',
+      product_description: 'Lifetime access to every premium theme, with updates and support included.',
+      product_sku: 'SB-BUNDLE-001',
+      product_add_to_cart: 'Add to cart',
+      product_gallery: '',
+    },
+  },
+  {
+    id: 'entry-product-2', collectionId: 'col-products', title: 'Agency Starter Kit', slug: 'agency-starter-kit', status: 'published',
+    values: {
+      product_title: 'Agency Starter Kit',
+      product_price: '$149',
+      product_description: 'Everything a studio needs to launch client sites fast — components, templates, and CMS presets.',
+      product_sku: 'SB-AGENCY-002',
+      product_add_to_cart: 'Add to cart',
+      product_gallery: '',
+    },
+  },
+  // Categories — fields: cat_name, cat_description
+  {
+    id: 'entry-cat-1', collectionId: 'col-categories', title: 'Design', slug: 'design', status: 'published',
+    values: { cat_name: 'Design', cat_description: 'Posts about design, UI/UX, and visual creativity.' },
+  },
+  {
+    id: 'entry-cat-2', collectionId: 'col-categories', title: 'Development', slug: 'development', status: 'published',
+    values: { cat_name: 'Development', cat_description: 'Posts about building, shipping, and the web platform.' },
+  },
 ]

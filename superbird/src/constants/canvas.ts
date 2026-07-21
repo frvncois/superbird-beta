@@ -99,56 +99,14 @@ export const DEFAULT_LOCALES: Locale[] = [
 
 // --- Page types ---
 
+// Regular (non-collection) page groups shown in the header dropdown's Pages tab.
+// Collection templates live under the Collections tab, not here.
 export const PAGE_TYPE_CONFIGS: PageTypeConfig[] = [
   {
     key: 'page',
     label: 'Page',
     plural: 'Pages',
     allowMultiple: true,
-  },
-  {
-    key: 'post-template',
-    label: 'Post Template',
-    plural: 'Post Templates',
-    allowMultiple: true,
-    dynamicFields: [
-      { key: 'post_title', label: 'Post Title', type: 'text', placeholder: 'Blog Post Title' },
-      { key: 'post_content', label: 'Post Content', type: 'richtext', placeholder: 'Post content goes here...' },
-      { key: 'post_excerpt', label: 'Excerpt', type: 'text', placeholder: 'A short excerpt of the post...' },
-      { key: 'post_featured_image', label: 'Featured Image', type: 'image' },
-      { key: 'post_date', label: 'Date', type: 'date', placeholder: 'January 1, 2026' },
-      { key: 'post_author', label: 'Author', type: 'text', placeholder: 'John Doe' },
-      { key: 'post_categories', label: 'Categories', type: 'list', placeholder: 'Design, Development' },
-      { key: 'post_tags', label: 'Tags', type: 'list', placeholder: 'css, vue, webflow' },
-    ],
-  },
-  {
-    key: 'product-template',
-    label: 'Product Template',
-    plural: 'Product Templates',
-    allowMultiple: true,
-    dynamicFields: [
-      { key: 'product_title', label: 'Product Title', type: 'text', placeholder: 'Product Name' },
-      { key: 'product_price', label: 'Price', type: 'number', placeholder: '$29.99' },
-      { key: 'product_description', label: 'Description', type: 'richtext', placeholder: 'Product description...' },
-      { key: 'product_gallery', label: 'Gallery', type: 'image' },
-      { key: 'product_add_to_cart', label: 'Add to Cart', type: 'action' },
-      { key: 'product_sku', label: 'SKU', type: 'text', placeholder: 'SKU-001' },
-      { key: 'product_rating', label: 'Rating', type: 'number', placeholder: '4.5' },
-      { key: 'product_related', label: 'Related Products', type: 'list' },
-    ],
-  },
-  {
-    key: 'archive-template',
-    label: 'Archive Template',
-    plural: 'Archive Templates',
-    allowMultiple: true,
-    dynamicFields: [
-      { key: 'archive_title', label: 'Archive Title', type: 'text', placeholder: 'Category Name' },
-      { key: 'archive_description', label: 'Archive Description', type: 'text', placeholder: 'Category description...' },
-      { key: 'archive_post_loop', label: 'Post Loop', type: 'list' },
-      { key: 'archive_pagination', label: 'Pagination', type: 'action' },
-    ],
   },
   {
     key: 'system',

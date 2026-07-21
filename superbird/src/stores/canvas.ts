@@ -30,9 +30,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   const pagesByType = computed(() => {
     const grouped: Record<PageType, Page[]> = {
       'page': [],
-      'post-template': [],
-      'product-template': [],
-      'archive-template': [],
+      'collection': [],
       'system': [],
     }
     for (const page of pages.value) {

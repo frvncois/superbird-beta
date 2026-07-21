@@ -12,7 +12,7 @@ const props = defineProps<{
       gridTemplateColumns: `${props.leftCollapsed ? '44px' : '280px'} 1fr ${props.rightCollapsed ? '44px' : '300px'}`,
     }"
   >
-    <header class="editor-header border-b p-6 flex items-center justify-between">
+    <header class="editor-header border-b p-4 flex items-center justify-between">
       <slot name="header" />
     </header>
 

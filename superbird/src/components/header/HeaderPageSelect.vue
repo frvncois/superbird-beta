@@ -23,9 +23,7 @@ const typeBadgeColor = computed(() => badgeColorForType(store.activePage.pageTyp
 function badgeColorForType(type: PageType): string {
   switch (type) {
     case 'page': return 'bg-blue-bg text-blue-fg'
-    case 'post-template': return 'bg-purple-bg text-purple-fg'
-    case 'product-template': return 'bg-amber-bg text-amber-fg'
-    case 'archive-template': return 'bg-orange-bg text-orange-fg'
+    case 'collection': return 'bg-purple-bg text-purple-fg'
     case 'system': return 'bg-muted-bg text-muted-fg'
     default: return 'bg-muted-bg text-muted-fg'
   }

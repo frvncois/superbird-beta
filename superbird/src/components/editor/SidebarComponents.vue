@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useUserComponentsStore } from '@/stores/userComponents'
 import { getPageTypeConfig } from '@/constants/canvas'
 import type { DynamicField } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -8,9 +9,10 @@ import { useContextMenu } from '@/composables/useContextMenu'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 
 const store = useCanvasStore()
+const componentsStore = useUserComponentsStore()
 const ctx = useContextMenu()
 
-const userComponentsList = computed(() => Object.values(store.userComponents))
+const userComponentsList = computed(() => Object.values(componentsStore.userComponents))
 
 const hasFields = computed(() => store.activePageFields.length > 0)
 const pageTypeConfig = computed(() => getPageTypeConfig(store.activePage.pageType))
@@ -35,7 +37,7 @@ function handleDragEnd() {
 }
 
 function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
-  const comp = store.userComponents[compId]
+  const comp = componentsStore.userComponents[compId]
   if (!comp) return
 
   const items: ContextMenuItem[] = filterMenuItems([
@@ -43,14 +45,14 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       id: 'add-to-page',
       label: 'Add to Page',
       icon: 'add',
-      handler: () => store.addComponentToPage(compId),
+      handler: () => componentsStore.addComponentToPage(compId),
     },
     {
       id: 'add-inside-selected',
       label: 'Add Inside Selected',
       icon: 'add',
       handler: () => {
-        if (store.selectedNode) store.addComponentToPage(compId, store.selectedNode.id, 'inside')
+        if (store.selectedNode) componentsStore.addComponentToPage(compId, store.selectedNode.id, 'inside')
       },
       hidden: !store.selectedNode || !store.isContainerNode(store.selectedNode.id),
     },
@@ -60,7 +62,7 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       label: `Delete "${comp.name}"`,
       icon: 'delete',
       danger: true,
-      handler: () => store.deleteComponent(compId),
+      handler: () => componentsStore.deleteComponent(compId),
     },
   ])
   ctx.open(e, items)
@@ -89,7 +91,7 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
           </div>
           <div>
             <div class="text-xs font-medium text-foreground">{{ comp.name }}</div>
-            <div class="text-[10px] text-secondary">{{ store.getComponentInstanceCount(comp.id) }} instances</div>
+            <div class="text-[10px] text-secondary">{{ componentsStore.getComponentInstanceCount(comp.id) }} instances</div>
           </div>
         </div>
       </div>

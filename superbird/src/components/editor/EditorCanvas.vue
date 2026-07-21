@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 import CanvasNodeRenderer from './CanvasNodeRenderer.vue'
 
 const store = useCanvasStore()
-const isDesktop = computed(() => store.activeBreakpoint === 'desktop')
+const globalStylesStore = useGlobalStylesStore()
+const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
 
 const artboardStyle = computed(() => {
-  const vars = { ...store.globalCssVars }
+  const vars = { ...globalStylesStore.globalCssVars }
   if (!isDesktop.value) {
     Object.assign(vars, {
-      width: `${store.activeViewportWidth}px`,
+      width: `${globalStylesStore.activeViewportWidth}px`,
       maxWidth: '100%',
       transition: 'width 0.3s ease',
     })

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { BREAKPOINTS } from '@/constants/canvas'
 import type { Breakpoint } from '@/types/canvas'
 
-const store = useCanvasStore()
+const store = useGlobalStylesStore()
 </script>
 
 <template>

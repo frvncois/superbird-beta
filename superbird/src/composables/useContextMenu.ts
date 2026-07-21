@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useUserComponentsStore } from '@/stores/userComponents'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import type { CanvasNode, NodeType } from '@/types/canvas'
@@ -28,6 +29,7 @@ export function useContextMenu() {
 
 export function buildLayerActions(node: CanvasNode, callbacks?: { onRename?: () => void; onCreateComponent?: () => void }): ContextMenuItem[] {
   const store = useCanvasStore()
+  const componentsStore = useUserComponentsStore()
   const isBody = node.type === 'body'
   const isComponent = node.type === 'component'
   const isContainer = CONTAINER_TYPES.includes(node.type)
@@ -143,7 +145,7 @@ export function buildLayerActions(node: CanvasNode, callbacks?: { onRename?: () 
       id: 'detach-instance',
       label: 'Detach Instance',
       icon: 'unwrap',
-      handler: () => store.detachComponentInstance(node.id),
+      handler: () => componentsStore.detachComponentInstance(node.id),
       hidden: !isComponent,
     },
     separator(),
@@ -161,6 +163,7 @@ export function buildLayerActions(node: CanvasNode, callbacks?: { onRename?: () 
 
 export function buildCanvasActions(node: CanvasNode): ContextMenuItem[] {
   const store = useCanvasStore()
+  const componentsStore = useUserComponentsStore()
   const isBody = node.type === 'body'
   const isComponent = node.type === 'component'
   const isContainer = CONTAINER_TYPES.includes(node.type)
@@ -256,7 +259,7 @@ export function buildCanvasActions(node: CanvasNode): ContextMenuItem[] {
       icon: 'component',
       handler: () => {
         const name = prompt('Component name:')
-        if (name) store.createComponentFromNode(node.id, name)
+        if (name) componentsStore.createComponentFromNode(node.id, name)
       },
       hidden: isBody || isComponent,
     },
@@ -264,7 +267,7 @@ export function buildCanvasActions(node: CanvasNode): ContextMenuItem[] {
       id: 'detach-instance',
       label: 'Detach Instance',
       icon: 'unwrap',
-      handler: () => store.detachComponentInstance(node.id),
+      handler: () => componentsStore.detachComponentInstance(node.id),
       hidden: !isComponent,
     },
     separator(),

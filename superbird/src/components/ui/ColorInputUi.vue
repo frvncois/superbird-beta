@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 
 defineProps<{
   modelValue?: string
@@ -11,7 +11,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const store = useCanvasStore()
+const store = useGlobalStylesStore()
 const swatchOpen = ref(false)
 
 const paletteColors = computed(() => Object.entries(store.globalStyles.colors))

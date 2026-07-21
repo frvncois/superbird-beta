@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, inject, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 import type { CanvasNode } from '@/types/canvas'
 
 const props = defineProps<{
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const store = useCanvasStore()
+const globalStylesStore = useGlobalStylesStore()
 const expanded = ref(true)
 const dropTarget = inject<Ref<{ id: string; position: string } | null>>('layerDropTarget')
 
@@ -30,7 +32,7 @@ const isDragged = computed(() => store.draggedNodeId === props.node.id)
 const isHiddenAtBreakpoint = computed(() => {
   const vis = props.node.visibility
   if (!vis) return false
-  const bp = store.activeBreakpoint
+  const bp = globalStylesStore.activeBreakpoint
   return (bp === 'desktop' && vis.hideDesktop) ||
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)

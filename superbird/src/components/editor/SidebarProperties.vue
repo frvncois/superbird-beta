@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import LinkedUnitInputUi from '@/components/ui/LinkedUnitInputUi.vue'
@@ -14,6 +15,7 @@ import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { StyleState } from '@/types/canvas'
 
 const store = useCanvasStore()
+const globalStylesStore = useGlobalStylesStore()
 const node = computed(() => store.selectedNode)
 
 const isTextNode = computed(() =>
@@ -24,8 +26,8 @@ const isContainer = computed(() =>
 )
 
 const activeClass = computed(() => {
-  if (!store.activeClassName) return null
-  return store.styleClasses[store.activeClassName] ?? null
+  if (!globalStylesStore.activeClassName) return null
+  return globalStylesStore.styleClasses[globalStylesStore.activeClassName] ?? null
 })
 
 const hasClass = computed(() => !!activeClass.value)
@@ -34,8 +36,8 @@ const hasClass = computed(() => !!activeClass.value)
 // Otherwise, edit instance styles directly.
 const activeStyles = computed<Record<string, string>>(() => {
   if (activeClass.value) {
-    const bpStyles = activeClass.value.styles[store.activeBreakpoint]
-    return bpStyles?.[store.activeState] ?? {}
+    const bpStyles = activeClass.value.styles[globalStylesStore.activeBreakpoint]
+    return bpStyles?.[globalStylesStore.activeState] ?? {}
   }
   return node.value?.styles ?? {}
 })
@@ -48,11 +50,11 @@ const isGrid = computed(() => activeStyles.value.display === 'grid')
 
 watch(() => node.value?.id, () => {
   if (node.value && node.value.classes.length > 0) {
-    store.setActiveClass(node.value.classes[0]!)
+    globalStylesStore.setActiveClass(node.value.classes[0]!)
   } else {
-    store.setActiveClass(null)
+    globalStylesStore.setActiveClass(null)
   }
-  store.setActiveState('default')
+  globalStylesStore.setActiveState('default')
 })
 
 function addClass(name: string) {
@@ -67,8 +69,8 @@ function removeClass(name: string) {
 
 function updateStyle(key: string, value: string) {
   // If a class is active, edit the class
-  if (store.activeClassName) {
-    store.updateClassStyle(store.activeClassName, key, value)
+  if (globalStylesStore.activeClassName) {
+    globalStylesStore.updateClassStyle(globalStylesStore.activeClassName, key, value)
     return
   }
   // Otherwise, edit instance styles directly
@@ -92,7 +94,7 @@ function getLinkedValues(keys: [string, string, string, string]): [string, strin
 
 function statesWithValues(keys: string[]): StyleState[] {
   if (!activeClass.value) return []
-  const bpStyles = activeClass.value.styles[store.activeBreakpoint]
+  const bpStyles = activeClass.value.styles[globalStylesStore.activeBreakpoint]
   if (!bpStyles) return []
   const states: StyleState[] = []
   for (const [state, styles] of Object.entries(bpStyles)) {
@@ -295,13 +297,13 @@ const cursorOptions = [
       <div class="text-[10px] font-mono uppercase tracking-wider text-secondary">Selector</div>
       <ClassInputUi
         :classes="node.classes"
-        :active-class="store.activeClassName"
-        :active-state="store.activeState"
-        :all-class-names="store.allClassNames"
+        :active-class="globalStylesStore.activeClassName"
+        :active-state="globalStylesStore.activeState"
+        :all-class-names="globalStylesStore.allClassNames"
         @add="addClass"
         @remove="removeClass"
-        @select="store.setActiveClass"
-        @update:active-state="store.setActiveState"
+        @select="globalStylesStore.setActiveClass"
+        @update:active-state="globalStylesStore.setActiveState"
       />
     </section>
 

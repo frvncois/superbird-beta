@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
+import { useMediaStore } from '@/stores/media'
 import { formatFileSize } from '@/lib/media'
 import type { MediaType } from '@/types/canvas'
 
-const store = useCanvasStore()
+const store = useMediaStore()
 
 const searchQuery = ref('')
 const activeFolder = ref<string | undefined>(undefined)
@@ -119,7 +119,7 @@ const typeFilters: { key: MediaType | 'all'; label: string }[] = [
       leave-to-class="opacity-0"
     >
       <div v-if="store.mediaLibraryOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-8">
-        <div class="absolute inset-0 bg-foreground/30 backdrop-blur-sm" @click="store.mediaLibraryOpen = false" />
+        <div class="absolute inset-0 bg-foreground/30 backdrop-blur-sm" @click="store.closeLibrary()" />
 
         <!-- Modal -->
         <div class="relative flex w-full max-w-5xl h-full max-h-[80vh] rounded-2xl border bg-background shadow-2xl overflow-hidden">
@@ -230,7 +230,7 @@ const typeFilters: { key: MediaType | 'all'; label: string }[] = [
               <!-- Close -->
               <button
                 class="flex size-8 items-center justify-center rounded-lg cursor-pointer text-secondary hover:bg-secondary/10 hover:text-foreground transition-colors duration-150 shrink-0"
-                @click="store.mediaLibraryOpen = false"
+                @click="store.closeLibrary()"
               >
                 <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />

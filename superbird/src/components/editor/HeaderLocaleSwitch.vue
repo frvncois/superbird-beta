@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
+import { useLocalesStore } from '@/stores/locales'
 import { DEFAULT_LOCALES } from '@/constants/canvas'
 import type { Locale } from '@/types/canvas'
 
-const store = useCanvasStore()
+const store = useLocalesStore()
 const isOpen = ref(false)
 const showAdd = ref(false)
 

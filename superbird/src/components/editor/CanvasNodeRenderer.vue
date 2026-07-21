@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, toRef } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useUserComponentsStore } from '@/stores/userComponents'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -13,6 +15,8 @@ const props = defineProps<{
 }>()
 
 const store = useCanvasStore()
+const globalStylesStore = useGlobalStylesStore()
+const componentsStore = useUserComponentsStore()
 const dropPosition = ref<'before' | 'after' | 'inside' | null>(null)
 const isEditing = ref(false)
 const isHovered = ref(false)
@@ -31,11 +35,11 @@ const isTextEditable = computed(() => TEXT_EDITABLE_TYPES.includes(props.node.ty
 const isFormElement = computed(() => ['input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type))
 const isMediaPlaceholder = computed(() => ['video', 'embed'].includes(props.node.type))
 const isDynamic = computed(() => !!props.node.dynamicField)
-const isDesktop = computed(() => store.activeBreakpoint === 'desktop')
+const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
 const isHiddenAtBreakpoint = computed(() => {
   const vis = props.node.visibility
   if (!vis) return false
-  const bp = store.activeBreakpoint
+  const bp = globalStylesStore.activeBreakpoint
   return (bp === 'desktop' && vis.hideDesktop) ||
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)
@@ -43,8 +47,8 @@ const isHiddenAtBreakpoint = computed(() => {
 const computedStyles = computed(() => {
   const classes = props.node.classes
   const instanceStyles = props.node.styles
-  const classRegistry = store.styleClasses
-  const bp = store.activeBreakpoint
+  const classRegistry = globalStylesStore.styleClasses
+  const bp = globalStylesStore.activeBreakpoint
   const merged: Record<string, string> = {}
 
   // Breakpoint cascade: desktop -> tablet -> mobile
@@ -166,7 +170,7 @@ function handleDrop(e: DragEvent) {
   // Dropping a user component from sidebar
   const userCompId = e.dataTransfer!.getData('application/superbird-user-component')
   if (userCompId) {
-    store.addComponentToPage(userCompId, props.node.id, pos)
+    componentsStore.addComponentToPage(userCompId, props.node.id, pos)
     return
   }
 

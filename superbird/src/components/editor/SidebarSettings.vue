@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useLocalesStore } from '@/stores/locales'
 import { COLLECTION_SOURCES, getCollectionSource } from '@/constants/canvas'
 import type { NodeVisibility, NodeLink, NodeAccessibility, NodeAdvanced } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -8,6 +9,7 @@ import SelectUi from '@/components/ui/SelectUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
 const store = useCanvasStore()
+const localesStore = useLocalesStore()
 const node = computed(() => store.selectedNode)
 
 const isBody = computed(() => node.value?.type === 'body')
@@ -333,7 +335,7 @@ const roleOptions = [
     <section v-if="isTextNode && !boundField" class="space-y-2 pb-3">
       <div class="flex items-center justify-between">
         <div class="text-[10px] font-mono uppercase tracking-wider text-secondary">Content</div>
-        <span v-if="!store.isDefaultLocale" class="text-[9px] font-mono font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded">{{ store.activeLocale.toUpperCase() }}</span>
+        <span v-if="!localesStore.isDefaultLocale" class="text-[9px] font-mono font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded">{{ localesStore.activeLocale.toUpperCase() }}</span>
       </div>
       <textarea
         :value="nodeContent"

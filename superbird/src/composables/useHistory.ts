@@ -1,5 +1,7 @@
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useUserComponentsStore } from '@/stores/userComponents'
 
 const MAX_HISTORY = 50
 
@@ -9,31 +11,41 @@ interface Snapshot {
   userComponents: string
 }
 
+// Module-scope singleton state: every useHistory() caller shares the same
+// stacks, so the header buttons and keyboard shortcuts stay in sync.
+const undoStack = ref<Snapshot[]>([])
+const redoStack = ref<Snapshot[]>([])
+const paused = ref(false)
+const canUndo = computed(() => undoStack.value.length > 0)
+const canRedo = computed(() => redoStack.value.length > 0)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+let watcherStarted = false
+
 export function useHistory() {
-  const store = useCanvasStore()
-  const undoStack = ref<Snapshot[]>([])
-  const redoStack = ref<Snapshot[]>([])
-  const paused = ref(false)
+  const canvas = useCanvasStore()
+  const globalStyles = useGlobalStylesStore()
+  const components = useUserComponentsStore()
 
   function takeSnapshot(): Snapshot {
     return {
-      pages: JSON.stringify(store.pages),
-      styleClasses: JSON.stringify(store.styleClasses),
-      userComponents: JSON.stringify(store.userComponents),
+      pages: JSON.stringify(canvas.pages),
+      styleClasses: JSON.stringify(globalStyles.styleClasses),
+      userComponents: JSON.stringify(components.userComponents),
     }
   }
 
   function applySnapshot(snapshot: Snapshot) {
+    // Restore all three stores inside one paused section so undo stays atomic
     paused.value = true
-    store.pages.splice(0, store.pages.length, ...JSON.parse(snapshot.pages))
-    Object.keys(store.styleClasses).forEach((k) => delete store.styleClasses[k])
-    Object.assign(store.styleClasses, JSON.parse(snapshot.styleClasses))
-    Object.keys(store.userComponents).forEach((k) => delete store.userComponents[k])
-    Object.assign(store.userComponents, JSON.parse(snapshot.userComponents))
+    canvas.pages.splice(0, canvas.pages.length, ...JSON.parse(snapshot.pages))
+    Object.keys(globalStyles.styleClasses).forEach((k) => delete globalStyles.styleClasses[k])
+    Object.assign(globalStyles.styleClasses, JSON.parse(snapshot.styleClasses))
+    Object.keys(components.userComponents).forEach((k) => delete components.userComponents[k])
+    Object.assign(components.userComponents, JSON.parse(snapshot.userComponents))
 
     // Re-validate active page
-    if (!store.pages.find((p) => p.id === store.activePageId)) {
-      store.setActivePage(store.pages[0]?.id ?? '')
+    if (!canvas.pages.find((p) => p.id === canvas.activePageId)) {
+      canvas.setActivePage(canvas.pages[0]?.id ?? '')
     }
 
     requestAnimationFrame(() => { paused.value = false })
@@ -62,28 +74,19 @@ export function useHistory() {
     applySnapshot(snapshot)
   }
 
-  const canUndo = ref(false)
-  const canRedo = ref(false)
-
-  // Watch stacks to update flags
-  watch(() => undoStack.value.length, (len) => { canUndo.value = len > 0 })
-  watch(() => redoStack.value.length, (len) => { canRedo.value = len > 0 })
-
-  // Save initial state
-  undoStack.value = []
-  redoStack.value = []
-
-  // Watch for changes and auto-push snapshots (debounced)
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
-  watch(
-    () => JSON.stringify(store.pages) + JSON.stringify(store.styleClasses) + JSON.stringify(store.userComponents),
-    () => {
-      if (paused.value) return
-      if (debounceTimer) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(() => pushState(), 300)
-    },
-  )
+  // Watch for changes and auto-push snapshots (debounced); started once,
+  // no matter how many components call useHistory()
+  if (!watcherStarted) {
+    watcherStarted = true
+    watch(
+      () => JSON.stringify(canvas.pages) + JSON.stringify(globalStyles.styleClasses) + JSON.stringify(components.userComponents),
+      () => {
+        if (paused.value) return
+        if (debounceTimer) clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(() => pushState(), 300)
+      },
+    )
+  }
 
   return { undo, redo, canUndo, canRedo }
 }

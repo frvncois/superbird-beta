@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 
 const props = withDefaults(
   defineProps<{
@@ -19,7 +19,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
-const store = useCanvasStore()
+const store = useGlobalStylesStore()
 const tokenOpen = ref(false)
 
 const sizeTokens = computed(() => Object.entries(store.globalStyles.sizes))

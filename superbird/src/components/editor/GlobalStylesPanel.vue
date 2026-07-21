@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { BREAKPOINTS } from '@/constants/canvas'
 import type { Breakpoint } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -8,7 +9,8 @@ import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
-const store = useCanvasStore()
+const store = useGlobalStylesStore()
+const siteStore = useSiteSettingsStore()
 const activeTab = ref('site')
 
 const tabs = [
@@ -51,7 +53,7 @@ const newRedirectFrom = ref('')
 const newRedirectTo = ref('')
 function addRedirect() {
   if (!newRedirectFrom.value.trim() || !newRedirectTo.value.trim()) return
-  store.addRedirect(newRedirectFrom.value.trim(), newRedirectTo.value.trim())
+  siteStore.addRedirect(newRedirectFrom.value.trim(), newRedirectTo.value.trim())
   newRedirectFrom.value = ''
   newRedirectTo.value = ''
 }
@@ -61,7 +63,7 @@ const newFontName = ref('')
 const newFontUrl = ref('')
 function addFont() {
   if (!newFontName.value.trim() || !newFontUrl.value.trim()) return
-  store.addCustomFont(newFontName.value.trim(), newFontUrl.value.trim())
+  siteStore.addCustomFont(newFontName.value.trim(), newFontUrl.value.trim())
   newFontName.value = ''
   newFontUrl.value = ''
 }
@@ -78,7 +80,7 @@ function addFont() {
       leave-to-class="opacity-0"
     >
       <div v-if="store.globalStylesPanelOpen" class="fixed inset-0 z-[100] flex justify-end">
-        <div class="absolute inset-0 bg-foreground/20 backdrop-blur-sm" @click="store.globalStylesPanelOpen = false" />
+        <div class="absolute inset-0 bg-foreground/20 backdrop-blur-sm" @click="store.closePanel()" />
 
         <div class="relative w-[420px] max-w-full h-full bg-background border-l overflow-hidden shadow-xl flex flex-col">
           <!-- Header -->
@@ -86,7 +88,7 @@ function addFont() {
             <h2 class="text-sm font-semibold">Global Settings</h2>
             <button
               class="flex size-7 items-center justify-center rounded-lg cursor-pointer text-secondary hover:bg-secondary/10 hover:text-foreground transition-colors duration-150"
-              @click="store.globalStylesPanelOpen = false"
+              @click="store.closePanel()"
             >
               <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
@@ -120,19 +122,19 @@ function addFont() {
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Title</span>
-                    <InputUi :model-value="store.siteSettings.identity.title" @update:model-value="store.updateSiteIdentity({ title: $event })" />
+                    <InputUi :model-value="siteStore.siteSettings.identity.title" @update:model-value="siteStore.updateSiteIdentity({ title: $event })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Tagline</span>
-                    <InputUi :model-value="store.siteSettings.identity.tagline" @update:model-value="store.updateSiteIdentity({ tagline: $event })" />
+                    <InputUi :model-value="siteStore.siteSettings.identity.tagline" @update:model-value="siteStore.updateSiteIdentity({ tagline: $event })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Favicon</span>
-                    <InputUi :model-value="store.siteSettings.identity.favicon ?? ''" placeholder="URL or upload" @update:model-value="store.updateSiteIdentity({ favicon: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.identity.favicon ?? ''" placeholder="URL or upload" @update:model-value="siteStore.updateSiteIdentity({ favicon: $event || undefined })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Logo</span>
-                    <InputUi :model-value="store.siteSettings.identity.logo ?? ''" placeholder="URL or upload" @update:model-value="store.updateSiteIdentity({ logo: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.identity.logo ?? ''" placeholder="URL or upload" @update:model-value="siteStore.updateSiteIdentity({ logo: $event || undefined })" />
                   </div>
                 </div>
               </PropertySectionUi>
@@ -232,16 +234,16 @@ function addFont() {
                 <div class="space-y-1.5">
                   <div class="space-y-1">
                     <span class="text-[10px] text-secondary">Title Format</span>
-                    <InputUi :model-value="store.siteSettings.seo.titleFormat" placeholder="%page_title% | %site_title%" @update:model-value="store.updateSeo({ titleFormat: $event })" />
+                    <InputUi :model-value="siteStore.siteSettings.seo.titleFormat" placeholder="%page_title% | %site_title%" @update:model-value="siteStore.updateSeo({ titleFormat: $event })" />
                     <span class="text-[9px] text-secondary/50">Use %page_title% and %site_title% as variables</span>
                   </div>
                   <div class="space-y-1">
                     <span class="text-[10px] text-secondary">Meta Description</span>
-                    <textarea :value="store.siteSettings.seo.metaDescription" placeholder="Default site description for search engines" rows="2" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="store.updateSeo({ metaDescription: ($event.target as HTMLTextAreaElement).value })" />
+                    <textarea :value="siteStore.siteSettings.seo.metaDescription" placeholder="Default site description for search engines" rows="2" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="siteStore.updateSeo({ metaDescription: ($event.target as HTMLTextAreaElement).value })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-20 text-[10px] text-secondary">Social Image</span>
-                    <InputUi :model-value="store.siteSettings.seo.socialImage ?? ''" placeholder="URL for OG image" @update:model-value="store.updateSeo({ socialImage: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.seo.socialImage ?? ''" placeholder="URL for OG image" @update:model-value="siteStore.updateSeo({ socialImage: $event || undefined })" />
                   </div>
                 </div>
               </PropertySectionUi>
@@ -250,14 +252,14 @@ function addFont() {
                 <div class="space-y-1.5">
                   <label class="flex items-center justify-between cursor-pointer">
                     <span class="text-xs">No Index (hide from search)</span>
-                    <button :class="['relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer', store.siteSettings.seo.robotsNoIndex ? 'bg-foreground' : 'bg-foreground/20']" @click="store.updateSeo({ robotsNoIndex: !store.siteSettings.seo.robotsNoIndex })">
-                      <span :class="['absolute top-0.5 left-0.5 size-4 rounded-full bg-background shadow transition-transform duration-200', store.siteSettings.seo.robotsNoIndex && 'translate-x-4']" />
+                    <button :class="['relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer', siteStore.siteSettings.seo.robotsNoIndex ? 'bg-foreground' : 'bg-foreground/20']" @click="siteStore.updateSeo({ robotsNoIndex: !siteStore.siteSettings.seo.robotsNoIndex })">
+                      <span :class="['absolute top-0.5 left-0.5 size-4 rounded-full bg-background shadow transition-transform duration-200', siteStore.siteSettings.seo.robotsNoIndex && 'translate-x-4']" />
                     </button>
                   </label>
                   <label class="flex items-center justify-between cursor-pointer">
                     <span class="text-xs">No Follow</span>
-                    <button :class="['relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer', store.siteSettings.seo.robotsNoFollow ? 'bg-foreground' : 'bg-foreground/20']" @click="store.updateSeo({ robotsNoFollow: !store.siteSettings.seo.robotsNoFollow })">
-                      <span :class="['absolute top-0.5 left-0.5 size-4 rounded-full bg-background shadow transition-transform duration-200', store.siteSettings.seo.robotsNoFollow && 'translate-x-4']" />
+                    <button :class="['relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer', siteStore.siteSettings.seo.robotsNoFollow ? 'bg-foreground' : 'bg-foreground/20']" @click="siteStore.updateSeo({ robotsNoFollow: !siteStore.siteSettings.seo.robotsNoFollow })">
+                      <span :class="['absolute top-0.5 left-0.5 size-4 rounded-full bg-background shadow transition-transform duration-200', siteStore.siteSettings.seo.robotsNoFollow && 'translate-x-4']" />
                     </button>
                   </label>
                 </div>
@@ -267,11 +269,11 @@ function addFont() {
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2">
                     <span class="w-12 text-[10px] text-secondary">GA ID</span>
-                    <InputUi :model-value="store.siteSettings.seo.googleAnalyticsId ?? ''" placeholder="G-XXXXXXXXXX" @update:model-value="store.updateSeo({ googleAnalyticsId: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.seo.googleAnalyticsId ?? ''" placeholder="G-XXXXXXXXXX" @update:model-value="siteStore.updateSeo({ googleAnalyticsId: $event || undefined })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-12 text-[10px] text-secondary">GTM ID</span>
-                    <InputUi :model-value="store.siteSettings.seo.googleTagManagerId ?? ''" placeholder="GTM-XXXXXXX" @update:model-value="store.updateSeo({ googleTagManagerId: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.seo.googleTagManagerId ?? ''" placeholder="GTM-XXXXXXX" @update:model-value="siteStore.updateSeo({ googleTagManagerId: $event || undefined })" />
                   </div>
                 </div>
               </PropertySectionUi>
@@ -282,28 +284,28 @@ function addFont() {
               <PropertySectionUi title="Head Code" icon="settings">
                 <div class="space-y-1">
                   <span class="text-[10px] text-secondary">Injected inside &lt;head&gt;</span>
-                  <textarea :value="store.siteSettings.customCode.headCode" placeholder="<!-- Analytics, fonts, meta tags -->" rows="4" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="store.updateCustomCode({ headCode: ($event.target as HTMLTextAreaElement).value })" />
+                  <textarea :value="siteStore.siteSettings.customCode.headCode" placeholder="<!-- Analytics, fonts, meta tags -->" rows="4" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="siteStore.updateCustomCode({ headCode: ($event.target as HTMLTextAreaElement).value })" />
                 </div>
               </PropertySectionUi>
 
               <PropertySectionUi title="Body Start Code" icon="settings" :default-open="false">
                 <div class="space-y-1">
                   <span class="text-[10px] text-secondary">Right after &lt;body&gt; open</span>
-                  <textarea :value="store.siteSettings.customCode.bodyStartCode" placeholder="<!-- GTM noscript, etc -->" rows="3" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="store.updateCustomCode({ bodyStartCode: ($event.target as HTMLTextAreaElement).value })" />
+                  <textarea :value="siteStore.siteSettings.customCode.bodyStartCode" placeholder="<!-- GTM noscript, etc -->" rows="3" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="siteStore.updateCustomCode({ bodyStartCode: ($event.target as HTMLTextAreaElement).value })" />
                 </div>
               </PropertySectionUi>
 
               <PropertySectionUi title="Body End Code" icon="settings" :default-open="false">
                 <div class="space-y-1">
                   <span class="text-[10px] text-secondary">Before &lt;/body&gt; close</span>
-                  <textarea :value="store.siteSettings.customCode.bodyEndCode" placeholder="<!-- Chat widgets, scripts -->" rows="3" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="store.updateCustomCode({ bodyEndCode: ($event.target as HTMLTextAreaElement).value })" />
+                  <textarea :value="siteStore.siteSettings.customCode.bodyEndCode" placeholder="<!-- Chat widgets, scripts -->" rows="3" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="siteStore.updateCustomCode({ bodyEndCode: ($event.target as HTMLTextAreaElement).value })" />
                 </div>
               </PropertySectionUi>
 
               <PropertySectionUi title="Custom CSS" icon="settings" :default-open="false">
                 <div class="space-y-1">
                   <span class="text-[10px] text-secondary">Global CSS added to every page</span>
-                  <textarea :value="store.siteSettings.customCode.customCss" placeholder="/* Custom styles */" rows="6" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="store.updateCustomCode({ customCss: ($event.target as HTMLTextAreaElement).value })" />
+                  <textarea :value="siteStore.siteSettings.customCode.customCss" placeholder="/* Custom styles */" rows="6" class="w-full resize-none rounded-xl border border-foreground/15 bg-transparent px-2.5 py-2 text-[11px] font-mono text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-3 outline-transparent focus:outline-secondary/10" @input="siteStore.updateCustomCode({ customCss: ($event.target as HTMLTextAreaElement).value })" />
                 </div>
               </PropertySectionUi>
             </div>
@@ -313,13 +315,13 @@ function addFont() {
               <div class="text-[10px] text-secondary">Manage 301/302 redirects for SEO migrations.</div>
 
               <!-- Existing redirects -->
-              <div v-if="store.siteSettings.redirects.length > 0" class="space-y-1">
-                <div v-for="r in store.siteSettings.redirects" :key="r.id" class="flex items-center gap-1.5 rounded-lg bg-secondary/5 px-2.5 py-1.5">
+              <div v-if="siteStore.siteSettings.redirects.length > 0" class="space-y-1">
+                <div v-for="r in siteStore.siteSettings.redirects" :key="r.id" class="flex items-center gap-1.5 rounded-lg bg-secondary/5 px-2.5 py-1.5">
                   <span class="text-[10px] font-mono text-secondary shrink-0">{{ r.type }}</span>
                   <span class="text-[10px] font-mono truncate flex-1">{{ r.from }}</span>
                   <span class="text-[9px] text-secondary shrink-0">-></span>
                   <span class="text-[10px] font-mono truncate flex-1">{{ r.to }}</span>
-                  <button class="flex size-4 shrink-0 items-center justify-center rounded text-secondary/40 cursor-pointer hover:text-red-fg transition-colors duration-100" @click="store.removeRedirect(r.id)">
+                  <button class="flex size-4 shrink-0 items-center justify-center rounded text-secondary/40 cursor-pointer hover:text-red-fg transition-colors duration-100" @click="siteStore.removeRedirect(r.id)">
                     <svg class="size-2.5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
                   </button>
                 </div>
@@ -346,18 +348,18 @@ function addFont() {
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">API Key</span>
-                    <InputUi :model-value="store.siteSettings.integrations.googleFontsApiKey ?? ''" placeholder="Optional" @update:model-value="store.updateIntegrations({ googleFontsApiKey: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.integrations.googleFontsApiKey ?? ''" placeholder="Optional" @update:model-value="siteStore.updateIntegrations({ googleFontsApiKey: $event || undefined })" />
                   </div>
                 </div>
               </PropertySectionUi>
 
               <PropertySectionUi title="Custom Fonts" icon="typography">
                 <div class="space-y-2">
-                  <div v-if="store.siteSettings.integrations.customFonts.length > 0" class="space-y-1">
-                    <div v-for="(font, i) in store.siteSettings.integrations.customFonts" :key="i" class="flex items-center gap-2 rounded-lg bg-secondary/5 px-2.5 py-1.5">
+                  <div v-if="siteStore.siteSettings.integrations.customFonts.length > 0" class="space-y-1">
+                    <div v-for="(font, i) in siteStore.siteSettings.integrations.customFonts" :key="i" class="flex items-center gap-2 rounded-lg bg-secondary/5 px-2.5 py-1.5">
                       <span class="text-xs font-medium flex-1">{{ font.name }}</span>
                       <span class="text-[10px] text-secondary truncate max-w-24">{{ font.url }}</span>
-                      <button class="flex size-4 shrink-0 items-center justify-center rounded text-secondary/40 cursor-pointer hover:text-red-fg transition-colors duration-100" @click="store.removeCustomFont(i)">
+                      <button class="flex size-4 shrink-0 items-center justify-center rounded text-secondary/40 cursor-pointer hover:text-red-fg transition-colors duration-100" @click="siteStore.removeCustomFont(i)">
                         <svg class="size-2.5" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
                       </button>
                     </div>
@@ -376,11 +378,11 @@ function addFont() {
                 <div class="space-y-1.5">
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Handler</span>
-                    <InputUi :model-value="store.siteSettings.integrations.formHandler ?? ''" placeholder="Webhook URL" @update:model-value="store.updateIntegrations({ formHandler: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.integrations.formHandler ?? ''" placeholder="Webhook URL" @update:model-value="siteStore.updateIntegrations({ formHandler: $event || undefined })" />
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="w-16 text-[10px] text-secondary">Email</span>
-                    <InputUi :model-value="store.siteSettings.integrations.formEmail ?? ''" placeholder="admin@site.com" @update:model-value="store.updateIntegrations({ formEmail: $event || undefined })" />
+                    <InputUi :model-value="siteStore.siteSettings.integrations.formEmail ?? ''" placeholder="admin@site.com" @update:model-value="siteStore.updateIntegrations({ formEmail: $event || undefined })" />
                   </div>
                 </div>
               </PropertySectionUi>

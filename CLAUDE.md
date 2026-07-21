@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Superbird is a Vue 3 web application. All source code lives inside the `superbird/` subdirectory.
 
+## Dev reference library
+
+`superbird/docs/` is a Claude-facing reference library — load the relevant file before working in that area (it is canonical; if code and a doc disagree, fix the doc):
+
+- `docs/architecture.md` — layers, dependency flow, folder map, placement rules, the double-render gotcha
+- `docs/design-tokens.md` — colors, typography, sizing vocabulary, motion, icons (never hardcode a value)
+- `docs/ui-primitives.md` — catalog of every `*Ui` with props/model/variants
+- `docs/stores.md` — public API of each domain store
+- `docs/lib-and-composables.md` — pure helpers, constants, composables, types index
+- `docs/patterns.md` — recipes for the recurring moves
+
+Start at `docs/README.md`. The design-system spec is `superbird/DESIGN.md`.
+
 ## Commands
 
 All commands must be run from the `superbird/` directory.

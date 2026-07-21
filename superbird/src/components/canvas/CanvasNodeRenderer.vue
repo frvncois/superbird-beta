@@ -2,6 +2,7 @@
 import { ref, computed, toRef } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useCollectionsStore } from '@/stores/collections'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -17,6 +18,7 @@ const props = defineProps<{
 }>()
 
 const store = useCanvasStore()
+const collectionsStore = useCollectionsStore()
 const globalStylesStore = useGlobalStylesStore()
 const isEditing = ref(false)
 const isHovered = ref(false)
@@ -169,7 +171,7 @@ function handleKeydown(e: KeyboardEvent) {
       <!-- Collection List indicator -->
       <div v-if="node.type === 'collection-list'" class="flex items-center gap-1.5 px-2 py-1 mb-1 rounded-lg bg-amber-bg/50 text-[10px] font-mono text-amber-fg">
         <span>&#8634;</span>
-        <span>{{ node.props.source ?? 'posts' }}</span>
+        <span>{{ collectionsStore.collectionById(node.props.source)?.name ?? node.props.source ?? 'Collection' }}</span>
         <span class="text-amber-fg/50">&#183; {{ node.props.limit ?? '3' }} items</span>
       </div>
 

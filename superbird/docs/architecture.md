@@ -35,7 +35,7 @@ components/
   modals/
     global-styles/    GlobalStylesPanel + 6 *Tab.vue
     media-library/    MediaLibraryModal + FolderList/Toolbar/Grid/DetailPanel
-stores/               canvas globalStyles media siteSettings locales userComponents
+stores/               canvas globalStyles media siteSettings locales userComponents collections
 lib/                  tree ids nodeFactory styles animations unitValue media siteDefaults
 constants/            canvas.ts propertyOptions.ts injectionKeys.ts
 composables/          useHistory useKeyboardShortcuts useContextMenu useNodeContextMenu useDragScrub useInteractionRunner
@@ -52,9 +52,9 @@ data/                 demo.ts (seed data only)
 ## Store dependency graph (acyclic)
 
 ```
-globalStyles → canvas → locales
+globalStyles → canvas → locales, collections
 userComponents → canvas
-media, siteSettings → (nothing)
+media, siteSettings, collections → (nothing)
 ```
 Never introduce a back-edge. If canvas needs something from userComponents, the logic belongs in `lib/tree` instead.
 

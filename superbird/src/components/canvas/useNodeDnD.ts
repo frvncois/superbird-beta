@@ -2,7 +2,7 @@ import { ref, computed, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import { CONTAINER_TYPES } from '@/constants/canvas'
-import type { CanvasNode } from '@/types/canvas'
+import type { CanvasNode, FieldType } from '@/types/canvas'
 
 /**
  * Drag & drop behavior for a canvas node: acting as a drag source (reorder)
@@ -76,11 +76,10 @@ export function useNodeDnD(node: Ref<CanvasNode>) {
       return
     }
 
-    // Dropping a dynamic field from sidebar
-    const fieldKey = e.dataTransfer!.getData('application/superbird-dynamic-field')
-    if (fieldKey) {
-      const field = store.activePageFields.find((f) => f.key === fieldKey)
-      if (field) store.addDynamicFieldElement(field, node.value.id, pos)
+    // Dropping a typed dynamic field from the Elements tab → creates a new field
+    const fieldType = e.dataTransfer!.getData('application/superbird-dynamic-field')
+    if (fieldType) {
+      store.addDynamicField(fieldType as FieldType, node.value.id, pos)
       return
     }
 

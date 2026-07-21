@@ -1,12 +1,28 @@
 <script setup lang="ts">
 import { useCanvasStore } from '@/stores/canvas'
-import type { NodeType } from '@/types/canvas'
+import type { FieldType, NodeType } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { buildElementActions } from '@/composables/useNodeContextMenu'
 
 const store = useCanvasStore()
 const ctx = useContextMenu()
+
+// Dynamic fields — only when editing a collection template. Dragging one
+// creates a new field on the collection and places its bound element.
+interface FieldDef { type: FieldType; label: string; glyph: string }
+const dynamicFields: FieldDef[] = [
+  { type: 'text', label: 'Text', glyph: 'T' },
+  { type: 'richtext', label: 'Rich text', glyph: '¶' },
+  { type: 'image', label: 'Image', glyph: '▦' },
+  { type: 'number', label: 'Number', glyph: '#' },
+  { type: 'date', label: 'Date', glyph: '📅' },
+]
+
+function handleFieldDragStart(e: DragEvent, type: FieldType) {
+  e.dataTransfer!.effectAllowed = 'copy'
+  e.dataTransfer!.setData('application/superbird-dynamic-field', type)
+}
 
 interface ElementDef { type: NodeType; label: string; icon: string }
 interface ElementCategory { label: string; elements: ElementDef[] }
@@ -84,6 +100,23 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
 
 <template>
   <div class="p-2 space-y-2">
+    <!-- Dynamic fields (collection templates only) -->
+    <div v-if="store.isCollectionTemplate">
+      <div class="px-1 pb-1 pt-0.5 text-[9px] font-mono uppercase tracking-wider text-purple-fg/70">Dynamic Fields</div>
+      <div class="grid grid-cols-4 gap-0.5">
+        <div
+          v-for="f in dynamicFields"
+          :key="f.type"
+          class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground transition-colors duration-150 hover:bg-purple-bg/40 active:cursor-grabbing"
+          draggable="true"
+          @dragstart="handleFieldDragStart($event, f.type)"
+        >
+          <span class="flex size-7 items-center justify-center rounded-md bg-purple-bg text-[10px] font-mono font-bold text-purple-fg">{{ f.glyph }}</span>
+          <span class="text-[9px]">{{ f.label }}</span>
+        </div>
+      </div>
+    </div>
+
     <div v-for="cat in categories" :key="cat.label">
       <div class="px-1 pb-1 pt-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ cat.label }}</div>
       <div class="grid grid-cols-4 gap-0.5">

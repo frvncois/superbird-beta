@@ -2,8 +2,6 @@
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
-import { getPageTypeConfig } from '@/constants/canvas'
-import type { DynamicField } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
@@ -13,19 +11,6 @@ const componentsStore = useUserComponentsStore()
 const ctx = useContextMenu()
 
 const userComponentsList = computed(() => Object.values(componentsStore.userComponents))
-
-const hasFields = computed(() => store.activePageFields.length > 0)
-const pageTypeConfig = computed(() => getPageTypeConfig(store.activePage.pageType))
-const usedFields = computed(() => store.getUsedDynamicFields())
-
-function addFieldElement(field: DynamicField) {
-  store.addDynamicFieldElement(field)
-}
-
-function handleFieldDragStart(e: DragEvent, field: DynamicField) {
-  e.dataTransfer!.effectAllowed = 'copyMove'
-  e.dataTransfer!.setData('application/superbird-dynamic-field', field.key)
-}
 
 function handleUserComponentDragStart(e: DragEvent, compId: string) {
   e.dataTransfer!.effectAllowed = 'copyMove'
@@ -97,42 +82,8 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       </div>
     </div>
 
-    <!-- Dynamic fields (template pages only) -->
-    <div v-if="hasFields">
-      <div class="px-2 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">
-        {{ pageTypeConfig.label }} Fields
-      </div>
-      <div class="space-y-0.5">
-        <div
-          v-for="field in store.activePageFields"
-          :key="field.key"
-          :class="[
-            'flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs cursor-grab transition-colors duration-150 active:cursor-grabbing',
-            usedFields.has(field.key)
-              ? 'text-secondary/50'
-              : 'text-foreground hover:bg-secondary/10',
-          ]"
-          draggable="true"
-          @dragstart="handleFieldDragStart($event, field)"
-          @dragend="handleDragEnd"
-          @click="addFieldElement(field)"
-        >
-          <div class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-purple-bg">
-            <svg class="size-3 text-purple-fg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-              <path d="M7.768 15.768a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 0 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3Z" />
-            </svg>
-          </div>
-          <div class="flex-1 text-left">
-            <div class="font-medium">{{ field.label }}</div>
-          </div>
-          <span v-if="usedFields.has(field.key)" class="text-[9px] font-mono text-secondary/40">used</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Empty state -->
-    <div v-if="userComponentsList.length === 0 && !hasFields" class="flex flex-col items-center justify-center py-12 text-center">
+    <div v-if="userComponentsList.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
       <div class="text-xs text-secondary">No components yet</div>
       <div class="text-[10px] text-secondary/50 mt-1">Right-click an element and select "Create Component"</div>
     </div>

@@ -32,10 +32,21 @@ No test runner or linter is configured yet.
 - `src/main.ts` — App entry: creates Vue app, installs Pinia + Router, imports global CSS
 - `src/assets/main.css` — Tailwind v4 entrypoint with all design tokens (`@theme` block), dark mode overrides (`.dark` class), custom keyframes, and base reset
 - `src/router/index.ts` — Router config (routes array, web history mode)
-- `src/stores/` — Pinia stores using composition API pattern (`defineStore` with setup function)
-- `src/App.vue` — Root component
+- `src/components/` — Organized by context:
+  - `ui/` — Reusable primitives with `*Ui` suffix (ButtonUi, InputUi, PopoverUi, ModalUi, IconUi, …) plus the `icons.ts` glyph registry
+  - `header/` — Editor top bar
+  - `sidebar/` — `layers/`, `elements/`, `components/`, `properties/`, `settings/`, `interactions/`
+  - `canvas/` — Artboard, node renderer, drag & drop
+  - `modals/` — `global-styles/`, `media-library/`
+- `src/stores/` — Domain Pinia stores (composition API `defineStore` with setup function): `canvas`, `globalStyles`, `media`, `siteSettings`, `locales`, `userComponents`. All mutations go through actions (undo/redo depends on it).
+- `src/lib/` — Pure helper functions: `tree`, `ids`, `nodeFactory`, `styles`, `animations`, `unitValue`, `media`, `siteDefaults`
+- `src/constants/` — `canvas.ts` (runtime constants), `propertyOptions.ts`, `injectionKeys.ts`
+- `src/types/` — Types only: `canvas.ts`, `contextMenu.ts`
+- `src/composables/` — Cross-feature composables: `useHistory` (singleton), `useKeyboardShortcuts`, `useContextMenu`, `useNodeContextMenu`, `useDragScrub`, `useInteractionRunner`. Feature-specific composables co-locate with their feature (e.g. `canvas/useNodeDnD.ts`).
 
 Path alias: `@/` maps to `src/`.
+
+Component and coding conventions (defineModel, store-free UI primitives, primitive reuse rules) are documented in `superbird/DESIGN.md` under "Architecture & Conventions".
 
 ## Design System
 
@@ -48,4 +59,4 @@ The full design system spec is in `superbird/DESIGN.md`. Key conventions:
 - **Labels/badges**: `text-[10px] font-mono uppercase tracking-wider`
 - **Animations**: Use `superbird-*` keyframes (defined in `@theme`). Entrance easing: `cubic-bezier(0.22, 1, 0.36, 1)`. Stagger with incrementing delays.
 - **Status colors**: Map to semantic pairs (green/blue/purple/amber/red/orange/yellow/muted) via `bg-{name}-bg text-{name}-fg`
-- **Icons**: `@heroicons/vue` outline 24px default
+- **Icons**: `IconUi` component rendering glyphs from the registry in `src/components/ui/icons.ts` — add new glyphs to the registry, never paste inline SVG in feature components

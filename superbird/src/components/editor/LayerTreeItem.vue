@@ -3,6 +3,22 @@ import { ref, computed, inject, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import type { CanvasNode } from '@/types/canvas'
+import IconUi from '@/components/ui/IconUi.vue'
+
+// Maps node types to icon registry keys (body reuses the layers glyph,
+// section/column reuse the container square)
+const TYPE_ICONS: Record<string, string> = {
+  component: 'component',
+  body: 'layers',
+  container: 'container',
+  section: 'section',
+  column: 'container',
+  columns: 'columns',
+  heading: 'heading',
+  text: 'text',
+  button: 'button',
+  image: 'image',
+}
 
 const props = defineProps<{
   node: CanvasNode
@@ -87,13 +103,11 @@ function toggleExpand(e: MouseEvent) {
         class="flex size-4 shrink-0 items-center justify-center rounded cursor-pointer hover:bg-secondary/15"
         @click="toggleExpand"
       >
-        <svg
-          :class="['size-3 text-secondary transition-transform duration-150', expanded && 'rotate-90']"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z" clip-rule="evenodd" />
-        </svg>
+        <IconUi
+          name="chevron-right"
+          size="size-3"
+          :class="['text-secondary transition-transform duration-150', expanded && 'rotate-90']"
+        />
       </button>
       <span v-else class="size-4 shrink-0" />
 
@@ -104,30 +118,9 @@ function toggleExpand(e: MouseEvent) {
         <!-- Collection item -->
         <span v-else-if="node.type === 'collection-item'" class="text-[11px] font-mono font-bold text-amber-fg/60">&#8634;</span>
         <!-- Component instance -->
-        <svg v-else-if="node.type === 'component'" class="size-3.5 text-green-fg" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10.362 1.093a.75.75 0 0 0-.724 0L2.523 5.018 10 9.143l7.477-4.125-7.115-3.925ZM18 6.443l-7.25 4v8.25l6.862-3.786A.75.75 0 0 0 18 14.25V6.443ZM9.25 18.693v-8.25l-7.25-4v7.807a.75.75 0 0 0 .388.657l6.862 3.786Z" />
-        </svg>
-        <svg v-else-if="node.type === 'body'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M1 2.75A.75.75 0 0 1 1.75 2h16.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75ZM1 7.75A.75.75 0 0 1 1.75 7h16.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75ZM1.75 12a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H1.75ZM1 17.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75Z" />
-        </svg>
-        <svg v-else-if="node.type === 'container' || node.type === 'section' || node.type === 'column'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3.5 2A1.5 1.5 0 0 0 2 3.5v13A1.5 1.5 0 0 0 3.5 18h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 16.5 2h-13ZM3.5 3.5h13v13h-13v-13Z" clip-rule="evenodd" />
-        </svg>
-        <svg v-else-if="node.type === 'columns'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h13A1.5 1.5 0 0 1 18 3.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 16.5v-13ZM3.5 3.5v13h5.25v-13H3.5Zm6.75 0v13h6.25v-13h-6.25Z" clip-rule="evenodd" />
-        </svg>
-        <svg v-else-if="node.type === 'heading'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M3 4.25a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75v4.5h6V4.25a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75v11.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75V10.5H5v5.25a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75V4.25Z" clip-rule="evenodd" />
-        </svg>
-        <svg v-else-if="node.type === 'text'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M2 3.75A.75.75 0 0 1 2.75 3h11.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75ZM2 7.5a.75.75 0 0 1 .75-.75h7.508a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 7.5ZM2.75 10.5a.75.75 0 0 0 0 1.5h11.5a.75.75 0 0 0 0-1.5H2.75ZM2 15.25a.75.75 0 0 1 .75-.75h7.508a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
-        </svg>
-        <svg v-else-if="node.type === 'button'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5Zm2.25-.75a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h11.5a.75.75 0 0 0 .75-.75v-8.5a.75.75 0 0 0-.75-.75H4.25Z" clip-rule="evenodd" />
-        </svg>
-        <svg v-else-if="node.type === 'image'" class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm1.5 9.5c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-2.305l-3.47-3.47a.75.75 0 0 0-1.06 0l-3.72 3.72-2.22-2.22a.75.75 0 0 0-1.06 0L2.5 12.94v1.81Zm0-4.94 2.22-2.22a2.25 2.25 0 0 1 3.182 0l.97.97 3.47-3.47a2.25 2.25 0 0 1 3.182 0L17.5 7.06V5.25a.75.75 0 0 0-.75-.75H3.25a.75.75 0 0 0-.75.75v4.56Z" clip-rule="evenodd" />
-        </svg>
+        <IconUi v-else-if="node.type === 'component'" name="component" size="size-3.5" class="text-green-fg" />
+        <!-- Other node types -->
+        <IconUi v-else-if="TYPE_ICONS[node.type]" :name="TYPE_ICONS[node.type]!" size="size-3.5" class="text-secondary" />
       </span>
 
       <!-- Label -->
@@ -136,16 +129,22 @@ function toggleExpand(e: MouseEvent) {
       </span>
 
       <!-- Hidden indicator -->
-      <svg v-if="isHiddenAtBreakpoint" class="size-2.5 shrink-0 text-secondary/40 ml-auto" viewBox="0 0 20 20" fill="currentColor" title="Hidden at this breakpoint">
-        <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.092 1.092a4 4 0 0 0-5.558-5.558Z" clip-rule="evenodd" />
-        <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" />
-      </svg>
+      <IconUi
+        v-if="isHiddenAtBreakpoint"
+        name="eye-slash"
+        size="size-2.5"
+        class="shrink-0 text-secondary/40 ml-auto"
+        title="Hidden at this breakpoint"
+      />
 
       <!-- Dynamic field indicator -->
-      <svg v-else-if="isDynamic" class="size-2.5 shrink-0 text-purple-fg/60 ml-auto" viewBox="0 0 20 20" fill="currentColor" title="Dynamic field">
-        <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-        <path d="M7.768 15.768a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 0 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3Z" />
-      </svg>
+      <IconUi
+        v-else-if="isDynamic"
+        name="link"
+        size="size-2.5"
+        class="shrink-0 text-purple-fg/60 ml-auto"
+        title="Dynamic field"
+      />
     </div>
 
     <!-- Drop indicator: after -->

@@ -3,7 +3,7 @@ import { useNodeSettings } from './useNodeSettings'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import ElementInfoBlock from './ElementInfoBlock.vue'
 import CollectionBlock from './CollectionBlock.vue'
-import FieldBindingBlock from './FieldBindingBlock.vue'
+import FieldInfoBlock from './FieldInfoBlock.vue'
 import ContentBlock from './ContentBlock.vue'
 import VisibilityBlock from './VisibilityBlock.vue'
 import AttributesBlock from './AttributesBlock.vue'
@@ -21,7 +21,7 @@ const { node, isBody, isTextNode, isCollectionList, boundField } = useNodeSettin
   <div v-else class="p-3">
     <ElementInfoBlock />
     <CollectionBlock v-if="isCollectionList" />
-    <FieldBindingBlock />
+    <FieldInfoBlock v-if="boundField" :field="boundField" />
     <ContentBlock v-if="isTextNode && !boundField" />
 
     <!-- Accordion sections -->

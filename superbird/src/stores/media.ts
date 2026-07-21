@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { generateMediaId, generateFolderId } from '@/lib/ids'
 import { getMediaTypeFromMime } from '@/lib/media'
@@ -20,11 +20,29 @@ export const useMediaStore = defineStore('media', () => {
   ])
   const mediaLibraryOpen = ref(false)
 
+  // When set, the library is acting as a picker: choosing an item invokes the
+  // callback and closes, instead of just browsing.
+  const pickCallback = ref<((item: MediaItem) => void) | null>(null)
+  const isPicking = computed(() => pickCallback.value !== null)
+
   function openLibrary() {
+    pickCallback.value = null
     mediaLibraryOpen.value = true
   }
 
+  function openPicker(onPick: (item: MediaItem) => void) {
+    pickCallback.value = onPick
+    mediaLibraryOpen.value = true
+  }
+
+  function pick(item: MediaItem) {
+    pickCallback.value?.(item)
+    pickCallback.value = null
+    mediaLibraryOpen.value = false
+  }
+
   function closeLibrary() {
+    pickCallback.value = null
     mediaLibraryOpen.value = false
   }
 
@@ -87,7 +105,10 @@ export const useMediaStore = defineStore('media', () => {
     mediaItems,
     mediaFolders,
     mediaLibraryOpen,
+    isPicking,
     openLibrary,
+    openPicker,
+    pick,
     closeLibrary,
     addMediaItem,
     removeMediaItem,

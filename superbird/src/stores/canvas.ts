@@ -2,13 +2,13 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
 import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
-import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree, collectDynamicFields } from '@/lib/tree'
-import { CONTAINER_TYPES, FORM_CHILD_TYPES, getDynamicFieldsForPageType, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
+import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree } from '@/lib/tree'
+import { CONTAINER_TYPES, FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { CanvasNode, DynamicField, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
+import type { CanvasNode, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -482,46 +482,6 @@ export const useCanvasStore = defineStore('canvas', () => {
 
   // --- Dynamic Fields ---
 
-  const activePageFields = computed<DynamicField[]>(() =>
-    getDynamicFieldsForPageType(activePage.value.pageType),
-  )
-
-  function getUsedDynamicFields(): Set<string> {
-    const used = new Set<string>()
-    collectDynamicFields(activePage.value.body, used)
-    return used
-  }
-
-  function bindDynamicField(nodeId: string, fieldKey: string) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return
-    const field = activePageFields.value.find((f) => f.key === fieldKey)
-    if (!field) return
-    node.dynamicField = fieldKey
-    if (field.placeholder) node.content = field.placeholder
-    node.label = field.label
-  }
-
-  function unbindDynamicField(nodeId: string) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return
-    delete node.dynamicField
-  }
-
-  function addDynamicFieldElement(field: DynamicField, targetId?: string, position?: 'before' | 'after' | 'inside') {
-    const nodeType = fieldTypeToNodeType(field.type)
-    const tag = fieldTypeToTag(field.type)
-    const node = addNode(nodeType, {
-      tag,
-      label: field.label,
-      content: field.placeholder,
-      dynamicField: field.key,
-    }, targetId, position)
-    return node
-  }
-
   // Drop a typed dynamic field from the Elements tab onto a collection
   // template: creates a NEW field (fresh key) and places its bound element.
   const FIELD_LABELS: Record<FieldType, string> = {
@@ -733,11 +693,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     isContainerNode,
     getParentId,
     // Dynamic fields
-    activePageFields,
-    getUsedDynamicFields,
-    bindDynamicField,
-    unbindDynamicField,
-    addDynamicFieldElement,
     addDynamicField,
     // Interactions
     getNodeInteractions,

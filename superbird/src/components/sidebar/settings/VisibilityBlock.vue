@@ -6,7 +6,7 @@ import SelectUi from '@/components/ui/SelectUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
-const { store, node, hasFields } = useNodeSettings()
+const { store, node, hasFields, schemaFields } = useNodeSettings()
 
 const conditionOperatorOptions = [
   { value: '', label: 'None' },
@@ -67,7 +67,7 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
             :model-value="node.visibility?.condition?.field ?? ''"
             :options="[
               { value: '', label: 'Select field...' },
-              ...store.activePageFields.map((f) => ({ value: f.key, label: f.label })),
+              ...schemaFields.map((f) => ({ value: f.key, label: f.label })),
             ]"
             @update:model-value="(v: string) => updateVisibility({
               condition: { ...node!.visibility!.condition!, field: v }

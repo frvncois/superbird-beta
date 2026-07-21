@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { CanvasNode } from '@/types/canvas'
+import type { CanvasNode, MediaItem } from '@/types/canvas'
 
 const props = defineProps<{
   node: CanvasNode
+  media?: MediaItem | null
 }>()
 
 const isMediaPlaceholder = computed(() => ['video', 'embed'].includes(props.node.type))
@@ -11,13 +12,17 @@ const isFormElement = computed(() => ['input', 'textarea', 'select', 'checkbox',
 </script>
 
 <template>
-  <!-- Image placeholder -->
-  <div
-    v-if="node.type === 'image'"
-    class="flex items-center justify-center bg-secondary/5 rounded-xl py-12 text-xs text-secondary"
-  >
-    Image placeholder
-  </div>
+  <!-- Image: chosen media (real image if it has a URL, else its name), or an
+       empty placeholder. Double-click the element to choose from the library. -->
+  <template v-if="node.type === 'image'">
+    <img v-if="media && media.url" :src="media.url" :alt="media.alt ?? media.name" class="block h-full w-full rounded-[inherit] object-cover" />
+    <div v-else-if="media" class="flex items-center justify-center gap-1.5 rounded-xl bg-secondary/5 py-12 text-xs text-secondary">
+      <span>🖼</span> {{ media.name }}
+    </div>
+    <div v-else class="flex items-center justify-center rounded-xl bg-secondary/5 py-12 text-xs text-secondary/70">
+      Double-click to choose image
+    </div>
+  </template>
 
   <!-- Video / Embed placeholder -->
   <div

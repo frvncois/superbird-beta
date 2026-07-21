@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { getCollectionSource } from '@/constants/canvas'
-import type { CollectionSource } from '@/types/canvas'
+import { useCollectionsStore } from '@/stores/collections'
+import type { CollectionField } from '@/types/canvas'
 
 /**
  * Shared selected-node helpers for the settings sidebar blocks.
@@ -10,6 +10,7 @@ import type { CollectionSource } from '@/types/canvas'
  */
 export function useNodeSettings() {
   const store = useCanvasStore()
+  const collections = useCollectionsStore()
   const node = computed(() => store.selectedNode)
 
   const isBody = computed(() => node.value?.type === 'body')
@@ -19,41 +20,18 @@ export function useNodeSettings() {
   const isImage = computed(() => node.value?.type === 'image')
   const isCollectionList = computed(() => node.value?.type === 'collection-list')
 
-  const isInsideCollection = computed(() => {
-    if (!node.value) return false
-    if (node.value.type === 'collection-item') return true
-    // Walk up to see if inside a collection-item
-    let current = store.getParentId(node.value.id)
-    while (current) {
-      const parent = store.bodyNode.id === current ? store.bodyNode : store.findNode(store.bodyNode.children, current)
-      if (parent?.type === 'collection-item') return true
-      current = store.getParentId(current)
-    }
-    return false
-  })
+  // Fields of the collection currently being edited (derived from the template's
+  // placed dynamic-field elements). Empty on a regular page.
+  const schemaFields = computed<CollectionField[]>(() =>
+    store.isCollectionTemplate ? collections.schemaFor(store.activePage.body) : [],
+  )
+  const hasFields = computed(() => schemaFields.value.length > 0)
 
-  const collectionFields = computed(() => {
-    if (!isInsideCollection.value && !isCollectionList.value) return []
-    // Find the collection-list ancestor to get the source
-    let searchId = node.value?.id
-    while (searchId) {
-      const n = searchId === store.bodyNode.id ? store.bodyNode : store.findNode(store.bodyNode.children, searchId)
-      if (n?.type === 'collection-list') {
-        const source = getCollectionSource(n.props.source as CollectionSource)
-        return source?.fields ?? []
-      }
-      searchId = store.getParentId(searchId) ?? undefined
-    }
-    return []
-  })
-
-  const hasFields = computed(() => store.activePageFields.length > 0 || collectionFields.value.length > 0)
-
-  const boundField = computed(() => {
+  // The field a selected element is bound to (a dynamic-field node).
+  const boundField = computed<CollectionField | null>(() => {
     if (!node.value?.dynamicField) return null
-    return store.activePageFields.find((f) => f.key === node.value!.dynamicField)
-      ?? collectionFields.value.find((f) => f.key === node.value!.dynamicField)
-      ?? null
+    return schemaFields.value.find((f) => f.key === node.value!.dynamicField)
+      ?? { key: node.value.dynamicField, label: node.value.label, type: node.value.type === 'image' ? 'image' : 'text' }
   })
 
   return {
@@ -63,8 +41,7 @@ export function useNodeSettings() {
     isTextNode,
     isImage,
     isCollectionList,
-    isInsideCollection,
-    collectionFields,
+    schemaFields,
     hasFields,
     boundField,
   }

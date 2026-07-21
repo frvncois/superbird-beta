@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { COLLECTION_SOURCES } from '@/constants/canvas'
+import { useCollectionsStore } from '@/stores/collections'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 
 const store = useCanvasStore()
+const collections = useCollectionsStore()
 const node = computed(() => store.selectedNode)
 
-const collectionSourceOptions = COLLECTION_SOURCES.map((s) => ({ value: s.key, label: s.label }))
+const collectionSourceOptions = computed(() => [
+  { value: '', label: 'Select collection…' },
+  ...collections.collections.map((c) => ({ value: c.id, label: c.name })),
+])
 const collectionOrderByOptions = [
   { value: 'date', label: 'Date' },
   { value: 'title', label: 'Title' },
@@ -35,7 +39,7 @@ function updatePropValue(key: string, value: string) {
     <div class="space-y-1.5">
       <FieldRowUi label="Source" label-width="md">
         <SelectUi
-          :model-value="node.props.source ?? 'posts'"
+          :model-value="node.props.source ?? ''"
           :options="collectionSourceOptions"
           @update:model-value="updatePropValue('source', $event)"
         />

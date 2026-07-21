@@ -28,8 +28,12 @@ function handleFilesDrop(e: DragEvent) {
   }
 }
 
-function toggleSelect(id: string) {
-  selectedId.value = selectedId.value === id ? null : id
+function onItemClick(item: MediaItem) {
+  if (store.isPicking) {
+    store.pick(item)
+    return
+  }
+  selectedId.value = selectedId.value === item.id ? null : item.id
 }
 </script>
 
@@ -63,8 +67,9 @@ function toggleSelect(id: string) {
         :class="[
           'group relative rounded-xl border overflow-hidden cursor-pointer transition-all duration-100',
           selectedId === item.id ? 'ring-2 ring-primary border-primary' : 'border-foreground/10 hover:border-foreground/20',
+          store.isPicking && 'hover:ring-2 hover:ring-primary/50',
         ]"
-        @click="toggleSelect(item.id)"
+        @click="onItemClick(item)"
       >
         <!-- Thumbnail -->
         <div class="aspect-square bg-secondary/5 flex items-center justify-center">

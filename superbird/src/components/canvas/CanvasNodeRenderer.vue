@@ -3,6 +3,7 @@ import { ref, computed, toRef } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
+import { useMediaStore } from '@/stores/media'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -20,6 +21,7 @@ const props = defineProps<{
 const store = useCanvasStore()
 const collectionsStore = useCollectionsStore()
 const globalStylesStore = useGlobalStylesStore()
+const mediaStore = useMediaStore()
 const isEditing = ref(false)
 const isHovered = ref(false)
 const editableRef = ref<HTMLElement | null>(null)
@@ -42,6 +44,15 @@ const isPlaceholder = computed(() =>
   ['image', 'video', 'embed', 'input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type),
 )
 const isDynamic = computed(() => !!props.node.dynamicField)
+
+// Image nodes store the chosen media item's id as their content (per-entry
+// when field-bound + an entry is loaded, else on the template).
+const imageMedia = computed(() => {
+  if (props.node.type !== 'image') return null
+  const value = store.getNodeContent(props.node)
+  if (!value) return null
+  return mediaStore.mediaItems.find((m) => m.id === value) ?? null
+})
 const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
 const isHiddenAtBreakpoint = computed(() => {
   const vis = props.node.visibility
@@ -66,6 +77,12 @@ function handleContextMenu(e: MouseEvent) {
 }
 
 function handleDoubleClick(e: MouseEvent) {
+  // Image nodes: double-click to choose media (stored per-entry or on template).
+  if (props.node.type === 'image') {
+    e.stopPropagation()
+    mediaStore.openPicker((item) => store.setNodeContent(props.node.id, item.id))
+    return
+  }
   if (!isTextEditable.value) return
   e.stopPropagation()
   isEditing.value = true
@@ -200,7 +217,7 @@ function handleKeydown(e: KeyboardEvent) {
     </template>
 
     <!-- Image / media / form placeholders -->
-    <NodePlaceholder v-else-if="isPlaceholder" :node="node" />
+    <NodePlaceholder v-else-if="isPlaceholder" :node="node" :media="imageMedia" />
 
     <!-- Drop indicator: after (not for body) -->
     <div

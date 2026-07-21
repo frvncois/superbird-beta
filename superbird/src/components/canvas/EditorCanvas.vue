@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import CanvasNodeRenderer from './CanvasNodeRenderer.vue'
+import EntryInspectorBar from './EntryInspectorBar.vue'
 
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
@@ -26,13 +27,16 @@ function handleClick() {
 </script>
 
 <template>
-  <div
-    :class="['h-full overflow-auto', isDesktop ? '' : 'p-8']"
-    data-canvas-scroll
-    @click.self="handleClick"
-  >
-    <div :class="['mx-auto canvas-artboard', isDesktop ? 'h-full' : 'min-h-full']" :style="artboardStyle">
-      <CanvasNodeRenderer :node="store.bodyNode" />
+  <div class="flex h-full flex-col">
+    <EntryInspectorBar />
+    <div
+      :class="['min-h-0 flex-1 overflow-auto', isDesktop ? '' : 'p-8']"
+      data-canvas-scroll
+      @click.self="handleClick"
+    >
+      <div :class="['mx-auto canvas-artboard', isDesktop ? 'h-full' : 'min-h-full']" :style="artboardStyle">
+        <CanvasNodeRenderer :node="store.bodyNode" />
+      </div>
     </div>
   </div>
 </template>

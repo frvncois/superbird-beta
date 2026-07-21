@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
-import SuperbirdIcon from '@/components/icons/SuperbirdIcon.vue'
+import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import HeaderPageSelect from './HeaderPageSelect.vue'

@@ -88,8 +88,7 @@ function isColorAction(property: ActionProperty): boolean {
 const actionGroups = computed(() => {
   const groups: Record<string, typeof ACTION_PROPERTIES> = {}
   for (const prop of ACTION_PROPERTIES) {
-    if (!groups[prop.group]) groups[prop.group] = []
-    groups[prop.group].push(prop)
+    ;(groups[prop.group] ??= []).push(prop)
   }
   return groups
 })

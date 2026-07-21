@@ -411,7 +411,7 @@ const roleOptions = [
               :model-value="node.visibility?.condition?.operator ?? ''"
               :options="conditionOperatorOptions"
               @update:model-value="(v: string) => updateVisibility({
-                condition: v ? { field: node.visibility?.condition?.field ?? '', operator: v as any, value: node.visibility?.condition?.value } : undefined
+                condition: v ? { field: node?.visibility?.condition?.field ?? '', operator: v as any, value: node?.visibility?.condition?.value } : undefined
               })"
             />
             <template v-if="node.visibility?.condition?.operator">
@@ -422,7 +422,7 @@ const roleOptions = [
                   ...store.activePageFields.map((f) => ({ value: f.key, label: f.label })),
                 ]"
                 @update:model-value="(v: string) => updateVisibility({
-                  condition: { ...node.visibility!.condition!, field: v }
+                  condition: { ...node!.visibility!.condition!, field: v }
                 })"
               />
               <InputUi
@@ -430,7 +430,7 @@ const roleOptions = [
                 :model-value="node.visibility?.condition?.value ?? ''"
                 placeholder="Value"
                 @update:model-value="(v: string) => updateVisibility({
-                  condition: { ...node.visibility!.condition!, value: v }
+                  condition: { ...node!.visibility!.condition!, value: v }
                 })"
               />
             </template>

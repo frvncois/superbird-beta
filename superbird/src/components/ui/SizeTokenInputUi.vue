@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
-import { parseUnitValue, stepUnitValue } from '@/lib/unitValue'
+import { parseUnitValue, nextUnitValue, stepUnitValue } from '@/lib/unitValue'
 import { GlobalTokensKey, type GlobalTokens } from '@/constants/injectionKeys'
 import PopoverUi from './PopoverUi.vue'
 
@@ -49,13 +49,10 @@ function clearToken() {
 }
 
 function handleNumInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value
-  if (!val) {
-    model.value = ''
-    return
-  }
-  const unit = parsed.value.unit
-  model.value = unit === 'auto' || unit === 'token' ? val + 'px' : val + unit
+  const el = e.target as HTMLInputElement
+  const { model: next, force } = nextUnitValue(el.value, parsed.value.unit)
+  model.value = next
+  if (force !== null && el.value !== force) el.value = force
 }
 
 function selectUnit(unit: string) {

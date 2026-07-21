@@ -19,6 +19,34 @@ export function parseUnitValue(val: string, keywords: string[] = []): ParsedUnit
 }
 
 /**
+ * Compute the next model value from the raw text of a unit input's number
+ * field, given the current unit. The number field must only ever hold the
+ * numeric part — the unit lives in the dropdown — so this strips any stray
+ * non-numeric text (preventing the "pxpxpx" append cascade).
+ *
+ * Returns `model` (the new "<num><unit>" value, or "" when cleared) and
+ * `force`: the string the DOM input should be reset to when it contained
+ * junk, or `null` to leave the DOM alone (so the cursor and in-progress
+ * values like "-" or "5." aren't disturbed).
+ */
+export function nextUnitValue(rawInput: string, currentUnit: string): { model: string; force: string | null } {
+  const unit = currentUnit === 'auto' || currentUnit === 'token' ? 'px' : currentUnit
+
+  // Pure or partial numeric ("", "-", ".", "5.", "-5", "12.5"): trust the DOM
+  if (/^-?\d*\.?\d*$/.test(rawInput)) {
+    if (rawInput === '' || rawInput === '-' || rawInput === '.' || rawInput === '-.') {
+      return { model: '', force: null }
+    }
+    return { model: rawInput + unit, force: null }
+  }
+
+  // Contains stray characters (e.g. a typed unit): keep only the number
+  const match = rawInput.match(/-?\d*\.?\d+/)
+  const num = match ? match[0] : ''
+  return { model: num ? num + unit : '', force: num }
+}
+
+/**
  * Shared arrow-key stepping for unit inputs: ±1, shift = ±10, alt = ±0.1.
  * Calls `apply` with the new "<num><unit>" value.
  */

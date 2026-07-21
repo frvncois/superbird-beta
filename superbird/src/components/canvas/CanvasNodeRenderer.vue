@@ -7,7 +7,8 @@ import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import NodePlaceholder from '@/components/canvas/NodePlaceholder.vue'
 import { useNodeDnD } from '@/components/canvas/useNodeDnD'
-import { useContextMenu, buildCanvasActions } from '@/composables/useContextMenu'
+import { useContextMenu } from '@/composables/useContextMenu'
+import { buildNodeActions } from '@/composables/useNodeContextMenu'
 import { useInteractionRunner } from '@/composables/useInteractionRunner'
 
 const props = defineProps<{
@@ -59,7 +60,7 @@ function handleClick(e: MouseEvent) {
 function handleContextMenu(e: MouseEvent) {
   e.stopPropagation()
   store.selectNode(props.node.id)
-  ctx.open(e, buildCanvasActions(props.node))
+  ctx.open(e, buildNodeActions(props.node, 'canvas'))
 }
 
 function handleDoubleClick(e: MouseEvent) {
@@ -87,6 +88,8 @@ function handleKeydown(e: KeyboardEvent) {
 <template>
   <div
     ref="nodeRef"
+    data-canvas-node
+    :data-node-id="node.id"
     :class="[
       'canvas-node relative',
       isBody && isDesktop && 'bg-background h-full',

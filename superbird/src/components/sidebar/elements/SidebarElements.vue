@@ -2,7 +2,8 @@
 import { useCanvasStore } from '@/stores/canvas'
 import type { NodeType } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
-import { useContextMenu, buildComponentActions } from '@/composables/useContextMenu'
+import { useContextMenu } from '@/composables/useContextMenu'
+import { buildElementActions } from '@/composables/useNodeContextMenu'
 
 const store = useCanvasStore()
 const ctx = useContextMenu()
@@ -77,7 +78,7 @@ function handleDragEnd() {
 }
 
 function handleContextMenu(e: MouseEvent, type: NodeType) {
-  ctx.open(e, buildComponentActions(type))
+  ctx.open(e, buildElementActions(type))
 }
 </script>
 

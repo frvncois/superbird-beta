@@ -5,12 +5,15 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
+import { useHistory } from '@/composables/useHistory'
 import HeaderPageSelect from './HeaderPageSelect.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
 
 const mediaStore = useMediaStore()
 const globalStylesStore = useGlobalStylesStore()
+const { undo, redo, canUndo, canRedo } = useHistory()
 const isDark = ref(false)
 
 onMounted(() => {
@@ -42,6 +45,14 @@ function toggleTheme() {
     <!-- Right: actions -->
     <div class="flex items-center gap-2">
       <slot name="actions">
+        <!-- Undo / Redo -->
+        <IconButtonUi title="Undo (⌘Z)" :disabled="!canUndo" @click="undo">
+          <IconUi name="undo" size="size-4" />
+        </IconButtonUi>
+        <IconButtonUi title="Redo (⇧⌘Z)" :disabled="!canRedo" @click="redo">
+          <IconUi name="redo" size="size-4" />
+        </IconButtonUi>
+        <div class="h-4 w-px bg-border" />
         <!-- Media Library -->
         <IconButtonUi title="Media Library" @click="mediaStore.openLibrary()">
           <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">

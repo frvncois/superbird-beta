@@ -99,7 +99,7 @@ export function useInteractionRunner(
 
         case 'scroll-position': {
           // Simplified: maps scroll progress 0-1 to animation progress
-          const canvasEl = el.closest('.h-full.overflow-auto')
+          const canvasEl = el.closest('[data-canvas-scroll]')
           if (!canvasEl) break
 
           const anims = runAllSteps(el, ix)

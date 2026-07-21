@@ -28,6 +28,7 @@ function handleClick() {
 <template>
   <div
     :class="['h-full overflow-auto', isDesktop ? '' : 'p-8']"
+    data-canvas-scroll
     @click.self="handleClick"
   >
     <div :class="['mx-auto canvas-artboard', isDesktop ? 'h-full' : 'min-h-full']" :style="artboardStyle">

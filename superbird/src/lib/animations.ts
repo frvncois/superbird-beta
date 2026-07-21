@@ -97,7 +97,7 @@ function resolveTargets(triggerEl: HTMLElement, step: InteractionStep): HTMLElem
       return Array.from(triggerEl.children) as HTMLElement[]
     case 'child': {
       if (!value) return []
-      const children = Array.from(triggerEl.querySelectorAll('.canvas-node')) as HTMLElement[]
+      const children = Array.from(triggerEl.querySelectorAll('[data-canvas-node]')) as HTMLElement[]
       return children.slice(0, 1)
     }
     case 'sibling': {

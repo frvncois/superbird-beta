@@ -4,7 +4,8 @@ import { useCanvasStore } from '@/stores/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import LayerTreeItem from './LayerTreeItem.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
-import { useContextMenu, buildLayerActions } from '@/composables/useContextMenu'
+import { useContextMenu } from '@/composables/useContextMenu'
+import { buildNodeActions } from '@/composables/useNodeContextMenu'
 
 const store = useCanvasStore()
 const dropTarget = ref<{ id: string; position: 'before' | 'after' | 'inside' } | null>(null)
@@ -19,7 +20,7 @@ function handleSelect(id: string, e: MouseEvent) {
 
 function handleContextMenu(e: MouseEvent, node: CanvasNode) {
   store.selectNode(node.id)
-  ctx.open(e, buildLayerActions(node))
+  ctx.open(e, buildNodeActions(node, 'layers'))
 }
 
 function handleDragStart(e: DragEvent, node: CanvasNode) {

@@ -296,6 +296,31 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  function setNodeSettings(
+    id: string,
+    settings: Partial<Pick<CanvasNode, 'htmlId' | 'htmlTitle' | 'customAttributes' | 'visibility' | 'link' | 'accessibility' | 'advanced' | 'dynamicField'>>,
+  ) {
+    const body = activePage.value.body
+    const node = id === body.id ? body : findNode(body.children, id)
+    if (!node) return
+    Object.assign(node, settings)
+  }
+
+  function setCustomAttribute(id: string, key: string, value: string) {
+    const body = activePage.value.body
+    const node = id === body.id ? body : findNode(body.children, id)
+    if (!node) return
+    if (!node.customAttributes) node.customAttributes = {}
+    node.customAttributes[key] = value
+  }
+
+  function removeCustomAttribute(id: string, key: string) {
+    const body = activePage.value.body
+    const node = id === body.id ? body : findNode(body.children, id)
+    if (!node?.customAttributes) return
+    delete node.customAttributes[key]
+  }
+
   // --- Clipboard ---
 
   const clipboardNode = ref<CanvasNode | null>(null)
@@ -621,6 +646,9 @@ export const useCanvasStore = defineStore('canvas', () => {
     moveNode,
     updateNode,
     removeNode,
+    setNodeSettings,
+    setCustomAttribute,
+    removeCustomAttribute,
     // Clipboard & operations
     clipboardNode,
     clipboardClasses,

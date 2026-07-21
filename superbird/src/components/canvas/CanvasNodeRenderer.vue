@@ -2,10 +2,11 @@
 import { ref, computed, toRef } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
-import { useUserComponentsStore } from '@/stores/userComponents'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import NodePlaceholder from '@/components/canvas/NodePlaceholder.vue'
+import { useNodeDnD } from '@/components/canvas/useNodeDnD'
 import { useContextMenu, buildCanvasActions } from '@/composables/useContextMenu'
 import { useInteractionRunner } from '@/composables/useInteractionRunner'
 
@@ -16,8 +17,6 @@ const props = defineProps<{
 
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
-const componentsStore = useUserComponentsStore()
-const dropPosition = ref<'before' | 'after' | 'inside' | null>(null)
 const isEditing = ref(false)
 const isHovered = ref(false)
 const editableRef = ref<HTMLElement | null>(null)
@@ -27,13 +26,18 @@ const nodeRef = ref<HTMLElement | null>(null)
 const nodeInteractions = computed(() => props.node.interactions)
 useInteractionRunner(nodeRef, nodeInteractions)
 
+// Drag & drop (drag source + drop target)
+const { dropPosition, handleDragStart, handleDragOver, handleDragLeave, handleDrop } =
+  useNodeDnD(toRef(props, 'node'))
+
 const isSelected = computed(() => store.selectedNodeId === props.node.id)
 const isBody = computed(() => props.node.type === 'body')
 const isComponentInstance = computed(() => props.node.type === 'component')
 const isContainer = computed(() => CONTAINER_TYPES.includes(props.node.type))
 const isTextEditable = computed(() => TEXT_EDITABLE_TYPES.includes(props.node.type))
-const isFormElement = computed(() => ['input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type))
-const isMediaPlaceholder = computed(() => ['video', 'embed'].includes(props.node.type))
+const isPlaceholder = computed(() =>
+  ['image', 'video', 'embed', 'input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type),
+)
 const isDynamic = computed(() => !!props.node.dynamicField)
 const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
 const isHiddenAtBreakpoint = computed(() => {
@@ -44,29 +48,7 @@ const isHiddenAtBreakpoint = computed(() => {
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)
 })
-const computedStyles = computed(() => {
-  const classes = props.node.classes
-  const instanceStyles = props.node.styles
-  const classRegistry = globalStylesStore.styleClasses
-  const bp = globalStylesStore.activeBreakpoint
-  const merged: Record<string, string> = {}
-
-  // Breakpoint cascade: desktop -> tablet -> mobile
-  const cascade = bp === 'mobile' ? ['desktop', 'tablet', 'mobile'] as const
-    : bp === 'tablet' ? ['desktop', 'tablet'] as const
-    : ['desktop'] as const
-
-  for (const name of classes) {
-    const cls = classRegistry[name]
-    if (!cls) continue
-    for (const b of cascade) {
-      const bpStyles = cls.styles[b]
-      if (bpStyles?.default) Object.assign(merged, bpStyles.default)
-    }
-  }
-  Object.assign(merged, instanceStyles)
-  return merged
-})
+const computedStyles = computed(() => globalStylesStore.resolveStyles(props.node))
 const ctx = useContextMenu()
 
 function handleClick(e: MouseEvent) {
@@ -98,86 +80,6 @@ function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) {
     e.preventDefault()
     editableRef.value?.blur()
-  }
-}
-
-// --- Drag source (reorder) ---
-
-function handleDragStart(e: DragEvent) {
-  if (isBody.value) {
-    e.preventDefault()
-    return
-  }
-  e.stopPropagation()
-  e.dataTransfer!.effectAllowed = 'move'
-  e.dataTransfer!.setData('application/superbird-node-id', props.node.id)
-}
-
-// --- Drop target ---
-
-function getDropPosition(e: DragEvent): 'before' | 'after' | 'inside' {
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  const y = e.clientY - rect.top
-  const threshold = rect.height * 0.25
-
-  if (isContainer.value && y > threshold && y < rect.height - threshold) {
-    return 'inside'
-  }
-  return y < rect.height / 2 ? 'before' : 'after'
-}
-
-function handleDragOver(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  e.dataTransfer!.dropEffect = 'move'
-  dropPosition.value = getDropPosition(e)
-}
-
-function handleDragLeave(e: DragEvent) {
-  e.stopPropagation()
-  dropPosition.value = null
-}
-
-function handleDrop(e: DragEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  const pos = dropPosition.value
-  dropPosition.value = null
-
-  if (!pos) return
-
-  // Dropping a new component from sidebar
-  const componentType = e.dataTransfer!.getData('application/superbird-component')
-  if (componentType) {
-    store.addNode(
-      componentType as any,
-      {},
-      props.node.id,
-      pos,
-    )
-    store.setDraggedComponent(null)
-    return
-  }
-
-  // Dropping a dynamic field from sidebar
-  const fieldKey = e.dataTransfer!.getData('application/superbird-dynamic-field')
-  if (fieldKey) {
-    const field = store.activePageFields.find((f) => f.key === fieldKey)
-    if (field) store.addDynamicFieldElement(field, props.node.id, pos)
-    return
-  }
-
-  // Dropping a user component from sidebar
-  const userCompId = e.dataTransfer!.getData('application/superbird-user-component')
-  if (userCompId) {
-    componentsStore.addComponentToPage(userCompId, props.node.id, pos)
-    return
-  }
-
-  // Reordering existing node
-  const nodeId = e.dataTransfer!.getData('application/superbird-node-id')
-  if (nodeId && nodeId !== props.node.id) {
-    store.moveNode(nodeId, props.node.id, pos)
   }
 }
 </script>
@@ -292,53 +194,8 @@ function handleDrop(e: DragEvent) {
       </div>
     </template>
 
-    <!-- Image placeholder -->
-    <div
-      v-else-if="node.type === 'image'"
-      class="flex items-center justify-center bg-secondary/5 rounded-xl py-12 text-xs text-secondary"
-    >
-      Image placeholder
-    </div>
-
-    <!-- Video / Embed placeholder -->
-    <div
-      v-else-if="isMediaPlaceholder"
-      class="flex items-center justify-center bg-secondary/5 rounded-xl py-10 text-xs text-secondary gap-2"
-    >
-      <span class="text-lg">{{ node.type === 'video' ? '&#9654;' : '&lt;/&gt;' }}</span>
-      {{ node.type === 'video' ? 'Video' : 'Embed' }} placeholder
-    </div>
-
-    <!-- Form elements -->
-    <div v-else-if="isFormElement" class="form-element-preview">
-      <!-- Input -->
-      <div v-if="node.type === 'input'" class="h-10 rounded-lg border border-foreground/15 bg-background px-3 flex items-center text-xs text-secondary">
-        Text input
-      </div>
-      <!-- Textarea -->
-      <div v-else-if="node.type === 'textarea'" class="h-24 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-xs text-secondary">
-        Textarea
-      </div>
-      <!-- Select -->
-      <div v-else-if="node.type === 'select'" class="h-10 rounded-lg border border-foreground/15 bg-background px-3 flex items-center justify-between text-xs text-secondary">
-        <span>Select option</span>
-        <span>&#9662;</span>
-      </div>
-      <!-- Checkbox -->
-      <div v-else-if="node.type === 'checkbox'" class="flex items-center gap-2">
-        <div class="size-4 rounded border border-foreground/20 bg-background" />
-        <span class="text-xs text-secondary">Checkbox</span>
-      </div>
-      <!-- Radio -->
-      <div v-else-if="node.type === 'radio'" class="flex items-center gap-2">
-        <div class="size-4 rounded-full border border-foreground/20 bg-background" />
-        <span class="text-xs text-secondary">Radio option</span>
-      </div>
-      <!-- File upload -->
-      <div v-else-if="node.type === 'file-upload'" class="flex items-center gap-2 rounded-lg border border-dashed border-foreground/15 bg-secondary/5 px-3 py-3 text-xs text-secondary">
-        <span>&#8679;</span> Choose file or drag here
-      </div>
-    </div>
+    <!-- Image / media / form placeholders -->
+    <NodePlaceholder v-else-if="isPlaceholder" :node="node" />
 
     <!-- Drop indicator: after (not for body) -->
     <div

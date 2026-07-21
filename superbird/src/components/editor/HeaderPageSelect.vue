@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
 import type { PageType } from '@/types/canvas'
+import PopoverUi from '@/components/ui/PopoverUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 const store = useCanvasStore()
 const isOpen = ref(false)
@@ -45,9 +47,14 @@ function toggle() {
 
 function close() {
   isOpen.value = false
-  isAdding.value = false
-  newPageName.value = ''
 }
+
+watch(isOpen, (open) => {
+  if (!open) {
+    isAdding.value = false
+    newPageName.value = ''
+  }
+})
 
 function selectPage(pageId: string) {
   store.setActivePage(pageId)
@@ -94,22 +101,8 @@ function handleAddKeydown(e: KeyboardEvent) {
       </svg>
     </button>
 
-    <!-- Backdrop -->
-    <div v-if="isOpen" class="fixed inset-0 z-40" @click="close" />
-
-    <!-- Dropdown -->
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div
-        v-if="isOpen"
-        class="absolute left-0 top-full mt-1.5 z-50 w-64 max-h-[70vh] overflow-y-auto rounded-2xl border bg-background p-1.5 shadow-lg"
-      >
+    <PopoverUi v-model:open="isOpen" align="left" panel-class="w-64 max-h-[70vh] overflow-y-auto rounded-2xl p-1.5">
+      <div>
         <!-- Grouped sections -->
         <template v-for="(section, sIdx) in sections" :key="section.config.key">
           <div v-if="sIdx > 0" class="my-1 border-t border-foreground/8" />
@@ -164,16 +157,11 @@ function handleAddKeydown(e: KeyboardEvent) {
                 class="h-7 flex-1 rounded-lg border border-foreground/15 bg-transparent px-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-none"
                 @keydown="handleAddKeydown"
               />
-              <button
-                class="h-7 rounded-lg bg-foreground px-2.5 text-[10px] font-medium text-background cursor-pointer hover:bg-foreground/85 transition-colors duration-150"
-                @click="confirmAdd"
-              >
-                Add
-              </button>
+              <ButtonUi size="sm" @click="confirmAdd">Add</ButtonUi>
             </div>
           </div>
         </template>
       </div>
-    </Transition>
+    </PopoverUi>
   </div>
 </template>

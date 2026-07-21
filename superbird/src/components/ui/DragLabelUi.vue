@@ -1,30 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { parseUnitValue } from '@/lib/unitValue'
 
 const props = defineProps<{
-  modelValue?: string
   sensitivity?: number
 }>()
 
-const emit = defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+const model = defineModel<string>({ default: '' })
 
 const isDragging = ref(false)
 let startX = 0
 let startValue = 0
 
-function parseValue(val: string): { num: number; unit: string } {
-  const trimmed = (val ?? '').trim()
-  if (!trimmed) return { num: 0, unit: 'px' }
-  const match = trimmed.match(/^(-?[\d.]+)\s*(.*)$/)
-  if (match) return { num: parseFloat(match[1]!), unit: match[2] || 'px' }
-  return { num: 0, unit: 'px' }
+function parseNum(val: string): { num: number; unit: string } {
+  const parsed = parseUnitValue(val)
+  const num = parseFloat(parsed.num)
+  return { num: isNaN(num) ? 0 : num, unit: parsed.unit }
 }
 
 function onPointerDown(e: PointerEvent) {
-  const parsed = parseValue(props.modelValue ?? '')
-  startValue = isNaN(parsed.num) ? 0 : parsed.num
+  startValue = parseNum(model.value).num
   startX = e.clientX
   isDragging.value = true
 
@@ -41,9 +36,9 @@ function onPointerMove(e: PointerEvent) {
   if (e.shiftKey) step *= 10
   if (e.altKey) step *= 0.1
 
-  const parsed = parseValue(props.modelValue ?? '')
+  const { unit } = parseNum(model.value)
   const next = Math.round((startValue + dx * step) * 100) / 100
-  emit('update:modelValue', next + parsed.unit)
+  model.value = next + unit
 }
 
 function onPointerUp() {

@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { ref, computed, inject } from 'vue'
+import { parseUnitValue, stepUnitValue } from '@/lib/unitValue'
+import { GlobalTokensKey, type GlobalTokens } from '@/constants/injectionKeys'
+import PopoverUi from './PopoverUi.vue'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: string
     placeholder?: string
     units?: string[]
     allowAuto?: boolean
+    tokens?: GlobalTokens
   }>(),
   {
     units: () => ['px', '%', 'em', 'rem', 'vw', 'vh'],
@@ -15,30 +17,26 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+const model = defineModel<string>({ default: '' })
 
-const store = useGlobalStylesStore()
+const injectedTokens = inject(GlobalTokensKey, undefined)
 const tokenOpen = ref(false)
+const unitOpen = ref(false)
 
-const sizeTokens = computed(() => Object.entries(store.globalStyles.sizes))
+const sizeTokens = computed(() =>
+  Object.entries(props.tokens?.sizes ?? injectedTokens?.value.sizes ?? {}),
+)
 const hasTokens = computed(() => sizeTokens.value.length > 0)
 
 // Parse value to detect if using a token
 const parsed = computed(() => {
-  const val = props.modelValue ?? ''
-  if (!val) return { num: '', unit: 'px' }
-  if (val === 'auto') return { num: '', unit: 'auto' }
+  const val = model.value
   if (val.startsWith('var(--global-size-')) return { num: val, unit: 'token' }
-  const match = val.match(/^(-?[\d.]+)\s*(.*)$/)
-  if (match) return { num: match[1]!, unit: match[2] || 'px' }
-  return { num: val, unit: 'px' }
+  return parseUnitValue(val, ['auto'])
 })
 
 const tokenName = computed(() => {
-  const val = props.modelValue ?? ''
-  const match = val.match(/^var\(--global-size-(.+)\)$/)
+  const match = model.value.match(/^var\(--global-size-(.+)\)$/)
   return match ? match[1]! : null
 })
 
@@ -46,49 +44,43 @@ const allUnits = computed(() =>
   props.allowAuto ? [...props.units, 'auto'] : props.units,
 )
 
-const unitOpen = ref(false)
-
 function clearToken() {
-  emit('update:modelValue', '')
+  model.value = ''
 }
 
 function handleNumInput(e: Event) {
   const val = (e.target as HTMLInputElement).value
-  if (!val) { emit('update:modelValue', ''); return }
-  const unit = parsed.value.unit
-  if (unit === 'auto' || unit === 'token') {
-    emit('update:modelValue', val + 'px')
-  } else {
-    emit('update:modelValue', val + unit)
+  if (!val) {
+    model.value = ''
+    return
   }
+  const unit = parsed.value.unit
+  model.value = unit === 'auto' || unit === 'token' ? val + 'px' : val + unit
 }
 
 function selectUnit(unit: string) {
   unitOpen.value = false
-  if (unit === 'auto') { emit('update:modelValue', 'auto'); return }
+  if (unit === 'auto') {
+    model.value = 'auto'
+    return
+  }
   const num = parsed.value.num
-  if (!num || parsed.value.unit === 'token') { emit('update:modelValue', ''); return }
-  emit('update:modelValue', num + unit)
+  if (!num || parsed.value.unit === 'token') {
+    model.value = ''
+    return
+  }
+  model.value = num + unit
 }
 
 function selectToken(name: string) {
-  emit('update:modelValue', `var(--global-size-${name})`)
+  model.value = `var(--global-size-${name})`
   tokenOpen.value = false
 }
 
 function handleKeydown(e: KeyboardEvent) {
   if (parsed.value.unit === 'token') return
-  const input = e.target as HTMLInputElement
-  const num = parseFloat(input.value)
-  if (isNaN(num)) return
-  let step = 1
-  if (e.shiftKey) step = 10
-  if (e.altKey) step = 0.1
-  const unit = parsed.value.unit === 'auto' ? 'px' : parsed.value.unit
-  if (e.key === 'ArrowUp') { e.preventDefault(); emit('update:modelValue', Math.round((num + step) * 100) / 100 + unit) }
-  if (e.key === 'ArrowDown') { e.preventDefault(); emit('update:modelValue', Math.round((num - step) * 100) / 100 + unit) }
+  stepUnitValue(e, parsed.value.unit, (value) => { model.value = value })
 }
-
 </script>
 
 <template>
@@ -148,51 +140,28 @@ function handleKeydown(e: KeyboardEvent) {
       </svg>
     </button>
 
-    <!-- Backdrop -->
-    <div v-if="unitOpen || tokenOpen" class="fixed inset-0 z-40" @click="unitOpen = false; tokenOpen = false" />
+    <PopoverUi v-model:open="unitOpen" align="right" panel-class="min-w-14 p-0.5 rounded-lg">
+      <button
+        v-for="u in allUnits"
+        :key="u"
+        :class="[
+          'flex w-full items-center rounded-md px-2 py-1 text-[10px] font-mono cursor-pointer transition-colors duration-100',
+          (parsed.unit || 'px') === u ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-secondary/10',
+        ]"
+        @click="selectUnit(u)"
+      >{{ u }}</button>
+    </PopoverUi>
 
-    <!-- Unit dropdown -->
-    <Transition
-      enter-active-class="transition duration-100 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-75 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div v-if="unitOpen" class="absolute right-0 top-full mt-1 z-50 min-w-14 rounded-lg border bg-background p-0.5 shadow-lg">
-        <button
-          v-for="u in allUnits"
-          :key="u"
-          :class="[
-            'flex w-full items-center rounded-md px-2 py-1 text-[10px] font-mono cursor-pointer transition-colors duration-100',
-            (parsed.unit || 'px') === u ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-secondary/10',
-          ]"
-          @click="selectUnit(u)"
-        >{{ u }}</button>
-      </div>
-    </Transition>
-
-    <!-- Token dropdown -->
-    <Transition
-      enter-active-class="transition duration-100 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-75 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div v-if="tokenOpen" class="absolute left-0 top-full mt-1 z-50 min-w-28 rounded-xl border bg-background p-1 shadow-lg">
-        <button
-          v-for="[name, value] in sizeTokens"
-          :key="name"
-          class="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @click="selectToken(name)"
-        >
-          <span class="font-mono text-[10px] font-medium">{{ name }}</span>
-          <span class="text-[10px] text-secondary">{{ value }}</span>
-        </button>
-      </div>
-    </Transition>
+    <PopoverUi v-model:open="tokenOpen" align="left" panel-class="min-w-28 p-1">
+      <button
+        v-for="[name, value] in sizeTokens"
+        :key="name"
+        class="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="selectToken(name)"
+      >
+        <span class="font-mono text-[10px] font-medium">{{ name }}</span>
+        <span class="text-[10px] text-secondary">{{ value }}</span>
+      </button>
+    </PopoverUi>
   </div>
 </template>

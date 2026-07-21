@@ -8,16 +8,13 @@ export interface Tab {
 
 const props = defineProps<{
   tabs: Tab[]
-  modelValue?: string
 }>()
 
-const emit = defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+const model = defineModel<string>()
 
 const activeTab = computed({
-  get: () => props.modelValue ?? props.tabs[0]?.key ?? '',
-  set: (value) => emit('update:modelValue', value),
+  get: () => model.value ?? props.tabs[0]?.key ?? '',
+  set: (value) => { model.value = value },
 })
 
 const direction = ref<'left' | 'right'>('right')

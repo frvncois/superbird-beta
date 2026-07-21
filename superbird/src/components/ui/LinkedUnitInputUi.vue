@@ -2,9 +2,8 @@
 import { ref, computed } from 'vue'
 import SizeTokenInputUi from './SizeTokenInputUi.vue'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
-    values: [string, string, string, string]
     labels?: [string, string, string, string]
     units?: string[]
     allowAuto?: boolean
@@ -16,33 +15,33 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
-  'update:values': [values: [string, string, string, string]]
-}>()
+const model = defineModel<[string, string, string, string]>({
+  default: () => ['', '', '', ''],
+})
 
 const linked = ref(isAllSame())
 
 function isAllSame(): boolean {
-  const vals = props.values
+  const vals = model.value
   if (vals.every((v) => !v)) return true
   return vals[0] === vals[1] && vals[1] === vals[2] && vals[2] === vals[3]
 }
 
 function updateValue(index: number, value: string) {
   if (linked.value) {
-    emit('update:values', [value, value, value, value])
+    model.value = [value, value, value, value]
   } else {
-    const next = [...props.values] as [string, string, string, string]
+    const next = [...model.value] as [string, string, string, string]
     next[index] = value
-    emit('update:values', next)
+    model.value = next
   }
 }
 
 function toggleLinked() {
   linked.value = !linked.value
   if (linked.value) {
-    const first = props.values[0] || props.values[1] || props.values[2] || props.values[3] || ''
-    emit('update:values', [first, first, first, first])
+    const first = model.value[0] || model.value[1] || model.value[2] || model.value[3] || ''
+    model.value = [first, first, first, first]
   }
 }
 </script>
@@ -52,7 +51,7 @@ function toggleLinked() {
     <div v-if="linked" class="flex items-center gap-1.5">
       <div class="flex-1">
         <SizeTokenInputUi
-          :model-value="values[0] ?? ''"
+          :model-value="model[0] ?? ''"
           placeholder="0"
           :units="units"
           :allow-auto="allowAuto"
@@ -76,7 +75,7 @@ function toggleLinked() {
         <div v-for="(label, i) in labels" :key="label" class="space-y-0.5">
           <span class="text-[9px] text-secondary/60 font-mono">{{ label }}</span>
           <SizeTokenInputUi
-            :model-value="values[i] ?? ''"
+            :model-value="model[i] ?? ''"
             placeholder="0"
             :units="units"
             :allow-auto="allowAuto"

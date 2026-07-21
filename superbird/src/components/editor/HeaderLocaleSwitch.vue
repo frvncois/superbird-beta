@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useLocalesStore } from '@/stores/locales'
 import { DEFAULT_LOCALES } from '@/constants/canvas'
 import type { Locale } from '@/types/canvas'
+import PopoverUi from '@/components/ui/PopoverUi.vue'
 
 const store = useLocalesStore()
 const isOpen = ref(false)
@@ -32,10 +33,9 @@ function removeLocale(code: string) {
   store.removeLocale(code)
 }
 
-function close() {
-  isOpen.value = false
-  showAdd.value = false
-}
+watch(isOpen, (open) => {
+  if (!open) showAdd.value = false
+})
 </script>
 
 <template>
@@ -51,19 +51,8 @@ function close() {
       <span class="font-mono text-[10px] font-medium">{{ currentLocale?.flag }}</span>
     </button>
 
-    <!-- Backdrop -->
-    <div v-if="isOpen" class="fixed inset-0 z-40" @click="close" />
-
-    <!-- Dropdown -->
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div v-if="isOpen" class="absolute right-0 top-full mt-1.5 z-50 w-52 rounded-2xl border bg-background p-1.5 shadow-lg">
+    <PopoverUi v-model:open="isOpen" align="right" panel-class="w-52 p-1.5 rounded-2xl">
+      <div>
         <!-- Active locales -->
         <div class="space-y-0.5">
           <button
@@ -125,6 +114,6 @@ function close() {
           Add language
         </button>
       </div>
-    </Transition>
+    </PopoverUi>
   </div>
 </template>

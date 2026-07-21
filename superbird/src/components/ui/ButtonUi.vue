@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-type ButtonVariant = 'default' | 'solid' | 'outline' | 'ghost'
+type ButtonVariant = 'default' | 'solid' | 'outline' | 'ghost' | 'danger'
 type ButtonSize = 'default' | 'sm'
 
 const props = withDefaults(
@@ -28,6 +28,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   solid: 'bg-primary text-white hover:bg-primary-hover',
   outline: 'bg-transparent border text-foreground hover:bg-secondary/10',
   ghost: 'bg-transparent text-foreground hover:bg-secondary/10',
+  danger: 'border border-red-border bg-red-bg text-red-fg hover:bg-red-bg/70',
 }
 
 const classes = computed(() => [

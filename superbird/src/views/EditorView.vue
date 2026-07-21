@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, provide, ref } from 'vue'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { GlobalTokensKey } from '@/constants/injectionKeys'
 import EditorLayout from '@/layouts/EditorLayout.vue'
 import EditorHeader from '@/components/editor/EditorHeader.vue'
 import EditorCanvas from '@/components/editor/EditorCanvas.vue'
@@ -16,6 +18,13 @@ import TabsUi from '@/components/ui/TabsUi.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 useKeyboardShortcuts()
+
+// Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches)
+const globalStylesStore = useGlobalStylesStore()
+provide(GlobalTokensKey, computed(() => ({
+  colors: globalStylesStore.globalStyles.colors,
+  sizes: globalStylesStore.globalStyles.sizes,
+})))
 
 const leftTab = ref('layers')
 const rightTab = ref('properties')

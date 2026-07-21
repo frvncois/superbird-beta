@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import { parseUnitValue, stepUnitValue } from '@/lib/unitValue'
+import PopoverUi from './PopoverUi.vue'
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: string
     placeholder?: string
     units?: string[]
     allowAuto?: boolean
@@ -14,9 +15,7 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
-  'update:modelValue': [value: string]
-}>()
+const model = defineModel<string>({ default: '' })
 
 const unitOpen = ref(false)
 
@@ -24,72 +23,31 @@ const allUnits = computed(() =>
   props.allowAuto ? [...props.units, 'auto'] : props.units,
 )
 
-const parsed = computed(() => parseValue(props.modelValue ?? ''))
-
-function parseValue(val: string): { num: string; unit: string } {
-  const trimmed = val.trim()
-  if (!trimmed) return { num: '', unit: 'px' }
-  if (trimmed === 'auto') return { num: '', unit: 'auto' }
-  if (trimmed === 'none') return { num: '', unit: 'none' }
-
-  const match = trimmed.match(/^(-?[\d.]+)\s*(.*)$/)
-  if (match) {
-    return { num: match[1]!, unit: match[2] || 'px' }
-  }
-  return { num: trimmed, unit: 'px' }
-}
+const parsed = computed(() => parseUnitValue(model.value, ['auto', 'none']))
 
 function handleNumInput(e: Event) {
   const val = (e.target as HTMLInputElement).value
   if (!val) {
-    emit('update:modelValue', '')
+    model.value = ''
     return
   }
   const unit = parsed.value.unit
-  if (unit === 'auto') {
-    emit('update:modelValue', val + 'px')
-  } else {
-    emit('update:modelValue', val + unit)
-  }
+  model.value = unit === 'auto' ? val + 'px' : val + unit
 }
 
 function selectUnit(unit: string) {
   unitOpen.value = false
   if (unit === 'auto') {
-    emit('update:modelValue', 'auto')
+    model.value = 'auto'
     return
   }
   const num = parsed.value.num
-  if (!num) {
-    emit('update:modelValue', '')
-    return
-  }
-  emit('update:modelValue', num + unit)
+  model.value = num ? num + unit : ''
 }
 
 function handleKeydown(e: KeyboardEvent) {
-  const input = e.target as HTMLInputElement
-  const num = parseFloat(input.value)
-  if (isNaN(num)) return
-
-  let step = 1
-  if (e.shiftKey) step = 10
-  if (e.altKey) step = 0.1
-
-  const unit = parsed.value.unit === 'auto' ? 'px' : parsed.value.unit
-
-  if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    const next = Math.round((num + step) * 100) / 100
-    emit('update:modelValue', next + unit)
-  }
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    const next = Math.round((num - step) * 100) / 100
-    emit('update:modelValue', next + unit)
-  }
+  stepUnitValue(e, parsed.value.unit, (value) => { model.value = value })
 }
-
 </script>
 
 <template>
@@ -115,36 +73,20 @@ function handleKeydown(e: KeyboardEvent) {
       </svg>
     </button>
 
-    <!-- Backdrop -->
-    <div v-if="unitOpen" class="fixed inset-0 z-40" @click="unitOpen = false" />
-
-    <!-- Dropdown -->
-    <Transition
-      enter-active-class="transition duration-100 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-75 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div
-        v-if="unitOpen"
-        class="absolute right-0 top-full mt-1 z-50 min-w-14 rounded-lg border bg-background p-0.5 shadow-lg"
+    <PopoverUi v-model:open="unitOpen" align="right" panel-class="min-w-14 p-0.5 rounded-lg">
+      <button
+        v-for="u in allUnits"
+        :key="u"
+        :class="[
+          'flex w-full items-center rounded-md px-2 py-1 text-[10px] font-mono cursor-pointer transition-colors duration-100',
+          (parsed.unit || 'px') === u
+            ? 'bg-primary/10 text-primary font-medium'
+            : 'text-foreground hover:bg-secondary/10',
+        ]"
+        @click="selectUnit(u)"
       >
-        <button
-          v-for="u in allUnits"
-          :key="u"
-          :class="[
-            'flex w-full items-center rounded-md px-2 py-1 text-[10px] font-mono cursor-pointer transition-colors duration-100',
-            (parsed.unit || 'px') === u
-              ? 'bg-primary/10 text-primary font-medium'
-              : 'text-foreground hover:bg-secondary/10',
-          ]"
-          @click="selectUnit(u)"
-        >
-          {{ u }}
-        </button>
-      </div>
-    </Transition>
+        {{ u }}
+      </button>
+    </PopoverUi>
   </div>
 </template>

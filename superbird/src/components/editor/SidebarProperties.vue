@@ -431,16 +431,16 @@ const cursorOptions = [
             <div class="space-y-1">
               <span class="text-[10px] text-secondary">Padding</span>
               <LinkedUnitInputUi
-                :values="getLinkedValues(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'])"
-                @update:values="updateLinkedStyles(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'], $event)"
+                :model-value="getLinkedValues(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'])"
+                @update:model-value="updateLinkedStyles(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'], $event)"
               />
             </div>
             <div class="space-y-1">
               <span class="text-[10px] text-secondary">Margin</span>
               <LinkedUnitInputUi
-                :values="getLinkedValues(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'])"
+                :model-value="getLinkedValues(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'])"
                 :allow-auto="true"
-                @update:values="updateLinkedStyles(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'], $event)"
+                @update:model-value="updateLinkedStyles(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'], $event)"
               />
             </div>
           </div>
@@ -580,10 +580,10 @@ const cursorOptions = [
             <div class="space-y-1 pt-1">
               <span class="text-[10px] text-secondary">Radius</span>
               <LinkedUnitInputUi
-                :values="getLinkedValues(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
+                :model-value="getLinkedValues(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
                 :labels="['TL', 'TR', 'BR', 'BL']"
                 :units="['px', '%', 'em', 'rem']"
-                @update:values="updateLinkedStyles(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'], $event)"
+                @update:model-value="updateLinkedStyles(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'], $event)"
               />
             </div>
           </div>

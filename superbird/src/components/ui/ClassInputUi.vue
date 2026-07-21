@@ -2,19 +2,20 @@
 import { ref, computed } from 'vue'
 import { STYLE_STATES } from '@/constants/canvas'
 import type { StyleState } from '@/types/canvas'
+import PopoverUi from './PopoverUi.vue'
 
 const props = defineProps<{
   classes: string[]
   activeClass: string | null
-  activeState: StyleState
   allClassNames: string[]
 }>()
+
+const activeState = defineModel<StyleState>('activeState', { default: 'default' })
 
 const emit = defineEmits<{
   add: [name: string]
   remove: [name: string]
   select: [name: string]
-  'update:activeState': [state: StyleState]
 }>()
 
 const query = ref('')
@@ -25,7 +26,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const showDropdown = computed(() => isFocused.value && query.value.length > 0)
 
 const currentStateLabel = computed(() =>
-  STYLE_STATES.find((s) => s.key === props.activeState)?.label ?? 'State',
+  STYLE_STATES.find((s) => s.key === activeState.value)?.label ?? 'State',
 )
 
 const suggestions = computed(() => {
@@ -77,7 +78,7 @@ function toggleState(e: MouseEvent) {
 }
 
 function selectState(state: StyleState) {
-  emit('update:activeState', state)
+  activeState.value = state
   stateOpen.value = false
 }
 </script>
@@ -151,37 +152,21 @@ function selectState(state: StyleState) {
           </svg>
         </button>
 
-        <!-- State backdrop -->
-        <div v-if="stateOpen" class="fixed inset-0 z-40" @click="stateOpen = false" />
-
-        <!-- State dropdown -->
-        <Transition
-          enter-active-class="transition duration-150 ease-out"
-          enter-from-class="opacity-0 translate-y-1"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-100 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-1"
-        >
-          <div
-            v-if="stateOpen"
-            class="absolute left-0 top-full mt-1 z-50 w-28 rounded-xl border bg-background p-1 shadow-lg"
+        <PopoverUi v-model:open="stateOpen" align="left" panel-class="w-28 p-1">
+          <button
+            v-for="state in STYLE_STATES"
+            :key="state.key"
+            :class="[
+              'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-mono cursor-pointer transition-colors duration-100',
+              activeState === state.key
+                ? 'bg-primary/10 text-primary font-medium'
+                : 'text-foreground hover:bg-secondary/10',
+            ]"
+            @click="selectState(state.key)"
           >
-            <button
-              v-for="state in STYLE_STATES"
-              :key="state.key"
-              :class="[
-                'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-mono cursor-pointer transition-colors duration-100',
-                activeState === state.key
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-foreground hover:bg-secondary/10',
-              ]"
-              @click="selectState(state.key)"
-            >
-              {{ state.label }}
-            </button>
-          </div>
-        </Transition>
+            {{ state.label }}
+          </button>
+        </PopoverUi>
       </div>
     </div>
 

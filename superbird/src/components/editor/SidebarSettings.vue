@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { COLLECTION_SOURCES, getCollectionSource, type NodeVisibility, type NodeLink, type NodeAccessibility, type NodeAdvanced } from '@/types/canvas'
+import { COLLECTION_SOURCES, getCollectionSource } from '@/constants/canvas'
+import type { NodeVisibility, NodeLink, NodeAccessibility, NodeAdvanced } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'

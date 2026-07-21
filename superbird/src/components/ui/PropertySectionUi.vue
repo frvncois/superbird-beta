@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { STYLE_STATES, type StyleState } from '@/types/canvas'
+import { STYLE_STATES } from '@/constants/canvas'
+import type { StyleState } from '@/types/canvas'
 
 const props = withDefaults(
   defineProps<{

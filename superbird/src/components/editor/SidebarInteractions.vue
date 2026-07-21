@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { TRIGGER_TYPES, TARGET_TYPES, ACTION_PROPERTIES, EASING_OPTIONS, type TriggerType, type Interaction, type InteractionStep, type ActionProperty } from '@/types/canvas'
+import { TRIGGER_TYPES, TARGET_TYPES, ACTION_PROPERTIES, EASING_OPTIONS } from '@/constants/canvas'
+import type { TriggerType, Interaction, InteractionStep, ActionProperty } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'

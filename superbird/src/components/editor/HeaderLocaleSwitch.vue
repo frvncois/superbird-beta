@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { DEFAULT_LOCALES, type Locale } from '@/types/canvas'
+import { DEFAULT_LOCALES } from '@/constants/canvas'
+import type { Locale } from '@/types/canvas'
 
 const store = useCanvasStore()
 const isOpen = ref(false)

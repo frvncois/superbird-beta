@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { PAGE_TYPE_CONFIGS, type PageType } from '@/types/canvas'
+import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
+import type { PageType } from '@/types/canvas'
 
 const store = useCanvasStore()
 const isOpen = ref(false)

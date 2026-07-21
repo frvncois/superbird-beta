@@ -1,6 +1,13 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { createNode, createPage, createStyleClassStyles, createDefaultSiteSettings, generateComponentId, generateInteractionId, generateStepId, generateRedirectId, generateMediaId, generateFolderId, getMediaTypeFromMime, getDynamicFieldsForPageType, fieldTypeToNodeType, fieldTypeToTag, BREAKPOINTS, PAGE_TYPE_CONFIGS, CONTAINER_TYPES, FORM_CHILD_TYPES, type Breakpoint, type CanvasNode, type DynamicField, type GlobalStyles, type HeadingStyle, type Interaction, type InteractionAction, type InteractionStep, type InteractionTarget, type Locale, type MediaFolder, type MediaItem, type MediaType, type NodeType, type Page, type PageType, type Redirect, type SiteSettings, type StyleClass, type StyleState, type TriggerType, type TypographySettings, type UserComponent } from '@/types/canvas'
+import { createNode, createPage, createStyleClassStyles, deepCloneNode } from '@/lib/nodeFactory'
+import { createDefaultSiteSettings } from '@/lib/siteDefaults'
+import { generateComponentId, generateInteractionId, generateStepId, generateRedirectId, generateMediaId, generateFolderId } from '@/lib/ids'
+import { getMediaTypeFromMime } from '@/lib/media'
+import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree, clearComponentIds, collectDynamicFields, countInstances, detachAllInstances, syncInstancesInTree } from '@/lib/tree'
+import { resolveStyles as resolveNodeStyles } from '@/lib/styles'
+import { BREAKPOINTS, CONTAINER_TYPES, FORM_CHILD_TYPES, getDynamicFieldsForPageType, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
+import type { Breakpoint, CanvasNode, DynamicField, GlobalStyles, HeadingStyle, Interaction, InteractionAction, InteractionStep, InteractionTarget, Locale, MediaFolder, MediaItem, NodeType, Page, PageType, SiteSettings, StyleClass, StyleState, TriggerType, TypographySettings, UserComponent } from '@/types/canvas'
 import { demoPages, demoStyleClasses, demoGlobalStyles, demoUserComponents } from '@/data/demo'
 
 export const useCanvasStore = defineStore('canvas', () => {
@@ -284,14 +291,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
-  function renameClassInTree(node: CanvasNode, oldName: string, newName: string) {
-    const idx = node.classes.indexOf(oldName)
-    if (idx !== -1) node.classes[idx] = newName
-    for (const child of node.children) {
-      renameClassInTree(child, oldName, newName)
-    }
-  }
-
   function deleteStyleClass(name: string) {
     delete styleClasses.value[name]
     // Remove from all nodes
@@ -303,13 +302,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
     if (activeClassName.value === name) {
       activeClassName.value = null
-    }
-  }
-
-  function removeClassFromTree(node: CanvasNode, name: string) {
-    node.classes = node.classes.filter((c) => c !== name)
-    for (const child of node.children) {
-      removeClassFromTree(child, name)
     }
   }
 
@@ -353,32 +345,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   function resolveStyles(node: CanvasNode, state: StyleState = 'default'): Record<string, string> {
-    const merged: Record<string, string> = {}
-    const bp = activeBreakpoint.value
-
-    // Breakpoint cascade order: desktop is base, tablet overrides, mobile overrides tablet
-    const cascade: Breakpoint[] =
-      bp === 'mobile' ? ['desktop', 'tablet', 'mobile'] :
-      bp === 'tablet' ? ['desktop', 'tablet'] :
-      ['desktop']
-
-    for (const className of node.classes) {
-      const cls = styleClasses.value[className]
-      if (!cls) continue
-      // Apply each breakpoint in cascade order
-      for (const b of cascade) {
-        const bpStyles = cls.styles[b]
-        if (!bpStyles) continue
-        // Always apply default state first
-        Object.assign(merged, bpStyles.default)
-        // Layer the active state on top
-        if (state !== 'default' && bpStyles[state]) {
-          Object.assign(merged, bpStyles[state])
-        }
-      }
-    }
-    Object.assign(merged, node.styles)
-    return merged
+    return resolveNodeStyles(node, styleClasses.value, activeBreakpoint.value, state)
   }
 
   // --- Selection & Drag ---
@@ -392,26 +359,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     if (selectedNodeId.value === bodyNode.value.id) return bodyNode.value
     return findNode(bodyNode.value.children, selectedNodeId.value)
   })
-
-  // --- Lookups ---
-
-  function findNode(tree: CanvasNode[], id: string): CanvasNode | null {
-    for (const node of tree) {
-      if (node.id === id) return node
-      const found = findNode(node.children, id)
-      if (found) return found
-    }
-    return null
-  }
-
-  function findParent(tree: CanvasNode[], id: string): { parent: CanvasNode[]; index: number } | null {
-    for (let i = 0; i < tree.length; i++) {
-      if (tree[i]!.id === id) return { parent: tree, index: i }
-      const found = findParent(tree[i]!.children, id)
-      if (found) return found
-    }
-    return null
-  }
 
   // --- Node Mutations ---
 
@@ -567,18 +514,6 @@ export const useCanvasStore = defineStore('canvas', () => {
   const clipboardNode = ref<CanvasNode | null>(null)
   const clipboardClasses = ref<string[]>([])
 
-  function deepCloneNode(node: CanvasNode): CanvasNode {
-    return createNode(node.type, {
-      tag: node.tag,
-      label: node.label,
-      content: node.content,
-      classes: [...node.classes],
-      children: node.children.map(deepCloneNode),
-      styles: { ...node.styles },
-      props: { ...node.props },
-    })
-  }
-
   function copyNode(id: string) {
     const body = activePage.value.body
     const node = id === body.id ? body : findNode(body.children, id)
@@ -703,15 +638,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     return findParentNode(body, id)?.id ?? null
   }
 
-  function findParentNode(parent: CanvasNode, id: string): CanvasNode | null {
-    for (const child of parent.children) {
-      if (child.id === id) return parent
-      const found = findParentNode(child, id)
-      if (found) return found
-    }
-    return null
-  }
-
   // --- User Components ---
 
   const userComponents = ref<Record<string, UserComponent>>(demoUserComponents)
@@ -736,14 +662,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     node.label = name
 
     return comp
-  }
-
-  function clearComponentIds(node: CanvasNode) {
-    delete node.componentId
-    delete node.contentOverrides
-    for (const child of node.children) {
-      clearComponentIds(child)
-    }
   }
 
   function instantiateComponent(compId: string): CanvasNode | null {
@@ -795,52 +713,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
-  function syncInstancesInTree(node: CanvasNode, comp: UserComponent) {
-    if (node.componentId === comp.id && node.type === 'component') {
-      // Preserve content overrides, sync structure and classes
-      const overrides = collectContentOverrides(node)
-      const synced = deepCloneNode(comp.tree)
-      applyContentOverrides(synced, overrides)
-      node.children = synced.children
-      node.classes = [...synced.classes]
-      node.tag = synced.tag
-      node.styles = { ...synced.styles }
-      node.props = { ...synced.props }
-      node.label = comp.name
-      // Don't recurse into component children — they're managed by the definition
-      return
-    }
-    for (const child of node.children) {
-      syncInstancesInTree(child, comp)
-    }
-  }
-
-  function collectContentOverrides(node: CanvasNode): Record<string, string> {
-    const overrides: Record<string, string> = {}
-    if (node.contentOverrides) {
-      Object.assign(overrides, node.contentOverrides)
-    }
-    collectContentFromTree(node, overrides)
-    return overrides
-  }
-
-  function collectContentFromTree(node: CanvasNode, overrides: Record<string, string>) {
-    if (node.content !== undefined) {
-      overrides[node.id] = node.content
-    }
-    for (const child of node.children) {
-      collectContentFromTree(child, overrides)
-    }
-  }
-
-  function applyContentOverrides(node: CanvasNode, overrides: Record<string, string>) {
-    // Content overrides are applied by position index since IDs change on clone
-    // For simplicity, we let instances keep their own content via contentOverrides map
-    for (const child of node.children) {
-      applyContentOverrides(child, overrides)
-    }
-  }
-
   function updateComponentDefinition(compId: string, updatedNode: CanvasNode) {
     const comp = userComponents.value[compId]
     if (!comp) return
@@ -867,29 +739,10 @@ export const useCanvasStore = defineStore('canvas', () => {
     delete userComponents.value[compId]
   }
 
-  function detachAllInstances(node: CanvasNode, compId: string) {
-    if (node.componentId === compId && node.type === 'component') {
-      node.type = 'container'
-      delete node.componentId
-      delete node.contentOverrides
-    }
-    for (const child of node.children) {
-      detachAllInstances(child, compId)
-    }
-  }
-
   function getComponentInstanceCount(compId: string): number {
     let count = 0
     for (const page of pages.value) {
       count += countInstances(page.body, compId)
-    }
-    return count
-  }
-
-  function countInstances(node: CanvasNode, compId: string): number {
-    let count = node.componentId === compId ? 1 : 0
-    for (const child of node.children) {
-      count += countInstances(child, compId)
     }
     return count
   }
@@ -904,13 +757,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     const used = new Set<string>()
     collectDynamicFields(activePage.value.body, used)
     return used
-  }
-
-  function collectDynamicFields(node: CanvasNode, used: Set<string>) {
-    if (node.dynamicField) used.add(node.dynamicField)
-    for (const child of node.children) {
-      collectDynamicFields(child, used)
-    }
   }
 
   function bindDynamicField(nodeId: string, fieldKey: string) {

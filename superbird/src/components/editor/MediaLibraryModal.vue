@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { formatFileSize, type MediaType } from '@/types/canvas'
+import { formatFileSize } from '@/lib/media'
+import type { MediaType } from '@/types/canvas'
 
 const store = useCanvasStore()
 

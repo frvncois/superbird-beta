@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { CONTAINER_TYPES } from '@/constants/canvas'
 import { useHistory } from './useHistory'
 
 export function useKeyboardShortcuts() {
@@ -61,7 +62,7 @@ export function useKeyboardShortcuts() {
     if (isMeta && e.key === 'v') {
       if (!store.clipboardNode) return
       e.preventDefault()
-      const isContainer = (['body', 'container', 'section', 'columns', 'column', 'div', 'form', 'link-block', 'list', 'blockquote', 'component'] as string[]).includes(selectedNode.type)
+      const isContainer = CONTAINER_TYPES.includes(selectedNode.type)
       store.pasteNode(selectedId, isContainer ? 'inside' : 'after')
       return
     }

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, toRef } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES, type CanvasNode } from '@/types/canvas'
+import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import type { CanvasNode } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu, buildCanvasActions } from '@/composables/useContextMenu'
 import { useInteractionRunner } from '@/composables/useInteractionRunner'

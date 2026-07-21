@@ -1,4 +1,6 @@
-import type { GlobalStyles, Page, StyleClass, UserComponent } from '@/types/canvas'
+import type { CanvasNode, GlobalStyles, Interaction, NodeType, Page, StyleClass, UserComponent } from '@/types/canvas'
+import { createNode } from '@/lib/nodeFactory'
+import { generateNodeId, generateInteractionId, generateStepId } from '@/lib/ids'
 
 // Helper to create breakpoint-aware class styles
 function cls(
@@ -178,25 +180,8 @@ export const demoStyleClasses: Record<string, StyleClass> = {
 
 // --- Helper to create nodes ---
 
-let _nid = 100
-function n(type: string, label: string, opts: any = {}): any {
-  return {
-    id: `demo-${++_nid}`,
-    type,
-    tag: opts.tag ?? (type === 'heading' ? 'h2' : type === 'text' ? 'p' : type === 'button' ? 'button' : type === 'image' ? 'img' : type === 'section' ? 'section' : 'div'),
-    label,
-    content: opts.content,
-    dynamicField: opts.dynamicField,
-    componentId: opts.componentId,
-    classes: opts.classes ?? [],
-    children: opts.children ?? [],
-    styles: opts.styles ?? {},
-    props: opts.props ?? {},
-    interactions: opts.interactions,
-    htmlId: opts.htmlId,
-    visibility: opts.visibility,
-    link: opts.link,
-  }
+function n(type: NodeType, label: string, opts: Partial<Omit<CanvasNode, 'id' | 'type'>> = {}): CanvasNode {
+  return createNode(type, { ...opts, label })
 }
 
 // --- User Components ---
@@ -319,11 +304,11 @@ export const demoUserComponents: Record<string, UserComponent> = {
 }
 
 // Shorthand for component instances
-function comp(compId: string, label: string, overrides: any = {}): any {
+function comp(compId: string, label: string, overrides: Partial<Omit<CanvasNode, 'id' | 'type'>> = {}): CanvasNode {
   const tree = demoUserComponents[compId]!.tree
   return {
-    ...JSON.parse(JSON.stringify(tree)),
-    id: `demo-${++_nid}`,
+    ...(JSON.parse(JSON.stringify(tree)) as CanvasNode),
+    id: generateNodeId(),
     type: 'component',
     componentId: compId,
     label,
@@ -333,12 +318,12 @@ function comp(compId: string, label: string, overrides: any = {}): any {
 
 // --- Interactions ---
 
-const fadeInUp = (delay = 0): any => ({
-  id: `ix-demo-${++_nid}`,
+const fadeInUp = (delay = 0): Interaction => ({
+  id: generateInteractionId(),
   name: 'Fade In Up',
   trigger: 'scroll-into-view',
   steps: [{
-    id: `step-demo-${++_nid}`,
+    id: generateStepId(),
     target: { type: 'self' },
     delay,
     duration: 600,
@@ -351,12 +336,12 @@ const fadeInUp = (delay = 0): any => ({
   options: {},
 })
 
-const hoverScale: any = {
-  id: `ix-demo-${++_nid}`,
+const hoverScale: Interaction = {
+  id: generateInteractionId(),
   name: 'Hover Scale',
   trigger: 'hover',
   steps: [{
-    id: `step-demo-${++_nid}`,
+    id: generateStepId(),
     target: { type: 'self' },
     delay: 0,
     duration: 250,
@@ -369,12 +354,12 @@ const hoverScale: any = {
   options: { resetOnExit: true },
 }
 
-const heroEntrance: any = {
-  id: `ix-demo-${++_nid}`,
+const heroEntrance: Interaction = {
+  id: generateInteractionId(),
   name: 'Hero Entrance',
   trigger: 'page-load',
   steps: [
-    { id: `step-demo-${++_nid}`, target: { type: 'self' }, delay: 0, duration: 800, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', actions: [
+    { id: generateStepId(), target: { type: 'self' }, delay: 0, duration: 800, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', actions: [
       { property: 'opacity', from: '0', to: '1' },
       { property: 'translateY', from: '40px', to: '0px' },
     ]},
@@ -382,12 +367,12 @@ const heroEntrance: any = {
   options: {},
 }
 
-const staggerChildren: any = {
-  id: `ix-demo-${++_nid}`,
+const staggerChildren: Interaction = {
+  id: generateInteractionId(),
   name: 'Stagger Children',
   trigger: 'scroll-into-view',
   steps: [{
-    id: `step-demo-${++_nid}`,
+    id: generateStepId(),
     target: { type: 'children' },
     delay: 0,
     duration: 500,

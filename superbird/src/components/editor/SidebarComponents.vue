@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { getPageTypeConfig, type DynamicField } from '@/types/canvas'
+import { getPageTypeConfig } from '@/constants/canvas'
+import type { DynamicField } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'

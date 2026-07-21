@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { BREAKPOINTS, type Breakpoint } from '@/types/canvas'
+import { BREAKPOINTS } from '@/constants/canvas'
+import type { Breakpoint } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'

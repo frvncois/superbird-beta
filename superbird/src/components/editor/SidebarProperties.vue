@@ -10,7 +10,8 @@ import SelectUi from '@/components/ui/SelectUi.vue'
 import ClassInputUi from '@/components/ui/ClassInputUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import DragLabelUi from '@/components/ui/DragLabelUi.vue'
-import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES, type StyleState } from '@/types/canvas'
+import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import type { StyleState } from '@/types/canvas'
 
 const store = useCanvasStore()
 const node = computed(() => store.selectedNode)

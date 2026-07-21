@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useCanvasStore } from '@/stores/canvas'
-import { BREAKPOINTS, type Breakpoint } from '@/types/canvas'
+import { BREAKPOINTS } from '@/constants/canvas'
+import type { Breakpoint } from '@/types/canvas'
 
 const store = useCanvasStore()
 </script>

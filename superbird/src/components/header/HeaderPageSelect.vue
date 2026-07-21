@@ -7,13 +7,11 @@ import type { PageType } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
-import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
 
 const isOpen = ref(false)
-const tab = ref('pages')
 
 // add page
 const isAdding = ref(false)
@@ -134,134 +132,117 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
     </button>
 
     <PopoverUi v-model:open="isOpen" align="left" panel-class="w-64 rounded-2xl p-1.5">
-      <!-- Pages | Collections switch -->
-      <SegmentedControlUi
-        v-model="tab"
-        :options="[{ value: 'pages', label: 'Pages' }, { value: 'collections', label: 'Collections' }]"
-        grow
-        class="mb-1.5"
-      />
-
-      <!-- Pages tab -->
-      <div v-if="tab === 'pages'">
-        <template v-for="(section, sIdx) in sections" :key="section.config.key">
-          <div v-if="sIdx > 0" class="my-1 border-t border-foreground/8" />
-          <div class="px-2.5 pt-1.5 pb-1">
-            <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ section.config.plural }}</span>
-          </div>
-          <button
-            v-for="page in section.pages"
-            :key="page.id"
-            :class="[
-              'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
-              page.id === store.activePageId && !store.activeEntry ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
-            ]"
-            @click="selectPage(page.id)"
-          >
-            <span class="truncate">{{ page.name }}</span>
-            <span class="ml-auto text-[10px] text-secondary/40 font-mono">/{{ page.slug }}</span>
-          </button>
-        </template>
-
-        <div class="my-1 border-t border-foreground/8" />
-        <template v-if="isAdding">
-          <div class="flex items-center gap-1.5 px-1 py-1">
-            <input
-              ref="inputRef"
-              v-model="newPageName"
-              placeholder="Page name"
-              class="h-7 flex-1 rounded-lg border border-foreground/15 bg-transparent px-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-none"
-              @keydown="handleKeydown($event, confirmAdd)"
-            />
-            <ButtonUi size="sm" @click="confirmAdd">Add</ButtonUi>
-          </div>
-        </template>
-        <button
-          v-else
-          class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
-          @click="startAdding"
-        >
-          <IconUi name="plus" size="size-3" /> New page
-        </button>
-      </div>
-
-      <!-- Collections tab -->
-      <div v-else>
+      <!-- Pages (grouped by type) -->
+      <template v-for="section in sections" :key="section.config.key">
         <div class="px-2.5 pt-1.5 pb-1">
-          <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">Collections</span>
+          <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ section.config.plural }}</span>
         </div>
-
-        <div v-if="collections.collections.length === 0" class="px-3 py-2 text-[11px] text-secondary/60">
-          No collections yet.
-        </div>
-
-        <div
-          v-for="col in collections.collections"
-          :key="col.id"
-          class="relative"
-          @mouseenter="hovered = col.id"
-          @mouseleave="hovered = null"
-        >
-          <button
-            :class="[
-              'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
-              store.activeCollection?.id === col.id ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
-            ]"
-            @click="openCollection(col.id)"
-          >
-            <span class="truncate">{{ col.name }}</span>
-            <span class="ml-auto text-[10px] text-secondary/40 font-mono">{{ collections.entriesByCollection(col.id).length }}</span>
-            <IconUi name="chevron-right" size="size-3" class="text-secondary/40" />
-          </button>
-
-          <!-- Item flyout -->
-          <div v-if="hovered === col.id" class="absolute left-full top-0 z-10 pl-1">
-            <div class="w-56 rounded-xl border bg-background p-1 shadow-lg">
-              <div class="px-2.5 pt-1 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ col.plural }}</div>
-              <button
-                v-for="entry in collections.entriesByCollection(col.id)"
-                :key="entry.id"
-                :class="[
-                  'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer transition-colors duration-100',
-                  store.activeEntry?.id === entry.id ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
-                ]"
-                @click="openEntry(entry.id)"
-              >
-                <span class="truncate">{{ entry.title }}</span>
-                <span v-if="entry.status === 'draft'" class="ml-auto rounded bg-muted-bg px-1 py-px text-[8px] font-mono uppercase text-muted-fg">draft</span>
-              </button>
-              <div class="my-1 border-t border-foreground/8" />
-              <button
-                class="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
-                @click="newItem(col.id)"
-              >
-                <IconUi name="plus" size="size-3" /> New item
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="my-1 border-t border-foreground/8" />
-        <template v-if="isAddingCollection">
-          <div class="flex items-center gap-1.5 px-1 py-1">
-            <input
-              ref="collectionInputRef"
-              v-model="newCollectionName"
-              placeholder="Collection name"
-              class="h-7 flex-1 rounded-lg border border-foreground/15 bg-transparent px-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-none"
-              @keydown="handleKeydown($event, confirmAddCollection)"
-            />
-            <ButtonUi size="sm" @click="confirmAddCollection">Add</ButtonUi>
-          </div>
-        </template>
         <button
-          v-else
-          class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
-          @click="startAddingCollection"
+          v-for="page in section.pages"
+          :key="page.id"
+          :class="[
+            'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+            page.id === store.activePageId && !store.activeEntry ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
+          ]"
+          @click="selectPage(page.id)"
         >
-          <IconUi name="plus" size="size-3" /> New collection
+          <span class="truncate">{{ page.name }}</span>
+          <span class="ml-auto text-[10px] text-secondary/40 font-mono">/{{ page.slug }}</span>
         </button>
+      </template>
+
+      <template v-if="isAdding">
+        <div class="flex items-center gap-1.5 px-1 py-1">
+          <input
+            ref="inputRef"
+            v-model="newPageName"
+            placeholder="Page name"
+            class="h-7 flex-1 rounded-lg border border-foreground/15 bg-transparent px-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-none"
+            @keydown="handleKeydown($event, confirmAdd)"
+          />
+          <ButtonUi size="sm" @click="confirmAdd">Add</ButtonUi>
+        </div>
+      </template>
+      <button
+        v-else
+        class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+        @click="startAdding"
+      >
+        <IconUi name="plus" size="size-3" /> New page
+      </button>
+
+      <div class="my-1 border-t border-foreground/8" />
+
+      <!-- Collections -->
+      <div class="px-2.5 pt-1.5 pb-1">
+        <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">Collections</span>
       </div>
+
+      <div
+        v-for="col in collections.collections"
+        :key="col.id"
+        class="relative"
+        @mouseenter="hovered = col.id"
+        @mouseleave="hovered = null"
+      >
+        <button
+          :class="[
+            'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+            store.activeCollection?.id === col.id ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
+          ]"
+          @click="openCollection(col.id)"
+        >
+          <span class="truncate">{{ col.name }}</span>
+          <span class="ml-auto text-[10px] text-secondary/40 font-mono">{{ collections.entriesByCollection(col.id).length }}</span>
+          <IconUi name="chevron-right" size="size-3" class="text-secondary/40" />
+        </button>
+
+        <!-- Item flyout -->
+        <div v-if="hovered === col.id" class="absolute left-full top-0 z-10 pl-1">
+          <div class="w-56 rounded-xl border bg-background p-1 shadow-lg">
+            <div class="px-2.5 pt-1 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ col.plural }}</div>
+            <button
+              v-for="entry in collections.entriesByCollection(col.id)"
+              :key="entry.id"
+              :class="[
+                'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+                store.activeEntry?.id === entry.id ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
+              ]"
+              @click="openEntry(entry.id)"
+            >
+              <span class="truncate">{{ entry.title }}</span>
+              <span v-if="entry.status === 'draft'" class="ml-auto rounded bg-muted-bg px-1 py-px text-[8px] font-mono uppercase text-muted-fg">draft</span>
+            </button>
+            <div class="my-1 border-t border-foreground/8" />
+            <button
+              class="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+              @click="newItem(col.id)"
+            >
+              <IconUi name="plus" size="size-3" /> New item
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <template v-if="isAddingCollection">
+        <div class="flex items-center gap-1.5 px-1 py-1">
+          <input
+            ref="collectionInputRef"
+            v-model="newCollectionName"
+            placeholder="Collection name"
+            class="h-7 flex-1 rounded-lg border border-foreground/15 bg-transparent px-2 text-xs text-foreground placeholder:text-foreground/40 focus:border-foreground/40 outline-none"
+            @keydown="handleKeydown($event, confirmAddCollection)"
+          />
+          <ButtonUi size="sm" @click="confirmAddCollection">Add</ButtonUi>
+        </div>
+      </template>
+      <button
+        v-else
+        class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+        @click="startAddingCollection"
+      >
+        <IconUi name="plus" size="size-3" /> New collection
+      </button>
     </PopoverUi>
   </div>
 </template>

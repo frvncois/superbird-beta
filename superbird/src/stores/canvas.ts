@@ -1,13 +1,14 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
-import { generateInteractionId, generateStepId } from '@/lib/ids'
+import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
 import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree, collectDynamicFields } from '@/lib/tree'
 import { CONTAINER_TYPES, FORM_CHILD_TYPES, getDynamicFieldsForPageType, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
+import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { CanvasNode, DynamicField, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
+import type { CanvasNode, DynamicField, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -17,6 +18,7 @@ import type { CanvasNode, DynamicField, Interaction, InteractionAction, Interact
 export const useCanvasStore = defineStore('canvas', () => {
   const globalStylesStore = useGlobalStylesStore()
   const localesStore = useLocalesStore()
+  const collectionsStore = useCollectionsStore()
 
   // --- Pages ---
 
@@ -45,6 +47,36 @@ export const useCanvasStore = defineStore('canvas', () => {
   function setActivePage(pageId: string) {
     activePageId.value = pageId
     selectedNodeId.value = null
+    activeEntryId.value = null
+  }
+
+  // --- Collection / entry context ---
+  // When a collection template is open, the canvas edits that template (Page
+  // with pageType 'collection'). An active entry supplies field content as
+  // preview data; editing a field-bound element writes to the entry.
+
+  const activeEntryId = ref<string | null>(null)
+  const activeEntry = computed(() => collectionsStore.entryById(activeEntryId.value))
+  const activeCollection = computed(() =>
+    collectionsStore.collectionByTemplatePage(activePageId.value) ?? null,
+  )
+  const isCollectionTemplate = computed(() => activePage.value.pageType === 'collection')
+
+  // Open a collection's template with no entry (fields show placeholders).
+  function openCollection(collectionId: string) {
+    const collection = collectionsStore.collectionById(collectionId)
+    if (!collection) return
+    setActivePage(collection.templatePageId)
+  }
+
+  // Open a specific entry: its collection's template + the entry as preview.
+  function openEntry(entryId: string) {
+    const entry = collectionsStore.entryById(entryId)
+    if (!entry) return
+    const collection = collectionsStore.collectionById(entry.collectionId)
+    if (!collection) return
+    setActivePage(collection.templatePageId)
+    activeEntryId.value = entryId
   }
 
   function addPage(name: string, slug?: string, pageType: PageType = 'page') {
@@ -490,6 +522,27 @@ export const useCanvasStore = defineStore('canvas', () => {
     return node
   }
 
+  // Drop a typed dynamic field from the Elements tab onto a collection
+  // template: creates a NEW field (fresh key) and places its bound element.
+  const FIELD_LABELS: Record<FieldType, string> = {
+    text: 'Text field',
+    richtext: 'Rich text field',
+    image: 'Image field',
+    number: 'Number field',
+    date: 'Date field',
+  }
+
+  function addDynamicField(fieldType: FieldType, targetId?: string, position?: 'before' | 'after' | 'inside') {
+    const label = FIELD_LABELS[fieldType]
+    return addNode(fieldTypeToNodeType(fieldType), {
+      tag: fieldTypeToTag(fieldType),
+      label,
+      content: label,
+      dynamicField: generateFieldId(),
+      props: { fieldType },
+    }, targetId, position)
+  }
+
   // --- Interactions ---
 
   function getNodeInteractions(nodeId: string): Interaction[] {
@@ -593,6 +646,10 @@ export const useCanvasStore = defineStore('canvas', () => {
   // --- Localized content ---
 
   function getNodeContent(node: CanvasNode): string {
+    // Field-bound node with an entry loaded → the entry's value (its content).
+    if (node.dynamicField && activeEntry.value) {
+      return activeEntry.value.values[node.dynamicField] ?? node.content ?? ''
+    }
     if (localesStore.isDefaultLocale) {
       return node.content ?? ''
     }
@@ -603,6 +660,12 @@ export const useCanvasStore = defineStore('canvas', () => {
     const body = activePage.value.body
     const node = nodeId === body.id ? body : findNode(body.children, nodeId)
     if (!node) return
+
+    // Field-bound node with an entry loaded → write the entry, not the template.
+    if (node.dynamicField && activeEntry.value) {
+      collectionsStore.setEntryValue(activeEntry.value.id, node.dynamicField, content)
+      return
+    }
 
     if (localesStore.isDefaultLocale) {
       node.content = content
@@ -619,6 +682,13 @@ export const useCanvasStore = defineStore('canvas', () => {
     activePage,
     pagesByType,
     setActivePage,
+    // Collection / entry context
+    activeEntryId,
+    activeEntry,
+    activeCollection,
+    isCollectionTemplate,
+    openCollection,
+    openEntry,
     addPage,
     removePage,
     renamePage,
@@ -668,6 +738,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     bindDynamicField,
     unbindDynamicField,
     addDynamicFieldElement,
+    addDynamicField,
     // Interactions
     getNodeInteractions,
     addInteraction,

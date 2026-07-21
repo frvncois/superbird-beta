@@ -19,8 +19,8 @@ const props = withDefaults(
 )
 
 const sizeClasses: Record<ButtonSize, string> = {
-  default: 'h-9 px-4 text-sm rounded-xl',
-  sm: 'h-7 px-3 text-xs rounded-xl',
+  default: 'h-9 px-4 text-sm rounded-lg',
+  sm: 'h-7 px-3 text-xs rounded-lg',
 }
 
 const variantClasses: Record<ButtonVariant, string> = {

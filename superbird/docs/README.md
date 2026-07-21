@@ -10,6 +10,7 @@ Claude-facing reference library. Load the relevant file when working in that are
 | [stores.md](stores.md) | Reading or mutating app state — the public API of each domain store |
 | [lib-and-composables.md](lib-and-composables.md) | Reaching for a pure helper, constant, composable, or type |
 | [patterns.md](patterns.md) | Doing a recurring task — recipes for the common moves |
+| [cms-architecture.md](cms-architecture.md) | **Direction (not yet built)** — the standalone-app + CMS target: collections/entries, one SQLite file, SSR runtime, draft/publish |
 
 **The five rules that override instinct** (full list in architecture.md):
 1. All state mutations go through store **actions** — never assign `store.x = y` or mutate a node from a getter. Undo depends on it.

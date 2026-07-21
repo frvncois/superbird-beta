@@ -17,7 +17,7 @@ const model = defineModel<string>({ default: '' })
 
 const sizeClasses: Record<InputSize, string> = {
   default: 'h-12 px-3 text-sm rounded-2xl',
-  sm: 'h-8 px-2.5 text-xs rounded-xl',
+  sm: 'h-8 px-2.5 text-xs rounded-lg',
   xs: 'h-7 px-2 text-xs rounded-lg',
 }
 </script>

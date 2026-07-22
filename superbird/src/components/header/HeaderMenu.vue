@@ -44,11 +44,12 @@ async function logout() {
   router.push('/login')
 }
 
-// The trigger shows which app section you're in (not the site page).
+// The trigger shows which app section you're in (not the site page). In the
+// editor it mirrors the active mode — exactly matching its menu button.
 const triggerLabel = computed(() => {
   if (props.mode === 'dashboard') return 'Dashboard'
   if (props.mode === 'settings') return 'Settings'
-  return 'Editor'
+  return store.editorMode === 'content' ? 'Edit content' : 'Edit design'
 })
 </script>
 

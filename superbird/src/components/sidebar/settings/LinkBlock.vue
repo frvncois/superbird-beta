@@ -12,17 +12,43 @@ const store = useCanvasStore()
 const collections = useCollectionsStore()
 const node = computed(() => store.selectedNode)
 
-const linkType = ref<'url' | 'page' | 'post'>('url')
+type LinkType = 'url' | 'page' | 'post' | 'current'
+const linkType = ref<LinkType>('url')
 
-const typeOptions = [
-  { value: 'url', label: 'Custom URL' },
-  { value: 'page', label: 'Page' },
-  { value: 'post', label: 'Post' },
-]
+// "Current post" is only offered when the element repeats per entry: inside a
+// collection-list, or on a collection template.
+function isUnderCollectionList(nodeId: string): boolean {
+  let pid = store.getParentId(nodeId)
+  while (pid) {
+    const parent = store.findNode(store.bodyNode.children, pid)
+    if (parent?.type === 'collection-list') return true
+    pid = store.getParentId(pid)
+  }
+  return false
+}
+const inCollectionContext = computed(
+  () => !!node.value && (store.isCollectionTemplate || isUnderCollectionList(node.value.id)),
+)
+
+const typeOptions = computed(() => {
+  const base = [
+    { value: 'url', label: 'Custom URL' },
+    { value: 'page', label: 'Page' },
+    { value: 'post', label: 'Post' },
+  ]
+  if (inCollectionContext.value) base.push({ value: 'current', label: 'Current post' })
+  return base
+})
 const targetOptions = [
   { value: '_self', label: 'Same tab' },
   { value: '_blank', label: 'New tab' },
 ]
+
+function setLinkType(t: LinkType) {
+  linkType.value = t
+  if (t === 'current') updateLink({ currentEntry: true, url: undefined })
+  else updateLink({ currentEntry: undefined })
+}
 
 function pagePath(p: Page): string {
   return p.slug === '/' ? '/' : `/${p.slug.replace(/^\//, '')}`
@@ -47,12 +73,14 @@ const postOptions = computed(() => {
 watch(
   () => node.value?.id,
   () => {
-    const url = node.value?.link?.url
-    if (!url) {
+    const link = node.value?.link
+    if (link?.currentEntry) {
+      linkType.value = 'current'
+    } else if (!link?.url) {
       linkType.value = 'url'
-    } else if (pageOptions.value.some((o) => o.value && o.value === url)) {
+    } else if (pageOptions.value.some((o) => o.value && o.value === link.url)) {
       linkType.value = 'page'
-    } else if (postOptions.value.some((o) => o.value && o.value === url)) {
+    } else if (postOptions.value.some((o) => o.value && o.value === link.url)) {
       linkType.value = 'post'
     } else {
       linkType.value = 'url'
@@ -71,7 +99,7 @@ function updateLink(partial: Partial<NodeLink>) {
   <PropertySectionUi v-if="node" title="Link" icon="settings" :default-open="false">
     <div class="space-y-1.5">
       <FieldRowUi label="Link to" label-width="sm">
-        <SelectUi :model-value="linkType" :options="typeOptions" @update:model-value="linkType = $event as 'url' | 'page' | 'post'" />
+        <SelectUi :model-value="linkType" :options="typeOptions" @update:model-value="setLinkType($event as LinkType)" />
       </FieldRowUi>
 
       <FieldRowUi v-if="linkType === 'url'" label="URL" label-width="sm">
@@ -88,12 +116,15 @@ function updateLink(partial: Partial<NodeLink>) {
           @update:model-value="updateLink({ url: $event || undefined })"
         />
       </FieldRowUi>
-      <FieldRowUi v-else label="Post" label-width="sm">
+      <FieldRowUi v-else-if="linkType === 'post'" label="Post" label-width="sm">
         <SelectUi
           :model-value="node.link?.url ?? ''"
           :options="postOptions"
           @update:model-value="updateLink({ url: $event || undefined })"
         />
+      </FieldRowUi>
+      <FieldRowUi v-else label="Post" label-width="sm">
+        <span class="text-xs text-secondary">Links to the current post</span>
       </FieldRowUi>
 
       <FieldRowUi label="Target" label-width="sm">

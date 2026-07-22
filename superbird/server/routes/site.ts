@@ -35,6 +35,11 @@ function buildContext(entries: Entry[], collections: Collection[], activeEntry?:
       // `entries` is already published-filtered.
       return entries.filter((e) => e.collectionId === col.id).slice(0, limit)
     },
+    entryUrl(entry: Entry): string {
+      const col = collections.find((c) => c.id === entry.collectionId)
+      return col ? `/${col.basePath}/${entry.slug}` : '#'
+    },
+    currentEntry: activeEntry,
   }
 }
 

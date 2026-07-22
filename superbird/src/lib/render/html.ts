@@ -46,9 +46,9 @@ function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | un
   out += attr('role', node.accessibility?.role)
   out += attr('aria-label', node.accessibility?.ariaLabel)
 
-  // Links
-  if (node.type === 'link' || node.type === 'link-block' || node.tag === 'a') {
-    out += attr('href', node.link?.url)
+  // Links — anchors, link blocks, and linked buttons (rendered as <a>).
+  if (isLinked(node)) {
+    out += attr('href', linkHref(node, ctx, entry))
     out += attr('target', node.link?.target)
     out += attr('rel', node.link?.rel)
   }
@@ -91,8 +91,34 @@ function isContainer(node: CanvasNode): boolean {
   return CONTAINER_TYPES.includes(node.type)
 }
 
+// A node carries a link if a url or "current post" is set.
+function hasLink(node: CanvasNode): boolean {
+  return !!(node.link && (node.link.url || node.link.currentEntry))
+}
+
+// Which nodes render as anchors: real links/link-blocks, any <a>, and buttons
+// that have a link (so the button navigates).
+function isLinked(node: CanvasNode): boolean {
+  return (
+    node.type === 'link' ||
+    node.type === 'link-block' ||
+    node.tag === 'a' ||
+    (node.type === 'button' && hasLink(node))
+  )
+}
+
+// Resolve a node's href, including "current post" → the entry's URL.
+function linkHref(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined): string | undefined {
+  if (node.link?.currentEntry) {
+    const e = entry ?? ctx.currentEntry
+    return e ? ctx.entryUrl(e) : undefined
+  }
+  return node.link?.url
+}
+
 export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry): string {
-  const tag = node.tag || 'div'
+  // A linked button becomes an <a> so it actually navigates.
+  const tag = node.type === 'button' && hasLink(node) ? 'a' : node.tag || 'div'
 
   // Collection list: render the container, repeating its item template per entry.
   if (node.type === 'collection-list') {

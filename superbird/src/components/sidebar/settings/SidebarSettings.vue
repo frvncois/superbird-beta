@@ -8,9 +8,8 @@ import ContentBlock from './ContentBlock.vue'
 import VisibilityBlock from './VisibilityBlock.vue'
 import AttributesBlock from './AttributesBlock.vue'
 import LinkBlock from './LinkBlock.vue'
-import DeleteBlock from './DeleteBlock.vue'
 
-const { node, isBody, isTextNode, isCollectionList, boundField } = useNodeSettings()
+const { node, isTextNode, isCollectionList, boundField } = useNodeSettings()
 </script>
 
 <template>
@@ -30,10 +29,6 @@ const { node, isBody, isTextNode, isCollectionList, boundField } = useNodeSettin
       <VisibilityBlock />
       <AttributesBlock />
       <LinkBlock />
-    </div>
-
-    <div v-if="!isBody" class="p-4">
-      <DeleteBlock />
     </div>
   </div>
 </template>

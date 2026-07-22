@@ -36,6 +36,13 @@ const ctx: RenderContext = {
     if (!col) return []
     return collections.entriesByCollection(col.id).slice(0, limit)
   },
+  entryUrl: (entry: Entry): string => {
+    const col = collections.collectionById(entry.collectionId)
+    return col ? `/${col.basePath}/${entry.slug}` : '#'
+  },
+  get currentEntry() {
+    return canvas.activeEntry ?? undefined
+  },
 }
 
 const srcdoc = computed(() =>

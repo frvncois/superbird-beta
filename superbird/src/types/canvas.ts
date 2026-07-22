@@ -70,6 +70,9 @@ export interface NodeLink {
   url?: string
   target?: '_self' | '_blank'
   rel?: string
+  // Link to the current entry (in a collection-list item or on a collection
+  // template) — resolved per-entry at render time.
+  currentEntry?: boolean
 }
 
 export interface NodeAccessibility {

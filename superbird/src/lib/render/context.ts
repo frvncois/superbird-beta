@@ -10,4 +10,10 @@ export interface RenderContext {
   mediaUrl(id: string): string
   // Entries to expand a collection-list (source = collection id, capped).
   entriesFor(source: string | undefined, limit: number): Entry[]
+  // The public URL of an entry's single page (/<basePath>/<slug>).
+  entryUrl(entry: Entry): string
+  // The active entry when rendering a collection single page (so a top-level
+  // node bound to "current post" resolves). Collection-list items pass their
+  // own entry down and don't need this.
+  currentEntry?: Entry
 }

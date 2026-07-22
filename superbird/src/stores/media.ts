@@ -5,9 +5,17 @@ import type { MediaFolder, MediaItem } from '@/types/canvas'
 
 // Media is API-backed: metadata lives in the DB, files on disk, served at
 // /media/:id. Loaded on sign-in; uploads/edits/folders hit the API.
+export interface PendingUpload {
+  id: string
+  name: string
+  folderId?: string
+}
+
 export const useMediaStore = defineStore('media', () => {
   const mediaItems = ref<MediaItem[]>([])
   const mediaFolders = ref<MediaFolder[]>([])
+  // In-flight uploads (skeleton placeholders while uploading + converting).
+  const pendingUploads = ref<PendingUpload[]>([])
   const mediaLibraryOpen = ref(false)
 
   // When set, the library is acting as a picker: choosing an item invokes the
@@ -61,15 +69,21 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   async function addMediaItem(file: File, folderId?: string): Promise<MediaItem> {
-    const { width, height } = await imageDimensions(file)
-    const form = new FormData()
-    form.append('file', file)
-    if (width) form.append('width', String(width))
-    if (height) form.append('height', String(height))
-    if (folderId) form.append('folderId', folderId)
-    const item = await apiUpload<MediaItem>('/api/media', form)
-    mediaItems.value.unshift(item)
-    return item
+    const pendingId = `pending-${Math.random().toString(36).slice(2)}`
+    pendingUploads.value.push({ id: pendingId, name: file.name, folderId })
+    try {
+      const { width, height } = await imageDimensions(file)
+      const form = new FormData()
+      form.append('file', file)
+      if (width) form.append('width', String(width))
+      if (height) form.append('height', String(height))
+      if (folderId) form.append('folderId', folderId)
+      const item = await apiUpload<MediaItem>('/api/media', form)
+      mediaItems.value.unshift(item)
+      return item
+    } finally {
+      pendingUploads.value = pendingUploads.value.filter((p) => p.id !== pendingId)
+    }
   }
 
   async function removeMediaItem(id: string) {
@@ -116,6 +130,7 @@ export const useMediaStore = defineStore('media', () => {
   return {
     mediaItems,
     mediaFolders,
+    pendingUploads,
     mediaLibraryOpen,
     isPicking,
     load,

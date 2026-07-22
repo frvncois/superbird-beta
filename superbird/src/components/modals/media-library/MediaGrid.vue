@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { formatFileSize } from '@/lib/media'
 import type { MediaItem } from '@/types/canvas'
@@ -14,6 +14,11 @@ const props = defineProps<{
 const selectedId = defineModel<string | null>('selectedId', { required: true })
 
 const store = useMediaStore()
+
+// In-flight uploads for the folder currently being viewed.
+const pending = computed(() =>
+  store.pendingUploads.filter((p) => (p.folderId ?? undefined) === props.activeFolder),
+)
 
 const isDragOver = ref(false)
 
@@ -43,7 +48,7 @@ function onItemClick(item: MediaItem) {
     @dragleave.self="isDragOver = false"
     @drop="handleFilesDrop"
   >
-    <EmptyStateUi v-if="items.length === 0 && !isDragOver" class="h-full">
+    <EmptyStateUi v-if="items.length === 0 && pending.length === 0 && !isDragOver" class="h-full">
       <IconUi name="upload" size="size-12" class="text-secondary/30" />
       <p class="text-sm">Drop files here or click Upload</p>
     </EmptyStateUi>
@@ -54,6 +59,21 @@ function onItemClick(item: MediaItem) {
     </EmptyStateUi>
 
     <div v-else class="grid grid-cols-4 gap-3">
+      <!-- Uploading + converting skeletons (newest first) -->
+      <div
+        v-for="p in pending"
+        :key="p.id"
+        class="relative overflow-hidden rounded-xl border border-foreground/10"
+      >
+        <div class="aspect-square flex items-center justify-center bg-secondary/5">
+          <span class="size-6 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary/70" />
+        </div>
+        <div class="px-2 py-1.5">
+          <div class="truncate text-[10px] font-medium text-secondary">{{ p.name }}</div>
+          <div class="text-[9px] text-secondary/60">Converting…</div>
+        </div>
+      </div>
+
       <div
         v-for="item in items"
         :key="item.id"

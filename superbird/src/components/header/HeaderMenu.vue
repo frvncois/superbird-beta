@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
+import { useMediaStore } from '@/stores/media'
 import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
 import type { PageType } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
@@ -15,6 +16,7 @@ const props = defineProps<{
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
+const media = useMediaStore()
 const router = useRouter()
 
 const isOpen = ref(false)
@@ -29,6 +31,10 @@ function openEditor() {
 }
 function openSettings() {
   router.push('/settings')
+  close()
+}
+function openMediaLibrary() {
+  media.openLibrary()
   close()
 }
 function logout() {
@@ -168,6 +174,13 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
         @click="goDashboard"
       >
         <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
+      </button>
+      <button
+        v-if="mode === 'editor'"
+        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="openMediaLibrary"
+      >
+        <IconUi name="image" size="size-3.5" class="text-secondary" /> Media Library
       </button>
       <button
         class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"

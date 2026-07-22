@@ -49,7 +49,7 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="relative flex h-8 min-w-0 items-center font-mono rounded-lg border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
+  <div class="relative flex h-8 min-w-0 items-center font-mono bg-input rounded-lg border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
     <!-- Number input -->
     <input
       :value="parsed.unit === 'auto' ? '' : parsed.num"

@@ -34,15 +34,15 @@ function selectTab(key: string) {
 <template>
   <div>
     <!-- Tab bar -->
-    <div class="flex border-b">
+    <div class="flex items-center gap-1 border-b p-1.5">
       <button
         v-for="tab in tabs"
         :key="tab.key"
         :class="[
-          'cursor-pointer px-3 py-2 text-xs transition-colors duration-[250ms]',
+          'cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-150',
           activeTab === tab.key
-            ? 'border-foreground text-foreground font-medium'
-            : 'border-transparent text-secondary hover:text-foreground',
+            ? 'bg-primary/10 text-primary'
+            : 'bg-transparent text-secondary hover:bg-secondary/10 hover:text-foreground',
         ]"
         @click="selectTab(tab.key)"
       >

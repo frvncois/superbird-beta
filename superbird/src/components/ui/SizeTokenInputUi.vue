@@ -82,7 +82,7 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="relative flex h-8 min-w-0 items-center bg-input rounded-xl border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
+  <div class="relative flex h-8 min-w-0 items-center bg-input rounded-lg border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
     <!-- Token button (only if tokens exist and no token active) -->
     <button
       v-if="hasTokens && !tokenName"
@@ -95,7 +95,7 @@ function handleKeydown(e: KeyboardEvent) {
 
     <!-- Token badge (when a token is active) -->
     <div v-if="tokenName" class="flex flex-1 items-center gap-1 px-1.5 min-w-0">
-      <span class="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-mono text-primary leading-tight truncate">
+      <span class="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[9px] font-mono text-primary leading-tight truncate">
         {{ tokenName }}
         <button class="cursor-pointer hover:text-primary/70" @click="clearToken">
           <IconUi name="close" size="size-2.5" />

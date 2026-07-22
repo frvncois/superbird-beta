@@ -7,6 +7,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
+import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -108,7 +109,8 @@ function backToTemplate() {
 
     <div class="h-4 w-px bg-border" />
 
-    <!-- Viewport selector (always) -->
+    <!-- Viewport selector + translation (always) -->
     <HeaderViewportSwitch />
+    <HeaderLocaleSwitch />
   </div>
 </template>

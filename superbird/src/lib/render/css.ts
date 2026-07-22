@@ -72,12 +72,35 @@ function typographyRules(t: TypographySettings): string {
   return out.join('')
 }
 
-const RESET =
-  '*,*::before,*::after{box-sizing:border-box}' +
-  'body{margin:0;font-family:var(--global-font-primary,sans-serif);color:var(--global-text,#0a0a0a)}' +
-  'img{max-width:100%;height:auto;display:block}' +
-  'a{color:inherit}' +
-  '*{margin:0}'
+// A Preflight-style reset so the published site shows only the design-system
+// styles — no native button chrome, no browser margins/padding/borders. Author
+// styles (classes) and global typography, both emitted after this, layer on top.
+const RESET = [
+  // Zero the big three everywhere; keep a solid border so a class only needs to
+  // set border-width to get a visible border.
+  '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;border:0 solid}',
+  'html{-webkit-text-size-adjust:100%;line-height:1.5;-moz-tab-size:4;tab-size:4}',
+  'body{min-height:100vh;font-family:var(--global-font-primary,sans-serif);color:var(--global-text,#0a0a0a);-webkit-font-smoothing:antialiased}',
+  // Media: block-level, never overflow.
+  'img,svg,video,canvas,audio,iframe,embed,object{display:block;vertical-align:middle;max-width:100%}',
+  'img,video{height:auto}',
+  // Form controls inherit typography and lose native chrome.
+  'input,button,textarea,select{font:inherit;color:inherit;background:transparent;border-radius:0;line-height:inherit}',
+  'button,select{text-transform:none}',
+  'button,[type=button],[type=reset],[type=submit]{-webkit-appearance:button;appearance:button}',
+  'button,[role=button]{cursor:pointer}',
+  ':disabled{cursor:default}',
+  'textarea{resize:vertical}',
+  '::placeholder{opacity:1;color:inherit}',
+  // Links + lists neutralized (author styles them).
+  'a{color:inherit;text-decoration:inherit}',
+  'ol,ul,menu{list-style:none}',
+  // Misc niceties.
+  'table{border-collapse:collapse;border-spacing:0}',
+  'summary{display:list-item}',
+  'p,h1,h2,h3,h4,h5,h6{overflow-wrap:break-word}',
+  '[hidden]{display:none}',
+].join('')
 
 export function compileCss(styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
   const parts: string[] = []

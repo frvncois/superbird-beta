@@ -49,6 +49,12 @@ export function ensureSchema(): void {
       published_design TEXT,
       published_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS ai_config (
+      project_id TEXT PRIMARY KEY REFERENCES projects(id),
+      provider TEXT NOT NULL DEFAULT 'anthropic',
+      api_key TEXT NOT NULL DEFAULT '',
+      model TEXT NOT NULL DEFAULT 'claude-sonnet-5'
+    );
     CREATE TABLE IF NOT EXISTS media (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),

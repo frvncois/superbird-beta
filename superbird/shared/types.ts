@@ -98,3 +98,62 @@ export interface ProjectDocument {
   design: ProjectDesign | null
   content: ProjectContent
 }
+
+// ── AI assistant ──
+// Provider-agnostic wire protocol (Anthropic-shaped blocks; the server adapts
+// them to each provider). The API key never reaches the client.
+
+export type AiProvider = 'anthropic' | 'openai'
+
+// What the client is allowed to know about the config (never the key itself).
+export interface AiConfigPublic {
+  configured: boolean
+  provider: AiProvider
+  model: string
+}
+
+export interface AiConfigUpdate {
+  provider: AiProvider
+  apiKey?: string // omitted → keep the stored key
+  model: string
+}
+
+export interface AiTextBlock {
+  type: 'text'
+  text: string
+}
+export interface AiToolUseBlock {
+  type: 'tool_use'
+  id: string
+  name: string
+  input: Record<string, unknown>
+}
+export interface AiToolResultBlock {
+  type: 'tool_result'
+  tool_use_id: string
+  content: string
+  is_error?: boolean
+}
+export type AiBlock = AiTextBlock | AiToolUseBlock | AiToolResultBlock
+
+export interface AiMessage {
+  role: 'user' | 'assistant'
+  content: AiBlock[]
+}
+
+export interface AiToolDef {
+  name: string
+  description: string
+  input_schema: Record<string, unknown>
+}
+
+export interface AiChatRequest {
+  system: string
+  messages: AiMessage[]
+  tools: AiToolDef[]
+}
+
+export interface AiChatResponse {
+  content: AiBlock[]
+  stopReason: 'end_turn' | 'tool_use' | 'max_tokens' | 'stop'
+}

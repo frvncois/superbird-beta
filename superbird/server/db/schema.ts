@@ -47,6 +47,16 @@ export const media = sqliteTable('media', {
   createdAt: text('created_at').notNull(),
 })
 
+// AI assistant config — one row per project. The api key stays server-side.
+export const aiConfig = sqliteTable('ai_config', {
+  projectId: text('project_id')
+    .primaryKey()
+    .references(() => projects.id),
+  provider: text('provider').notNull().default('anthropic'),
+  apiKey: text('api_key').notNull().default(''),
+  model: text('model').notNull().default('claude-sonnet-5'),
+})
+
 export const mediaFolders = sqliteTable('media_folders', {
   id: text('id').primaryKey(),
   projectId: text('project_id')

@@ -49,7 +49,7 @@ No test runner or linter is configured yet. Reset the app to first-run by deleti
 
 - `src/main.ts` — App entry: creates Vue app, installs Pinia + Router, imports global CSS
 - `src/assets/main.css` — Tailwind v4 entrypoint with all design tokens (`@theme` block), dark mode overrides (`.dark` class), custom keyframes, and base reset
-- `src/router/index.ts` — Router config (routes array, web history mode)
+- `src/router/index.ts` — Router config (routes array, web history mode). The admin app is mounted under `/admin` (Vite `base: '/admin/'`); routes keep bare paths (`/`, `/editor`, …) and are prefixed via `import.meta.env.BASE_URL`. Public SSR site owns `/`. Dev: admin at `:5173/admin/`, public site at `:3001/`.
 - `src/components/` — Organized by context:
   - `ui/` — Reusable primitives with `*Ui` suffix (ButtonUi, InputUi, PopoverUi, ModalUi, IconUi, …) plus the `icons.ts` glyph registry
   - `header/` — Editor top bar

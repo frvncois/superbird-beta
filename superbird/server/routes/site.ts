@@ -40,6 +40,11 @@ function buildContext(entries: Entry[], collections: Collection[], activeEntry?:
 site.get('*', (c) => {
   const path = c.req.path
   if (path.startsWith('/api')) return c.json({ error: 'Not found' }, 404)
+  // /admin is the admin SPA's namespace — never a public page. In production
+  // the built admin app is served here; in dev it lives on the Vite server.
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return c.html(placeholder('The admin app runs on the Vite dev server at /admin.'), 404)
+  }
 
   const proj = getInstalledProject()
   if (!proj) return c.html(placeholder('This site has not been set up yet.'))

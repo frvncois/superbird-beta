@@ -69,6 +69,7 @@ Media is **not** persisted yet (files-on-disk pipeline is a later slice).
 ## Dev workflow
 
 - `npm run dev` runs **both** the Vite client (`dev:web`) and the API (`dev:server`, `tsx watch`) via `run-p`.
+- **Admin app:** `http://localhost:5173/admin/` (Vite `base: '/admin/'`; the router prefixes every route via `import.meta.env.BASE_URL`). **Public site:** `http://localhost:3001/`. In production `/admin` serves the built SPA and `/` the public SSR site from one origin.
 - Vite proxies `/api` → `http://localhost:3001`, so requests are same-origin and the session cookie flows without CORS.
 - `npm run server:type-check` type-checks the server independently of `vue-tsc`.
 - Reset the app to first-run: delete `data/superbird.db*`.

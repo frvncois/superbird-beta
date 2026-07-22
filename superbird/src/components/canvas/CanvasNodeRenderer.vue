@@ -7,6 +7,7 @@ import { useMediaStore } from '@/stores/media'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
 import type { CanvasNode, Entry } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 import NodePlaceholder from '@/components/canvas/NodePlaceholder.vue'
 import { useNodeDnD } from '@/components/canvas/useNodeDnD'
 import { useContextMenu } from '@/composables/useContextMenu'
@@ -182,15 +183,8 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       class="pointer-events-none absolute -top-5 left-0 z-20 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none text-white"
       :class="isComponentInstance ? 'bg-green-fg' : isDynamic ? 'bg-purple-fg' : 'bg-primary'"
     >
-      <!-- Component icon -->
-      <svg v-if="isComponentInstance" class="size-2.5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10.362 1.093a.75.75 0 0 0-.724 0L2.523 5.018 10 9.143l7.477-4.125-7.115-3.925ZM18 6.443l-7.25 4v8.25l6.862-3.786A.75.75 0 0 0 18 14.25V6.443ZM9.25 18.693v-8.25l-7.25-4v7.807a.75.75 0 0 0 .388.657l6.862 3.786Z" />
-      </svg>
-      <!-- Dynamic field icon -->
-      <svg v-else-if="isDynamic" class="size-2.5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-        <path d="M7.768 15.768a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 0 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3Z" />
-      </svg>
+      <IconUi v-if="isComponentInstance" name="component" size="size-2.5" />
+      <IconUi v-else-if="isDynamic" name="link" size="size-2.5" />
       {{ node.label }}
     </div>
     <!-- Drop indicator: before (not for body) -->

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { STYLE_STATES } from '@/constants/canvas'
 import type { StyleState } from '@/types/canvas'
 import PopoverUi from './PopoverUi.vue'
+import IconUi from './IconUi.vue'
 
 const props = defineProps<{
   classes: string[]
@@ -109,14 +110,7 @@ function selectState(state: StyleState) {
           @click.stop="emit('select', cls)"
         >
           {{ cls }}
-          <svg
-            class="size-2.5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            @click.stop="emit('remove', cls)"
-          >
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-          </svg>
+          <IconUi name="close" size="size-2.5" @click.stop="emit('remove', cls)" />
         </button>
 
         <!-- Text input -->
@@ -143,13 +137,7 @@ function selectState(state: StyleState) {
           @click="toggleState"
         >
           {{ currentStateLabel }}
-          <svg
-            :class="['size-2.5 transition-transform duration-150', stateOpen && 'rotate-180']"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-          </svg>
+          <IconUi name="chevron-down" :class="['transition-transform duration-150', stateOpen && 'rotate-180']" size="size-2.5" />
         </button>
 
         <PopoverUi v-model:open="stateOpen" align="left" panel-class="w-28 p-1">
@@ -198,9 +186,7 @@ function selectState(state: StyleState) {
           class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
           @mousedown.prevent="emit('add', query.trim()); query = ''"
         >
-          <svg class="size-3 text-primary" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-          </svg>
+          <IconUi name="plus" size="size-3" class="text-primary" />
           <span>Create <span class="font-mono font-medium text-primary">{{ query.trim() }}</span></span>
         </button>
 

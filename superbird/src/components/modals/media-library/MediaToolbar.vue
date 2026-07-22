@@ -54,9 +54,7 @@ function handleFileInput(e: Event) {
   <div class="flex items-center gap-2 border-b px-4 py-2.5 shrink-0">
     <!-- Search -->
     <div class="relative flex-1 min-w-0">
-      <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-secondary pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
-      </svg>
+      <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
       <InputUi v-model="search" placeholder="Search files..." class="pl-8" />
     </div>
 
@@ -69,10 +67,7 @@ function handleFileInput(e: Event) {
 
     <!-- Upload button -->
     <ButtonUi size="sm" class="shrink-0 text-[10px]" @click="fileInput?.click()">
-      <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
-        <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-      </svg>
+      <IconUi name="upload" size="size-3.5" />
       Upload
     </ButtonUi>
     <input ref="fileInput" type="file" multiple class="hidden" @change="handleFileInput" />

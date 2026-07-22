@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { parseUnitValue, nextUnitValue, stepUnitValue } from '@/lib/unitValue'
 import PopoverUi from './PopoverUi.vue'
+import IconUi from './IconUi.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -65,9 +66,7 @@ function handleKeydown(e: KeyboardEvent) {
       @click.stop="unitOpen = !unitOpen"
     >
       {{ parsed.unit === 'auto' ? 'auto' : parsed.unit || 'px' }}
-      <svg class="size-2.5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-      </svg>
+      <IconUi name="chevron-down" size="size-2.5" />
     </button>
 
     <PopoverUi v-model:open="unitOpen" align="right" panel-class="min-w-14 p-0.5 rounded-lg">

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 
@@ -70,9 +71,7 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
           @contextmenu.prevent="handleUserComponentContextMenu($event, comp.id)"
         >
           <div class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-green-bg">
-            <svg class="size-3 text-green-fg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.362 1.093a.75.75 0 0 0-.724 0L2.523 5.018 10 9.143l7.477-4.125-7.115-3.925ZM18 6.443l-7.25 4v8.25l6.862-3.786A.75.75 0 0 0 18 14.25V6.443ZM9.25 18.693v-8.25l-7.25-4v7.807a.75.75 0 0 0 .388.657l6.862 3.786Z" />
-            </svg>
+            <IconUi name="component" size="size-3" class="text-green-fg" />
           </div>
           <div>
             <div class="text-xs font-medium text-foreground">{{ comp.name }}</div>

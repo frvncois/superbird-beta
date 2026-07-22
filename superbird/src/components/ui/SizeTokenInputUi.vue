@@ -3,6 +3,7 @@ import { ref, computed, inject } from 'vue'
 import { parseUnitValue, nextUnitValue, stepUnitValue } from '@/lib/unitValue'
 import { GlobalTokensKey, type GlobalTokens } from '@/constants/injectionKeys'
 import PopoverUi from './PopoverUi.vue'
+import IconUi from './IconUi.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -89,9 +90,7 @@ function handleKeydown(e: KeyboardEvent) {
       title="Size tokens"
       @click.stop="tokenOpen = !tokenOpen"
     >
-      <svg class="size-3" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M4.5 2A2.5 2.5 0 0 0 2 4.5v2.879a2.5 2.5 0 0 0 .732 1.767l7.5 7.5a2.5 2.5 0 0 0 3.536 0l2.878-2.878a2.5 2.5 0 0 0 0-3.536l-7.5-7.5A2.5 2.5 0 0 0 7.378 2H4.5ZM5 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
-      </svg>
+      <IconUi name="classes" size="size-3" />
     </button>
 
     <!-- Token badge (when a token is active) -->
@@ -99,18 +98,14 @@ function handleKeydown(e: KeyboardEvent) {
       <span class="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-mono text-primary leading-tight truncate">
         {{ tokenName }}
         <button class="cursor-pointer hover:text-primary/70" @click="clearToken">
-          <svg class="size-2.5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-          </svg>
+          <IconUi name="close" size="size-2.5" />
         </button>
       </span>
       <button
         class="flex size-4 shrink-0 items-center justify-center rounded cursor-pointer text-secondary hover:text-foreground"
         @click.stop="tokenOpen = !tokenOpen"
       >
-        <svg class="size-3" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-        </svg>
+        <IconUi name="chevron-down" size="size-3" />
       </button>
     </div>
 
@@ -132,9 +127,7 @@ function handleKeydown(e: KeyboardEvent) {
       @click.stop="unitOpen = !unitOpen"
     >
       {{ parsed.unit || 'px' }}
-      <svg class="size-2.5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-      </svg>
+      <IconUi name="chevron-down" size="size-2.5" />
     </button>
 
     <PopoverUi v-model:open="unitOpen" align="right" panel-class="min-w-14 p-0.5 rounded-lg">

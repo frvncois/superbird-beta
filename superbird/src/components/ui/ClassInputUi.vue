@@ -190,7 +190,7 @@ function selectState(state: StyleState) {
         <!-- Chip menu -->
         <div
           v-if="menuFor === cls"
-          class="absolute left-0 top-full z-[60] mt-1 w-36 rounded-xl border bg-background p-1 shadow-lg"
+          class="absolute right-0 top-full z-[60] mt-1 w-36 rounded-xl border bg-background p-1 shadow-lg"
           @click.stop
         >
           <button

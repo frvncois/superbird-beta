@@ -160,7 +160,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
   <div class="relative">
     <!-- Trigger -->
     <button
-      class="flex items-center gap-1.5 rounded-xl px-3 h-7 w-48 justify-between text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
+      class="flex items-center gap-1.5 rounded-lg border px-3 h-7 w-48 justify-between text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
       @click="isOpen = !isOpen"
     >
       <span class="font-medium truncate">{{ triggerLabel }}</span>
@@ -170,19 +170,19 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
     <PopoverUi v-model:open="isOpen" align="left" panel-class="w-64 rounded-2xl p-1.5">
       <!-- App nav -->
       <button
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="goDashboard"
       >
         <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
       </button>
       <button
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openMediaLibrary"
       >
         <IconUi name="image" size="size-3.5" class="text-secondary" /> Media Library
       </button>
       <button
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openSettings"
       >
         <IconUi name="settings" size="size-3.5" class="text-secondary" /> Settings
@@ -194,14 +194,14 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       <template v-if="mode === 'editor'">
       <!-- Pages (grouped by type) -->
       <template v-for="section in sections" :key="section.config.key">
-        <div class="px-2.5 pt-1.5 pb-1">
+        <div class="px-2.5 pb-1">
           <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ section.config.plural }}</span>
         </div>
         <button
           v-for="page in section.pages"
           :key="page.id"
           :class="[
-            'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+            'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
             page.id === store.activePageId && !store.activeEntry ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
           ]"
           @click="selectPage(page.id)"
@@ -225,7 +225,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       </template>
       <button
         v-else
-        class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+        class="flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
         @click="startAdding"
       >
         <IconUi name="plus" size="size-3" /> New page
@@ -247,7 +247,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       >
         <button
           :class="[
-            'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+            'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
             store.activeCollection?.id === col.id ? 'bg-primary/10 text-foreground font-medium' : 'text-foreground hover:bg-secondary/10',
           ]"
           @click="openCollection(col.id)"
@@ -259,7 +259,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
 
         <!-- Item flyout -->
         <div v-if="hovered === col.id" class="absolute left-full top-0 z-10 pl-1">
-          <div class="w-56 rounded-xl border bg-background p-1 shadow-lg">
+          <div class="w-56 rounded-lg border bg-background p-1 shadow-lg">
             <div class="px-2.5 pt-1 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ col.plural }}</div>
             <button
               v-for="entry in collections.entriesByCollection(col.id)"
@@ -298,7 +298,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       </template>
       <button
         v-else
-        class="flex w-full items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+        class="flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
         @click="startAddingCollection"
       >
         <IconUi name="plus" size="size-3" /> New collection
@@ -308,7 +308,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       <!-- Dashboard: no editing surfaces, just a way into the editor -->
       <button
         v-else
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openEditor"
       >
         <IconUi name="rename" size="size-3.5" class="text-secondary" /> Open editor
@@ -317,7 +317,7 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       <div class="my-1 border-t border-foreground/8" />
 
       <button
-        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="logout"
       >
         <IconUi name="logout" size="size-3.5" class="text-secondary" /> Logout

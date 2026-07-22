@@ -59,6 +59,13 @@ import {
   ComputerDesktopIcon,
   DeviceTabletIcon,
   DevicePhoneMobileIcon,
+  ChartBarIcon,
+  CurrencyDollarIcon,
+  InboxArrowDownIcon,
+  ArrowRightIcon,
+  ArrowTopRightOnSquareIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
 } from '@heroicons/vue/24/outline'
 
 // Named icons → HeroIcons (24px outline). Rendered by IconUi.
@@ -81,6 +88,15 @@ export const ICONS: Record<string, Component> = {
   upload: ArrowUpTrayIcon,
   document: DocumentIcon,
   globe: GlobeAltIcon,
+  'arrow-right': ArrowRightIcon,
+  'external-link': ArrowTopRightOnSquareIcon,
+
+  // Dashboard
+  analytics: ChartBarIcon,
+  sales: CurrencyDollarIcon,
+  submissions: InboxArrowDownIcon,
+  'trend-up': ArrowTrendingUpIcon,
+  'trend-down': ArrowTrendingDownIcon,
 
   // Viewports
   desktop: ComputerDesktopIcon,

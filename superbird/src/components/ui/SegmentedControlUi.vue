@@ -24,7 +24,7 @@ const model = defineModel<string>({ default: '' })
   <div
     :class="[
       'flex items-center bg-foreground/5 p-0.5',
-      size === 'xs' ? 'rounded-md' : 'gap-0.5 rounded-xl',
+      size === 'xs' ? 'rounded-md' : 'gap-0.5 rounded-lg',
     ]"
   >
     <button
@@ -33,7 +33,7 @@ const model = defineModel<string>({ default: '' })
       type="button"
       :title="opt.title"
       :class="[
-        'flex items-center justify-center gap-1 cursor-pointer',
+        'flex items-center font-mono text-[10px] tracking-wider uppercase justify-center gap-1 cursor-pointer',
         grow && 'flex-1',
         size === 'xs'
           ? 'rounded px-1.5 py-0.5 text-[9px] font-mono transition-all duration-100'

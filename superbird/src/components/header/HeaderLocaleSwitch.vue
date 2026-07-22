@@ -43,7 +43,7 @@ watch(isOpen, (open) => {
   <div class="relative">
     <!-- Trigger -->
     <button
-      class="flex items-center gap-1 rounded-lg px-2 h-7 text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
+      class="flex items-center gap-1 rounded-lg border px-2 h-7 text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
       @click="isOpen = !isOpen"
     >
       <IconUi name="globe" size="size-3.5" class="text-secondary" />

@@ -4,6 +4,7 @@ import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
 import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
 import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree } from '@/lib/tree'
 import { CONTAINER_TYPES, FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
+import { isTailwindUtility } from '@/lib/tailwindToStyles'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
@@ -201,6 +202,12 @@ export const useCanvasStore = defineStore('canvas', () => {
     const node = nodeId === body.id ? body : findNode(body.children, nodeId)
     if (!node) return
     if (node.classes.includes(className)) return
+
+    // Tailwind utilities are raw classes — not editable style classes.
+    if (isTailwindUtility(className)) {
+      node.classes.push(className)
+      return
+    }
 
     const isNew = !globalStylesStore.styleClasses[className]
     if (isNew) {

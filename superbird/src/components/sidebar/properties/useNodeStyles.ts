@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import { tailwindToStyles } from '@/lib/tailwindToStyles'
 import type { StyleState } from '@/types/canvas'
 
 /**
@@ -29,13 +30,15 @@ export function useNodeStyles() {
   const hasClass = computed(() => !!activeClass.value)
 
   // When a class is active, edit the class styles at the active breakpoint+state.
-  // Otherwise, edit instance styles directly.
+  // Otherwise, edit instance styles directly. Tailwind utilities on the node are
+  // merged in as a read-through base so the panel reflects their values (e.g.
+  // p-6 shows as padding). Editing writes to the class / instance styles on top.
   const activeStyles = computed<Record<string, string>>(() => {
-    if (activeClass.value) {
-      const bpStyles = activeClass.value.styles[globalStylesStore.activeBreakpoint]
-      return bpStyles?.[globalStylesStore.activeState] ?? {}
-    }
-    return node.value?.styles ?? {}
+    const tw = node.value ? tailwindToStyles(node.value.classes) : {}
+    const own = activeClass.value
+      ? (activeClass.value.styles[globalStylesStore.activeBreakpoint]?.[globalStylesStore.activeState] ?? {})
+      : (node.value?.styles ?? {})
+    return { ...tw, ...own }
   })
 
   const isFlex = computed(() =>

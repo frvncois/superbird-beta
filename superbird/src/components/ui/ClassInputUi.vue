@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { STYLE_STATES } from '@/constants/canvas'
+import { isTailwindUtility } from '@/lib/tailwindToStyles'
 import type { StyleState } from '@/types/canvas'
 import IconUi from './IconUi.vue'
 
@@ -38,6 +39,9 @@ const canCreate = computed(() => {
   if (!q) return false
   return !props.allClassNames.some((n) => n.toLowerCase() === q)
 })
+
+// A recognized Tailwind utility is "added", not "created" as a custom class.
+const isTwUtil = computed(() => isTailwindUtility(query.value.trim()))
 
 // Recently-used classes not already applied (shown when not typing).
 const recentSelectable = computed(() =>
@@ -140,8 +144,13 @@ function selectState(state: StyleState) {
             class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
             @mousedown.prevent="addClass(query)"
           >
-            <IconUi name="plus" size="size-3" class="text-primary" />
-            <span>Create <span class="font-mono font-medium text-primary">{{ query.trim() }}</span></span>
+            <IconUi name="plus" size="size-3" :class="isTwUtil ? 'text-purple-fg' : 'text-primary'" />
+            <template v-if="isTwUtil">
+              <span>Add <span class="font-mono font-medium text-purple-fg">{{ query.trim() }}</span> <span class="text-secondary">· Tailwind</span></span>
+            </template>
+            <template v-else>
+              <span>Create <span class="font-mono font-medium text-primary">{{ query.trim() }}</span></span>
+            </template>
           </button>
           <div v-if="!suggestions.length && !canCreate" class="px-2.5 py-1.5 text-[10px] text-secondary">No matching classes</div>
         </template>

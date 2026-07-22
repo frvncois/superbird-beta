@@ -21,11 +21,15 @@ function spaceValue(v: string): string | undefined {
 }
 
 const SPACING_SIDES: Record<string, string[]> = {
-  p: ['padding'], px: ['padding-left', 'padding-right'], py: ['padding-top', 'padding-bottom'],
+  p: ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'],
+  px: ['padding-left', 'padding-right'], py: ['padding-top', 'padding-bottom'],
   pt: ['padding-top'], pr: ['padding-right'], pb: ['padding-bottom'], pl: ['padding-left'],
-  m: ['margin'], mx: ['margin-left', 'margin-right'], my: ['margin-top', 'margin-bottom'],
+  m: ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'],
+  mx: ['margin-left', 'margin-right'], my: ['margin-top', 'margin-bottom'],
   mt: ['margin-top'], mr: ['margin-right'], mb: ['margin-bottom'], ml: ['margin-left'],
   gap: ['gap'], 'gap-x': ['column-gap'], 'gap-y': ['row-gap'],
+  inset: ['top', 'right', 'bottom', 'left'], 'inset-x': ['left', 'right'], 'inset-y': ['top', 'bottom'],
+  top: ['top'], right: ['right'], bottom: ['bottom'], left: ['left'],
 }
 
 const DISPLAY: Record<string, string> = {
@@ -68,6 +72,42 @@ const COLORS: Record<string, Record<string, string>> = {
   rose: { 50: '#fff1f2', 100: '#ffe4e6', 200: '#fecdd3', 300: '#fda4af', 400: '#fb7185', 500: '#f43f5e', 600: '#e11d48', 700: '#be123c', 800: '#9f1239', 900: '#881337', 950: '#4c0519' },
 }
 
+// More enum utilities.
+const EXACT: Record<string, Decls> = {
+  // flex/grid item
+  grow: { 'flex-grow': '1' }, 'grow-0': { 'flex-grow': '0' }, shrink: { 'flex-shrink': '1' }, 'shrink-0': { 'flex-shrink': '0' },
+  'flex-wrap': { 'flex-wrap': 'wrap' }, 'flex-nowrap': { 'flex-wrap': 'nowrap' }, 'flex-1': { flex: '1 1 0%' }, 'flex-auto': { flex: '1 1 auto' }, 'flex-none': { flex: 'none' },
+  // self
+  'self-auto': { 'align-self': 'auto' }, 'self-start': { 'align-self': 'flex-start' }, 'self-center': { 'align-self': 'center' }, 'self-end': { 'align-self': 'flex-end' }, 'self-stretch': { 'align-self': 'stretch' },
+  // text
+  uppercase: { 'text-transform': 'uppercase' }, lowercase: { 'text-transform': 'lowercase' }, capitalize: { 'text-transform': 'capitalize' }, 'normal-case': { 'text-transform': 'none' },
+  underline: { 'text-decoration-line': 'underline' }, 'line-through': { 'text-decoration-line': 'line-through' }, 'no-underline': { 'text-decoration-line': 'none' },
+  italic: { 'font-style': 'italic' }, 'not-italic': { 'font-style': 'normal' }, truncate: { overflow: 'hidden', 'text-overflow': 'ellipsis', 'white-space': 'nowrap' },
+  // whitespace
+  'whitespace-normal': { 'white-space': 'normal' }, 'whitespace-nowrap': { 'white-space': 'nowrap' }, 'whitespace-pre': { 'white-space': 'pre' }, 'whitespace-pre-line': { 'white-space': 'pre-line' }, 'whitespace-pre-wrap': { 'white-space': 'pre-wrap' },
+  // overflow
+  'overflow-auto': { overflow: 'auto' }, 'overflow-hidden': { overflow: 'hidden' }, 'overflow-visible': { overflow: 'visible' }, 'overflow-scroll': { overflow: 'scroll' },
+  'overflow-x-auto': { 'overflow-x': 'auto' }, 'overflow-y-auto': { 'overflow-y': 'auto' }, 'overflow-x-hidden': { 'overflow-x': 'hidden' }, 'overflow-y-hidden': { 'overflow-y': 'hidden' },
+  // object-fit
+  'object-contain': { 'object-fit': 'contain' }, 'object-cover': { 'object-fit': 'cover' }, 'object-fill': { 'object-fit': 'fill' }, 'object-none': { 'object-fit': 'none' }, 'object-scale-down': { 'object-fit': 'scale-down' },
+  // aspect
+  'aspect-square': { 'aspect-ratio': '1 / 1' }, 'aspect-video': { 'aspect-ratio': '16 / 9' }, 'aspect-auto': { 'aspect-ratio': 'auto' },
+  // list
+  'list-disc': { 'list-style-type': 'disc' }, 'list-decimal': { 'list-style-type': 'decimal' }, 'list-none': { 'list-style-type': 'none' },
+  // misc
+  'w-full': { width: '100%' }, 'h-full': { height: '100%' }, 'w-screen': { width: '100vw' }, 'h-screen': { height: '100vh' }, 'min-h-screen': { 'min-height': '100vh' },
+  'mx-auto': { 'margin-left': 'auto', 'margin-right': 'auto' }, 'cursor-pointer': { cursor: 'pointer' }, 'cursor-default': { cursor: 'default' }, 'cursor-not-allowed': { cursor: 'not-allowed' },
+  'text-nowrap': { 'white-space': 'nowrap' }, 'sr-only': { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden' },
+}
+
+const TRACKING: Record<string, string> = { tighter: '-0.05em', tight: '-0.025em', normal: '0', wide: '0.025em', wider: '0.05em', widest: '0.1em' }
+const CURSOR = ['pointer', 'default', 'not-allowed', 'wait', 'text', 'move', 'grab', 'grabbing', 'auto', 'help']
+const BORDER_SIDE: Record<string, string[]> = {
+  '': ['border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width'],
+  t: ['border-top-width'], r: ['border-right-width'], b: ['border-bottom-width'], l: ['border-left-width'],
+  x: ['border-left-width', 'border-right-width'], y: ['border-top-width', 'border-bottom-width'],
+}
+
 function color(rest: string): string | undefined {
   if (rest === 'white') return '#ffffff'
   if (rest === 'black') return '#000000'
@@ -80,6 +120,18 @@ function color(rest: string): string | undefined {
 }
 
 export function classToDecls(cls: string): Decls | null {
+  // Exact-match utilities
+  if (cls in EXACT) return { ...EXACT[cls]! }
+
+  // Border width: border, border-2, border-x, border-t-2 …
+  const bw = cls.match(/^border(-([xytrbl]))?(-(\d+))?$/)
+  if (bw && (cls === 'border' || bw[2] || bw[4])) {
+    const w = `${bw[4] ?? '1'}px`
+    const d: Decls = { 'border-style': 'solid' }
+    for (const p of BORDER_SIDE[bw[2] ?? '']!) d[p] = w
+    return d
+  }
+
   // Spacing (longest prefix first so 'px' beats 'p')
   for (const prefix of Object.keys(SPACING_SIDES).sort((a, b) => b.length - a.length)) {
     const m = cls.match(new RegExp(`^${prefix}-(.+)$`))
@@ -133,6 +185,25 @@ export function classToDecls(cls: string): Decls | null {
   // Opacity
   const op = cls.match(/^opacity-(\d+)$/)
   if (op) return { opacity: String(Number(op[1]) / 100) }
+  // z-index
+  const z = cls.match(/^z-(\d+|auto)$/)
+  if (z) return { 'z-index': z[1]! }
+  // order
+  const ord = cls.match(/^order-(\d+)$/)
+  if (ord) return { order: ord[1]! }
+  // letter spacing
+  const tr = cls.match(/^tracking-(.+)$/)
+  if (tr && tr[1]! in TRACKING) return { 'letter-spacing': TRACKING[tr[1]!]! }
+  // cursor
+  const cur = cls.match(/^cursor-(.+)$/)
+  if (cur && CURSOR.includes(cur[1]!)) return { cursor: cur[1]! }
+  // grid columns / rows
+  const gc = cls.match(/^grid-cols-(\d+)$/)
+  if (gc) return { 'grid-template-columns': `repeat(${gc[1]}, minmax(0, 1fr))` }
+  const gr = cls.match(/^grid-rows-(\d+)$/)
+  if (gr) return { 'grid-template-rows': `repeat(${gr[1]}, minmax(0, 1fr))` }
+  const cspan = cls.match(/^col-span-(\d+)$/)
+  if (cspan) return { 'grid-column': `span ${cspan[1]} / span ${cspan[1]}` }
   // Colors
   const col = cls.match(/^(bg|text|border)-(.+)$/)
   if (col) {
@@ -143,6 +214,12 @@ export function classToDecls(cls: string): Decls | null {
     }
   }
   return null
+}
+
+// Is this class a Tailwind utility we understand (ignoring variant prefixes)?
+export function isTailwindUtility(cls: string): boolean {
+  const util = cls.split(':').pop()!
+  return classToDecls(util) !== null
 }
 
 export function tailwindToStyles(classes: string[]): Decls {

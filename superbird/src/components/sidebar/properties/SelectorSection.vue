@@ -12,11 +12,17 @@ const { node } = useNodeStyles()
 function addClass(name: string) {
   if (!node.value) return
   store.addClassToNode(node.value.id, name)
+  globalStylesStore.noteClassUsed(name)
 }
 
 function removeClass(name: string) {
   if (!node.value) return
   store.removeClassFromNode(node.value.id, name)
+}
+
+function selectClass(name: string) {
+  globalStylesStore.setActiveClass(name)
+  globalStylesStore.noteClassUsed(name)
 }
 </script>
 
@@ -27,9 +33,10 @@ function removeClass(name: string) {
       :active-class="globalStylesStore.activeClassName"
       :active-state="globalStylesStore.activeState"
       :all-class-names="globalStylesStore.allClassNames"
+      :recent-classes="globalStylesStore.recentClasses"
       @add="addClass"
       @remove="removeClass"
-      @select="globalStylesStore.setActiveClass"
+      @select="selectClass"
       @update:active-state="globalStylesStore.setActiveState"
     />
   </section>

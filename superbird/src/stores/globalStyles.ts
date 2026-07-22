@@ -96,6 +96,12 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
 
   const allClassNames = computed(() => Object.keys(styleClasses.value).sort())
 
+  // Recently-used classes (MRU, ephemeral) for the class-input dropdown.
+  const recentClasses = ref<string[]>([])
+  function noteClassUsed(name: string) {
+    recentClasses.value = [name, ...recentClasses.value.filter((n) => n !== name)].slice(0, 12)
+  }
+
   function createStyleClass(name: string): StyleClass {
     const cls: StyleClass = { name, styles: createStyleClassStyles() }
     styleClasses.value[name] = cls
@@ -156,6 +162,8 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     activeBreakpoint,
     activeViewportWidth,
     allClassNames,
+    recentClasses,
+    noteClassUsed,
     createStyleClass,
     updateClassStyle,
     setActiveState,

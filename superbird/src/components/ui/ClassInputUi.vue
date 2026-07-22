@@ -2,14 +2,17 @@
 import { ref, computed } from 'vue'
 import { STYLE_STATES } from '@/constants/canvas'
 import type { StyleState } from '@/types/canvas'
-import PopoverUi from './PopoverUi.vue'
 import IconUi from './IconUi.vue'
 
-const props = defineProps<{
-  classes: string[]
-  activeClass: string | null
-  allClassNames: string[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    classes: string[]
+    activeClass: string | null
+    allClassNames: string[]
+    recentClasses?: string[]
+  }>(),
+  { recentClasses: () => [] },
+)
 
 const activeState = defineModel<StyleState>('activeState', { default: 'default' })
 
@@ -21,34 +24,38 @@ const emit = defineEmits<{
 
 const query = ref('')
 const isFocused = ref(false)
-const stateOpen = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 
-const showDropdown = computed(() => isFocused.value && query.value.length > 0)
-
-const currentStateLabel = computed(() =>
-  STYLE_STATES.find((s) => s.key === activeState.value)?.label ?? 'State',
-)
-
+// Matches while typing (existing classes not already applied).
 const suggestions = computed(() => {
-  if (!query.value) return []
-  const q = query.value.toLowerCase()
-  return props.allClassNames
-    .filter((n) => n.toLowerCase().includes(q) && !props.classes.includes(n))
-    .slice(0, 6)
+  const q = query.value.trim().toLowerCase()
+  if (!q) return []
+  return props.allClassNames.filter((n) => n.toLowerCase().includes(q) && !props.classes.includes(n)).slice(0, 6)
 })
 
 const canCreate = computed(() => {
-  if (!query.value.trim()) return false
   const q = query.value.trim().toLowerCase()
+  if (!q) return false
   return !props.allClassNames.some((n) => n.toLowerCase() === q)
 })
+
+// Recently-used classes not already applied (shown when not typing).
+const recentSelectable = computed(() =>
+  props.recentClasses.filter((n) => !props.classes.includes(n)).slice(0, 8),
+)
+
+function addClass(name: string) {
+  const n = name.trim()
+  if (!n) return
+  emit('add', n)
+  query.value = ''
+  inputRef.value?.focus()
+}
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && query.value.trim()) {
     e.preventDefault()
-    emit('add', query.value.trim())
-    query.value = ''
+    addClass(query.value)
   }
   if (e.key === 'Backspace' && !query.value && props.classes.length > 0) {
     emit('remove', props.classes[props.classes.length - 1]!)
@@ -59,106 +66,55 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
-function pickSuggestion(name: string) {
-  emit('add', name)
-  query.value = ''
-  inputRef.value?.focus()
-}
-
 function focusInput() {
   inputRef.value?.focus()
 }
-
 function handleBlur() {
-  setTimeout(() => { isFocused.value = false }, 150)
+  // Delay so dropdown mousedown handlers run first.
+  setTimeout(() => {
+    isFocused.value = false
+  }, 150)
 }
-
-function toggleState(e: MouseEvent) {
-  e.stopPropagation()
-  stateOpen.value = !stateOpen.value
-}
-
 function selectState(state: StyleState) {
   activeState.value = state
-  stateOpen.value = false
 }
 </script>
 
 <template>
   <div class="relative">
-    <div class="flex items-center gap-1.5">
-      <!-- Class input -->
-      <div
+    <!-- Chips + input -->
+    <div
+      :class="[
+        'flex flex-wrap items-center gap-1 min-h-8 px-1 py-0.5 rounded-xl border cursor-text transition-colors duration-150',
+        isFocused ? 'border-foreground/40 outline-3 outline-secondary/10' : 'border-foreground/15 hover:border-foreground/25',
+      ]"
+      @click="focusInput"
+    >
+      <button
+        v-for="cls in classes"
+        :key="cls"
         :class="[
-          'flex flex-1 flex-wrap items-center gap-1 min-h-8 px-1 py-0.5 rounded-xl border cursor-text transition-colors duration-150',
-          isFocused
-            ? 'border-foreground/40 outline-3 outline-secondary/10'
-            : 'border-foreground/15 hover:border-foreground/25',
+          'group inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-mono leading-tight cursor-pointer transition-colors duration-100 shrink-0',
+          activeClass === cls ? 'bg-primary/15 text-primary' : 'bg-secondary/10 text-foreground/70 hover:bg-secondary/15',
         ]"
-        @click="focusInput"
+        @click.stop="emit('select', cls)"
       >
-        <!-- Class badges -->
-        <button
-          v-for="cls in classes"
-          :key="cls"
-          :class="[
-            'group inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-mono leading-tight cursor-pointer transition-colors duration-100 shrink-0',
-            activeClass === cls
-              ? 'bg-primary/15 text-primary'
-              : 'bg-secondary/10 text-foreground/70 hover:bg-secondary/15',
-          ]"
-          @click.stop="emit('select', cls)"
-        >
-          {{ cls }}
-          <IconUi name="close" size="size-2.5" @click.stop="emit('remove', cls)" />
-        </button>
+        {{ cls }}
+        <IconUi name="close" size="size-2.5" @click.stop="emit('remove', cls)" />
+      </button>
 
-        <!-- Text input -->
-        <input
-          ref="inputRef"
-          v-model="query"
-          placeholder="Add class..."
-          class="flex-1 min-w-[60px] bg-transparent text-xs text-foreground placeholder:text-foreground/30 outline-none h-5"
-          @focus="isFocused = true"
-          @blur="handleBlur"
-          @keydown="handleKeydown"
-        />
-      </div>
-
-      <!-- State mini-dropdown -->
-      <div v-if="activeClass" class="relative shrink-0">
-        <button
-          :class="[
-            'flex items-center gap-0.5 h-8 px-2 rounded-xl border text-[10px] font-mono cursor-pointer transition-colors duration-150',
-            activeState !== 'default'
-              ? 'border-primary/30 bg-primary/8 text-primary'
-              : 'border-foreground/15 text-secondary hover:border-foreground/25 hover:text-foreground',
-          ]"
-          @click="toggleState"
-        >
-          {{ currentStateLabel }}
-          <IconUi name="chevron-down" :class="['transition-transform duration-150', stateOpen && 'rotate-180']" size="size-2.5" />
-        </button>
-
-        <PopoverUi v-model:open="stateOpen" align="left" panel-class="w-28 p-1">
-          <button
-            v-for="state in STYLE_STATES"
-            :key="state.key"
-            :class="[
-              'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-mono cursor-pointer transition-colors duration-100',
-              activeState === state.key
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-foreground hover:bg-secondary/10',
-            ]"
-            @click="selectState(state.key)"
-          >
-            {{ state.label }}
-          </button>
-        </PopoverUi>
-      </div>
+      <input
+        ref="inputRef"
+        v-model="query"
+        placeholder="Add class..."
+        class="h-5 min-w-[60px] flex-1 bg-transparent text-xs text-foreground placeholder:text-foreground/30 outline-none"
+        @focus="isFocused = true"
+        @blur="handleBlur"
+        @keydown="handleKeydown"
+      />
     </div>
 
-    <!-- Autocomplete dropdown -->
+    <!-- Dropdown (on focus) -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
       enter-from-class="opacity-0 translate-y-1"
@@ -167,31 +123,66 @@ function selectState(state: StyleState) {
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 translate-y-1"
     >
-      <div
-        v-if="showDropdown"
-        class="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl border bg-background p-1 shadow-lg"
-      >
-        <button
-          v-for="s in suggestions"
-          :key="s"
-          class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @mousedown.prevent="pickSuggestion(s)"
-        >
-          <span class="font-mono text-[10px] text-foreground/60">.</span>
-          <span>{{ s }}</span>
-        </button>
+      <div v-if="isFocused" class="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border bg-background p-1 shadow-lg">
+        <!-- Create / suggestions (top) -->
+        <template v-if="query.trim()">
+          <button
+            v-for="s in suggestions"
+            :key="s"
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            @mousedown.prevent="addClass(s)"
+          >
+            <span class="font-mono text-[10px] text-foreground/50">.</span>
+            <span class="font-mono">{{ s }}</span>
+          </button>
+          <button
+            v-if="canCreate"
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            @mousedown.prevent="addClass(query)"
+          >
+            <IconUi name="plus" size="size-3" class="text-primary" />
+            <span>Create <span class="font-mono font-medium text-primary">{{ query.trim() }}</span></span>
+          </button>
+          <div v-if="!suggestions.length && !canCreate" class="px-2.5 py-1.5 text-[10px] text-secondary">No matching classes</div>
+        </template>
 
-        <button
-          v-if="canCreate"
-          class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @mousedown.prevent="emit('add', query.trim()); query = ''"
-        >
-          <IconUi name="plus" size="size-3" class="text-primary" />
-          <span>Create <span class="font-mono font-medium text-primary">{{ query.trim() }}</span></span>
-        </button>
+        <template v-else>
+          <div class="flex items-center gap-2 px-2.5 py-1.5 text-xs text-secondary">
+            <IconUi name="plus" size="size-3" />
+            <span>Create a class</span>
+          </div>
 
-        <div v-if="suggestions.length === 0 && !canCreate" class="px-2.5 py-1.5 text-[10px] text-secondary">
-          No matching classes
+          <!-- Recently used -->
+          <template v-if="recentSelectable.length">
+            <div class="px-2.5 pb-0.5 pt-1.5 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Recent</div>
+            <button
+              v-for="c in recentSelectable"
+              :key="c"
+              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+              @mousedown.prevent="addClass(c)"
+            >
+              <span class="font-mono text-[10px] text-foreground/50">.</span>
+              <span class="font-mono">{{ c }}</span>
+            </button>
+          </template>
+        </template>
+
+        <!-- State selector -->
+        <div class="mt-1 border-t border-foreground/8 pt-1.5">
+          <div class="px-2.5 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">State</div>
+          <div class="flex flex-wrap gap-1 px-1.5 pb-0.5">
+            <button
+              v-for="state in STYLE_STATES"
+              :key="state.key"
+              :class="[
+                'rounded-md px-2 py-1 text-[10px] font-mono cursor-pointer transition-colors duration-100',
+                activeState === state.key ? 'bg-primary/10 text-primary font-medium' : 'text-secondary hover:bg-secondary/10 hover:text-foreground',
+              ]"
+              @mousedown.prevent="selectState(state.key)"
+            >
+              {{ state.label }}
+            </button>
+          </div>
         </div>
       </div>
     </Transition>

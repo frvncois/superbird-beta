@@ -1,9 +1,27 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
+
+// Redirect the bare /admin → /admin/ in dev, so visiting /admin just works
+// instead of hitting Vite's base-URL notice.
+function adminTrailingSlash(): Plugin {
+  return {
+    name: 'admin-trailing-slash',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/admin') {
+          res.writeHead(301, { Location: '/admin/' })
+          res.end()
+          return
+        }
+        next()
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +30,7 @@ export default defineConfig({
   // is prefixed automatically.
   base: '/admin/',
   plugins: [
+    adminTrailingSlash(),
     tailwindcss(),
     vue(),
     vueDevTools(),

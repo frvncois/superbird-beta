@@ -2,9 +2,17 @@
 import { ref, computed, nextTick, watch } from 'vue'
 import IconUi from './IconUi.vue'
 
+interface SelectOption {
+  value: string
+  label: string
+  // Optional per-option affordances (e.g. a highlighted "dynamic" choice).
+  icon?: string
+  accentClass?: string
+}
+
 const props = withDefaults(
   defineProps<{
-    options: { value: string; label: string }[]
+    options: SelectOption[]
     placeholder?: string
     disabled?: boolean
   }>(),
@@ -20,9 +28,8 @@ const open = ref(false)
 const highlighted = ref(-1)
 const panelRef = ref<HTMLElement | null>(null)
 
-const selectedLabel = computed(
-  () => props.options.find((o) => o.value === model.value)?.label ?? '',
-)
+const selectedOption = computed(() => props.options.find((o) => o.value === model.value))
+const selectedLabel = computed(() => selectedOption.value?.label ?? '')
 
 function toggle() {
   if (props.disabled) return
@@ -110,7 +117,18 @@ watch(highlighted, scrollToHighlighted)
       @keydown="onKeydown"
       @blur="close"
     >
-      <span :class="['min-w-0 flex-1 truncate text-left', selectedLabel ? 'text-foreground' : 'text-foreground/40']">
+      <IconUi
+        v-if="selectedOption?.icon"
+        :name="selectedOption.icon"
+        size="size-3"
+        :class="['shrink-0', selectedOption.accentClass ?? 'text-secondary']"
+      />
+      <span
+        :class="[
+          'min-w-0 flex-1 truncate text-left',
+          selectedOption?.accentClass ?? (selectedLabel ? 'text-foreground' : 'text-foreground/40'),
+        ]"
+      >
         {{ selectedLabel || placeholder }}
       </span>
       <IconUi
@@ -146,17 +164,15 @@ watch(highlighted, scrollToHighlighted)
           :aria-selected="opt.value === model"
           :class="[
             'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors duration-100',
-            opt.value === model
-              ? 'bg-primary/10 font-medium text-primary'
-              : i === highlighted
-                ? 'bg-secondary/10 text-foreground'
-                : 'text-foreground hover:bg-secondary/10',
+            opt.value === model ? 'bg-primary/10 font-medium' : i === highlighted ? 'bg-secondary/10' : 'hover:bg-secondary/10',
+            opt.accentClass ?? (opt.value === model ? 'text-primary' : 'text-foreground'),
           ]"
           @mousedown.prevent="select(opt.value)"
           @mouseenter="highlighted = i"
         >
+          <IconUi v-if="opt.icon" :name="opt.icon" size="size-3" class="shrink-0" />
           <span class="min-w-0 flex-1 truncate">{{ opt.label }}</span>
-          <IconUi v-if="opt.value === model" name="check" size="size-3" class="shrink-0 text-primary" />
+          <IconUi v-if="opt.value === model" name="check" size="size-3" class="shrink-0" />
         </button>
       </div>
     </Transition>

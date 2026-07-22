@@ -31,13 +31,17 @@ const inCollectionContext = computed(
 )
 
 const typeOptions = computed(() => {
-  const base = [
+  const opts: { value: string; label: string; icon?: string; accentClass?: string }[] = []
+  // The dynamic "current post" choice leads, styled purple like other bindings.
+  if (inCollectionContext.value) {
+    opts.push({ value: 'current', label: 'Current post', icon: 'link', accentClass: 'text-purple-fg' })
+  }
+  opts.push(
     { value: 'url', label: 'Custom URL' },
     { value: 'page', label: 'Page' },
     { value: 'post', label: 'Post' },
-  ]
-  if (inCollectionContext.value) base.push({ value: 'current', label: 'Current post' })
-  return base
+  )
+  return opts
 })
 const targetOptions = [
   { value: '_self', label: 'Same tab' },

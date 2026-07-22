@@ -17,6 +17,10 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     Object.assign(siteSettings.value.imageCompression, updates)
   }
 
+  function setCssMode(mode: SiteSettings['cssMode']) {
+    siteSettings.value.cssMode = mode
+  }
+
   function updateSiteIdentity(updates: Partial<SiteSettings['identity']>) {
     Object.assign(siteSettings.value.identity, updates)
   }
@@ -53,6 +57,7 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     siteSettings,
     hydrate,
     updateImageCompression,
+    setCssMode,
     updateSiteIdentity,
     updateSeo,
     updateCustomCode,

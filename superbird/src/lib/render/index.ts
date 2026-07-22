@@ -16,6 +16,8 @@ export interface DocumentHead {
   title?: string
   description?: string
   noIndex?: boolean
+  // Load the Tailwind CDN so Tailwind utility classes render.
+  tailwind?: boolean
 }
 
 function escAttr(s: string): string {
@@ -35,6 +37,7 @@ export function renderDocument(
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
   if (head.description) headTags += `<meta name="description" content="${escAttr(head.description)}">`
   if (head.noIndex) headTags += '<meta name="robots" content="noindex, nofollow">'
+  if (head.tailwind) headTags += '<script src="https://cdn.tailwindcss.com"></script>'
   // Only ship the interaction runtime when the page actually uses interactions.
   const ixScript = html.includes('data-sb-ix') ? `<script>${interactionsRuntimeScript()}</script>` : ''
   return (

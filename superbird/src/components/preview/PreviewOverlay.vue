@@ -4,6 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
+import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { renderDocument, type RenderContext } from '@/lib/render'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -13,6 +14,7 @@ const canvas = useCanvasStore()
 const styles = useGlobalStylesStore()
 const collections = useCollectionsStore()
 const media = useMediaStore()
+const siteSettings = useSiteSettingsStore()
 
 // Viewport widths to exercise the compiled @media rules.
 const widths = [
@@ -46,7 +48,9 @@ const ctx: RenderContext = {
 }
 
 const srcdoc = computed(() =>
-  renderDocument(canvas.activePage.body, styles.styleClasses, styles.globalStyles, ctx),
+  renderDocument(canvas.activePage.body, styles.styleClasses, styles.globalStyles, ctx, {
+    tailwind: siteSettings.siteSettings.cssMode === 'tailwind',
+  }),
 )
 </script>
 

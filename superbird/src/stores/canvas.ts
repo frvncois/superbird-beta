@@ -196,6 +196,18 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  // Swap one class for another in place, without touching the style-class
+  // registry (used for Tailwind utilities, which aren't style classes).
+  function replaceClassOnNode(nodeId: string, oldName: string, newName: string) {
+    const body = activePage.value.body
+    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
+    if (!node) return
+    const idx = node.classes.indexOf(oldName)
+    if (idx === -1) return
+    if (newName && !node.classes.includes(newName)) node.classes.splice(idx, 1, newName)
+    else node.classes.splice(idx, 1)
+  }
+
   function addClassToNode(nodeId: string, className: string) {
     const body = activePage.value.body
     const node = nodeId === body.id ? body : findNode(body.children, nodeId)
@@ -716,6 +728,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     deleteStyleClass,
     addClassToNode,
     removeClassFromNode,
+    replaceClassOnNode,
     // Node mutations
     findNode,
     addNode,

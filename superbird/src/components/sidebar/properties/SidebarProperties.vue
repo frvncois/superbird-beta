@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useSiteSettingsStore } from '@/stores/siteSettings'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import SelectorSection from './SelectorSection.vue'
+import TailwindInfoPanel from './TailwindInfoPanel.vue'
 import LayoutSection from './LayoutSection.vue'
 import PositionSection from './PositionSection.vue'
 import SizeSection from './SizeSection.vue'
@@ -14,7 +16,10 @@ import EffectsSection from './EffectsSection.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const globalStylesStore = useGlobalStylesStore()
+const siteSettings = useSiteSettingsStore()
 const { node, activeStyles, isContainer, isTextNode } = useNodeStyles()
+
+const isTailwind = computed(() => siteSettings.siteSettings.cssMode === 'tailwind')
 
 watch(() => node.value?.id, () => {
   if (node.value && node.value.classes.length > 0) {
@@ -34,8 +39,11 @@ watch(() => node.value?.id, () => {
   <div v-else>
     <SelectorSection />
 
-    <!-- Style sections (always shown when node selected) -->
-    <template v-if="activeStyles">
+    <!-- Tailwind mode: no property editing — show the parsed classes instead. -->
+    <TailwindInfoPanel v-if="isTailwind" />
+
+    <!-- Custom mode: the style sections. -->
+    <template v-else-if="activeStyles">
       <div class="border-y">
         <LayoutSection v-if="isContainer" />
         <PositionSection />

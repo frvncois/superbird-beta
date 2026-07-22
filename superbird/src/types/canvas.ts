@@ -343,6 +343,8 @@ export interface ImageCompression {
   quality: number // 1–100
 }
 
+export type CssMode = 'custom' | 'tailwind'
+
 export interface SiteSettings {
   identity: SiteIdentity
   seo: SeoDefaults
@@ -350,6 +352,7 @@ export interface SiteSettings {
   redirects: Redirect[]
   integrations: SiteIntegrations
   imageCompression: ImageCompression
+  cssMode: CssMode
 }
 
 // --- Global styles ---

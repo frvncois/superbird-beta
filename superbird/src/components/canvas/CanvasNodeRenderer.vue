@@ -6,7 +6,6 @@ import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES, CONTENT_TYPES } from '@/constants/canvas'
 import { renderMarkdown } from '@/lib/markdown'
-import { tailwindToStyles } from '@/lib/tailwindToStyles'
 import type { CanvasNode, Entry } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -103,12 +102,7 @@ const isHiddenAtBreakpoint = computed(() => {
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)
 })
-// Tailwind utilities → inline styles so they render live in the canvas; custom
-// style-class styles (resolveStyles) layer on top.
-const computedStyles = computed(() => ({
-  ...tailwindToStyles(props.node.classes),
-  ...globalStylesStore.resolveStyles(props.node),
-}))
+const computedStyles = computed(() => globalStylesStore.resolveStyles(props.node))
 const ctx = useContextMenu()
 
 function handleClick(e: MouseEvent) {
@@ -186,6 +180,7 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     :data-node-id="preview ? undefined : node.id"
     :class="[
       'canvas-node relative',
+      ...node.classes,
       isBody && isDesktop && 'bg-background h-full',
       isBody && !isDesktop && 'rounded-2xl border bg-background shadow-sm min-h-full',
       showOutlines && isSelected && !isComponentInstance && !isDynamic && 'ring-2 ring-primary ring-offset-1',

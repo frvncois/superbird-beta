@@ -79,7 +79,7 @@ function color(rest: string): string | undefined {
   return COLORS[rest]?.['500']
 }
 
-function classToDecls(cls: string): Decls | null {
+export function classToDecls(cls: string): Decls | null {
   // Spacing (longest prefix first so 'px' beats 'p')
   for (const prefix of Object.keys(SPACING_SIDES).sort((a, b) => b.length - a.length)) {
     const m = cls.match(new RegExp(`^${prefix}-(.+)$`))
@@ -151,5 +151,57 @@ export function tailwindToStyles(classes: string[]): Decls {
     const d = classToDecls(cls)
     if (d) Object.assign(out, d)
   }
+  return out
+}
+
+// ── Variant-aware compiler (real CSS rules, for the editor canvas) ──
+// Handles responsive (sm/md/lg/xl/2xl), state (hover/focus/…), group-*, dark:.
+// The published site uses the Tailwind CDN, which covers everything.
+
+const BREAKPOINTS: Record<string, string> = { sm: '640px', md: '768px', lg: '1024px', xl: '1280px', '2xl': '1536px' }
+const STATE_PSEUDO: Record<string, string> = {
+  hover: ':hover', focus: ':focus', active: ':active', visited: ':visited',
+  'focus-within': ':focus-within', 'focus-visible': ':focus-visible', disabled: ':disabled', checked: ':checked',
+}
+const ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
+
+function escapeClass(cls: string): string {
+  return cls.replace(/[:./%[\]!]/g, '\\$&')
+}
+function declsToText(d: Decls): string {
+  return Object.entries(d).map(([k, v]) => `${k}:${v}`).join(';')
+}
+
+/** Compile a set of Tailwind classes to CSS rules scoped under `scope`. */
+export function compileTailwindCss(classes: string[], scope: string): string {
+  const base: string[] = []
+  const byMedia: Record<string, string[]> = {}
+  const seen = new Set<string>()
+
+  for (const cls of classes) {
+    if (seen.has(cls)) continue
+    seen.add(cls)
+    const parts = cls.split(':')
+    const util = parts.pop()!
+    const decls = classToDecls(util)
+    if (!decls) continue
+
+    let pseudo = ''
+    let ancestor = ''
+    let mq: string | null = null
+    for (const v of parts) {
+      if (v in BREAKPOINTS) mq = BREAKPOINTS[v]!
+      else if (v in STATE_PSEUDO) pseudo += STATE_PSEUDO[v]
+      else if (v in ANCESTOR) ancestor = ANCESTOR[v]! + ancestor
+    }
+    const rule = `${scope} ${ancestor}.${escapeClass(cls)}${pseudo}{${declsToText(decls)}}`
+    if (mq) (byMedia[mq] ??= []).push(rule)
+    else base.push(rule)
+  }
+
+  let out = base.join('')
+  // Container queries (not @media) so responsive variants track the artboard
+  // width set by the viewport switcher, not the browser window.
+  for (const [mq, rules] of Object.entries(byMedia)) out += `@container (min-width:${mq}){${rules.join('')}}`
   return out
 }

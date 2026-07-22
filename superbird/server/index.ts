@@ -5,6 +5,7 @@ import authRoutes from './routes/auth'
 import projectRoutes from './routes/project'
 import mediaRoutes from './routes/media'
 import fontsRoutes from './routes/fonts'
+import usersRoutes from './routes/users'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -18,6 +19,7 @@ app.route('/api', authRoutes)
 app.route('/api', projectRoutes)
 app.route('/api', mediaRoutes)
 app.route('/api', fontsRoutes)
+app.route('/api', usersRoutes)
 
 // Public media files (no auth — referenced by published pages).
 app.get('/media/:id', (c) => {

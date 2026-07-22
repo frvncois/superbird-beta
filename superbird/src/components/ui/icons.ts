@@ -87,7 +87,6 @@ export const ICONS: Record<string, Component> = {
   settings: Cog6ToothIcon,
   search: MagnifyingGlassIcon,
   users: UsersIcon,
-  sparkles: SparklesIcon,
   folder: FolderIcon,
   upload: ArrowUpTrayIcon,
   document: DocumentIcon,

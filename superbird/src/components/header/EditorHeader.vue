@@ -8,7 +8,7 @@ import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import { useHistory } from '@/composables/useHistory'
 import HeaderPageSelect from './HeaderPageSelect.vue'
-import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
+import HeaderContextBar from './HeaderContextBar.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
 
 const mediaStore = useMediaStore()
@@ -36,9 +36,9 @@ function toggleTheme() {
       <HeaderPageSelect />
     </div>
 
-    <!-- Center: viewport switcher -->
+    <!-- Center: context bar (entry controls + viewport switcher) -->
     <div class="flex items-center gap-1.5">
-      <HeaderViewportSwitch />
+      <HeaderContextBar />
       <slot name="toolbar" />
     </div>
 

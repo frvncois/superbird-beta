@@ -123,10 +123,9 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
   <div class="relative">
     <!-- Trigger -->
     <button
-      class="flex items-center gap-1.5 rounded-xl px-3 h-7 text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
+      class="flex items-center gap-1.5 rounded-xl px-3 h-7 w-48 justify-between text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
       @click="isOpen = !isOpen"
     >
-      <span :class="['rounded px-1 py-px text-[9px] font-mono font-medium', context.color]">{{ context.badge }}</span>
       <span class="font-medium">{{ context.name }}</span>
       <IconUi name="chevron-down" size="size-3" :class="['text-secondary transition-transform duration-150', isOpen && 'rotate-180']" />
     </button>

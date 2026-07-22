@@ -5,6 +5,7 @@ import { useCollectionsStore } from '@/stores/collections'
 import InputUi from '@/components/ui/InputUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -31,20 +32,20 @@ function backToTemplate() {
 </script>
 
 <template>
-  <!-- Editing a specific item -->
-  <div v-if="entry" class="flex items-center gap-3 border-b bg-purple-bg/20 px-4 py-2">
-    <span class="rounded bg-purple-bg px-1.5 py-0.5 text-[9px] font-mono font-medium uppercase text-purple-fg">
-      {{ collection?.singular ?? 'Item' }}
-    </span>
-    <div class="flex items-center gap-1.5">
-      <span class="text-[10px] font-mono uppercase tracking-wider text-secondary/60">Title</span>
-      <div class="w-56"><InputUi v-model="title" size="xs" placeholder="Item title" /></div>
-    </div>
-    <div class="flex items-center gap-1.5">
-      <span class="text-[10px] font-mono text-secondary/40">/</span>
-      <div class="w-40"><InputUi v-model="slug" size="xs" placeholder="slug" /></div>
-    </div>
-    <div class="ml-auto flex items-center gap-3">
+  <div class="flex items-center gap-3">
+    <!-- Entry controls (only when an item is loaded) -->
+    <template v-if="entry">
+      <span class="rounded bg-purple-bg px-1.5 py-0.5 text-[9px] font-mono font-medium uppercase text-purple-fg">
+        {{ collection?.singular ?? 'Item' }}
+      </span>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-secondary/60">Title</span>
+        <div class="w-48"><InputUi v-model="title" size="xs" placeholder="Item title" /></div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] font-mono text-secondary/40">/</span>
+        <div class="w-32"><InputUi v-model="slug" size="xs" placeholder="slug" /></div>
+      </div>
       <SegmentedControlUi
         v-model="status"
         size="xs"
@@ -56,12 +57,10 @@ function backToTemplate() {
       >
         <IconUi name="chevron-down" size="size-3" class="rotate-90" /> Template
       </button>
-    </div>
-  </div>
+      <div class="h-4 w-px bg-border" />
+    </template>
 
-  <!-- Editing the template (no item loaded) -->
-  <div v-else-if="store.isCollectionTemplate" class="flex items-center gap-2 border-b bg-secondary/5 px-4 py-1.5 text-[11px] text-secondary">
-    <IconUi name="layers" size="size-3" class="text-secondary/50" />
-    Editing the <span class="font-medium text-foreground">{{ collection?.name ?? 'collection' }}</span> template — changes apply to all items.
+    <!-- Viewport selector (always) -->
+    <HeaderViewportSwitch />
   </div>
 </template>

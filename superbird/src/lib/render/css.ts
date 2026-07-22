@@ -209,8 +209,14 @@ function elementRules(
   }
 }
 
-/** Compile a full page: global base + per-element rules (identical to canvas). */
-export function compilePageCss(body: CanvasNode, styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+// Assemble base + per-element rules across one or more page bodies. Element
+// rules are keyed by (globally unique) node id, so a single stylesheet can serve
+// the whole site without collisions.
+function compileBodiesCss(
+  bodies: CanvasNode[],
+  styleClasses: Record<string, StyleClass>,
+  globalStyles: GlobalStyles,
+): string {
   const base: string[] = []
   const maxMedia: Record<string, string[]> = {}
   const minMedia: Record<string, string[]> = {}
@@ -221,10 +227,20 @@ export function compilePageCss(body: CanvasNode, styleClasses: Record<string, St
     }
     for (const child of node.children) walk(child)
   }
-  walk(body)
+  for (const body of bodies) walk(body)
 
   const parts = [baseCss(globalStyles), base.join('')]
   for (const w of ['768px', '375px']) if (maxMedia[w]) parts.push(`@media (max-width:${w}){${maxMedia[w]!.join('')}}`)
   for (const w of ['640px', '768px', '1024px', '1280px', '1536px']) if (minMedia[w]) parts.push(`@media (min-width:${w}){${minMedia[w]!.join('')}}`)
   return parts.join('\n')
+}
+
+/** Compile a single page: global base + per-element rules (identical to canvas). */
+export function compilePageCss(body: CanvasNode, styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+  return compileBodiesCss([body], styleClasses, globalStyles)
+}
+
+/** Compile the whole site into one stylesheet (base once + every page's rules). */
+export function compileSiteCss(bodies: CanvasNode[], styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+  return compileBodiesCss(bodies, styleClasses, globalStyles)
 }

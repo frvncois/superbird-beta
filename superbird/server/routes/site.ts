@@ -1,7 +1,17 @@
 import { Hono } from 'hono'
 import { getInstalledProject, getWorkingDocument, getPublishedDesign } from '../lib/project'
-import { renderDocument, type RenderContext } from '@/lib/render'
+import {
+  renderDocument,
+  compileSiteCss,
+  collectInteractions,
+  interactionsScript,
+  type RenderContext,
+} from '@/lib/render'
 import type { CanvasNode, Collection, Entry, GlobalStyles, Page, StyleClass } from '@/types/canvas'
+
+// Shared external asset paths (linked from every page).
+const STYLE_HREF = '/style.css'
+const SCRIPT_SRC = '/script.js'
 
 // The public face: resolves a URL to a page (or a collection template + entry)
 // and renders it with the shared pipeline. Serves the PUBLISHED design + LIVE
@@ -43,6 +53,46 @@ function buildContext(entries: Entry[], collections: Collection[], activeEntry?:
   }
 }
 
+// The published design (pages + styles), or null if not installed/published.
+function loadDesign():
+  | { pages: Page[]; styleClasses: Record<string, StyleClass>; globalStyles: GlobalStyles }
+  | null {
+  const proj = getInstalledProject()
+  if (!proj) return null
+  const design = getPublishedDesign(proj.id)
+  if (!design) return null
+  return {
+    pages: (design.pages ?? []) as Page[],
+    styleClasses: (design.styleClasses ?? {}) as Record<string, StyleClass>,
+    globalStyles: design.globalStyles as GlobalStyles,
+  }
+}
+
+// One shared stylesheet for the whole site (element rules are node-id scoped).
+site.get('/style.css', (c) => {
+  const design = loadDesign()
+  if (!design) return c.body('', 404)
+  const css = compileSiteCss(
+    design.pages.map((p) => p.body),
+    design.styleClasses,
+    design.globalStyles,
+  )
+  return new Response(css, {
+    headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-cache' },
+  })
+})
+
+// One shared script: the interaction runtime + every page's interaction data.
+site.get('/script.js', (c) => {
+  const design = loadDesign()
+  if (!design) return c.body('', 404)
+  const map: Record<string, unknown> = {}
+  for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
+  return new Response(interactionsScript(map), {
+    headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
+  })
+})
+
 site.get('*', (c) => {
   const path = c.req.path
   if (path.startsWith('/api')) return c.json({ error: 'Not found' }, 404)
@@ -67,7 +117,10 @@ site.get('*', (c) => {
   const published = ((working?.content.entries ?? []) as Entry[]).filter((e) => e.status === 'published')
 
   const render = (body: CanvasNode, ctx: RenderContext, head: Parameters<typeof renderDocument>[4]) =>
-    renderDocument(body, styleClasses, globalStyles, ctx, head)
+    renderDocument(body, styleClasses, globalStyles, ctx, head, {
+      styleHref: STYLE_HREF,
+      scriptSrc: SCRIPT_SRC,
+    })
 
   const pageHead = (p: Page) => ({
     title: p.seo?.title || p.name,

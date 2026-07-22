@@ -110,12 +110,19 @@ export function interactionsRuntimeScript(): string {
     }
   }
   function init(){
+    var map=window.__SB_IX__||{};
     var els=document.querySelectorAll('[data-sb-ix]');
     Array.prototype.forEach.call(els,function(el){
-      var list; try{ list=JSON.parse(el.getAttribute('data-sb-ix')); }catch(e){ return; }
+      var list=map[el.getAttribute('data-sb-ix')];
       if(list && list.length){ list.forEach(function(ix){ attach(el,ix); }); }
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();`
+}
+
+// Full script payload: the interactions map + the runtime, as one JS string.
+// Used verbatim for the external /script.js (served with a JS content type).
+export function interactionsScript(map: Record<string, unknown>): string {
+  return `window.__SB_IX__=${JSON.stringify(map)};` + interactionsRuntimeScript()
 }

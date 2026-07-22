@@ -74,9 +74,11 @@ function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | un
     out += attr('name', node.props.name)
   }
 
-  // Interactions — the runtime (see interactionsRuntime) reads this and plays them.
+  // Interactions — the element only carries its node id here; the actual
+  // interaction data lives in the script (window.__SB_IX__), keyed by this id,
+  // so the markup stays clean. The runtime (interactionsRuntime) wires them up.
   if (node.interactions && node.interactions.length > 0) {
-    out += attr('data-sb-ix', JSON.stringify(node.interactions))
+    out += attr('data-sb-ix', node.id)
   }
 
   // Custom attributes last (author override).

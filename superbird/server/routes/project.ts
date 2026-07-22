@@ -3,8 +3,8 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projectState } from '../db/schema'
 import { currentUser } from '../lib/session'
-import { getInstalledProject } from '../lib/project'
-import type { ProjectDocument } from '../../shared/types'
+import { getInstalledProject, publishDesign } from '../lib/project'
+import type { ProjectDocument, PublishResult } from '../../shared/types'
 
 const project = new Hono()
 
@@ -43,6 +43,16 @@ project.put('/project', async (c) => {
     })
     .run()
   return c.json({ ok: true })
+})
+
+// Publish: snapshot the working design into the published slot (the public
+// site serves the published design + live published entries).
+project.post('/publish', (c) => {
+  const proj = getInstalledProject()
+  if (!proj) return c.json({ error: 'Not installed.' }, 409)
+  const publishedAt = publishDesign(proj.id)
+  if (!publishedAt) return c.json({ error: 'Nothing to publish yet.' }, 400)
+  return c.json({ publishedAt } satisfies PublishResult)
 })
 
 export default project

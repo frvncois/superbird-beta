@@ -5,6 +5,7 @@ import { db } from '../db/client'
 import { projects, users } from '../db/schema'
 import { hashPassword, verifyPassword } from '../lib/password'
 import { startSession, endSession, currentUser } from '../lib/session'
+import { getPublishedAt } from '../lib/project'
 import type {
   SetupPayload,
   LoginPayload,
@@ -31,6 +32,7 @@ auth.get('/session', (c) => {
     installed: project !== null,
     project,
     user: currentUser(c),
+    publishedAt: project ? getPublishedAt(project.id) : null,
   }
   return c.json(state)
 })

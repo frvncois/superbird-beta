@@ -50,6 +50,12 @@ export interface SessionState {
   installed: boolean
   project: Project | null
   user: User | null
+  // When the site was last published (design snapshot), or null if never.
+  publishedAt: string | null
+}
+
+export interface PublishResult {
+  publishedAt: string
 }
 
 // ── Project document ──

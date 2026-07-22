@@ -43,7 +43,9 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 | `POST /api/logout` | — | Destroy session |
 | `GET /api/project` | ✓ | Load the project document (`{ design, content }`); `design:null` on a fresh project |
 | `PUT /api/project` | ✓ | Upsert the project document |
+| `POST /api/publish` | ✓ | Snapshot the working design as the live/published design |
 | `GET /api/health` | — | Liveness |
+| `GET /*` (non-`/api`) | — | **Public SSR site** — resolves the URL and returns rendered HTML |
 
 ## Project persistence
 
@@ -85,9 +87,33 @@ router, hydrates the `setup` and `auth` stores, then mounts — so navigation
 guards see real state on first paint. Stores are async and hydrate-based; no
 more localStorage.
 
+## Public SSR site + draft/publish
+
+The Hono server has two faces on one port: `/api/*` (admin API) and a catch-all
+**public site** (`server/routes/site.ts`) for every other path. In dev the
+public site is `http://localhost:3001/` (`/about`, `/blog/<slug>`, …); the
+editor SPA stays on Vite (`5173`). In production they're different domains.
+
+- **Routing:** `/` → home page (slug `/`) · `/<slug>` → static page ·
+  `/<collection.basePath>/<entry.slug>` → collection template + that entry ·
+  else the `404` system page.
+- **Rendering:** the server imports the shared pipeline via a `@/*` → `../src/*`
+  tsconfig path alias (`server/tsconfig.json`; `dev:server` passes
+  `--tsconfig`). It builds a DB-backed `RenderContext` and calls `renderDocument`.
+- **Draft/publish (hybrid):** the public site serves the **published design
+  snapshot** (`project_state.published_design`, written by `POST /api/publish`)
+  plus **live entries filtered to `status:published`**. So content publishes
+  instantly/independently while design changes stay private until Publish. An
+  unpublished site shows a placeholder. Editor: the header **Publish** button
+  (`useProjectPersistence().publish()`); `SessionState.publishedAt` drives the
+  dashboard's published badge.
+- **Known gap:** media isn't persisted, so `<img>` src resolves empty on the
+  public site until the media pipeline lands.
+
 ## Next slices
 
-Per `cms-architecture.md`: content model tables + CRUD (collections/fields/
-entries/media), then the shared render pipeline (node→HTML, classes→CSS), then
-the SSR public runtime, then draft/publish. Migrations move from `ensureSchema`
-to drizzle-kit (`npm run db:generate`) once the schema stabilises.
+Media as files-on-disk + a metadata table (unblocks real images on the public
+site); responsive-visibility + interaction emission in the render pipeline;
+normalising content into queryable rows if list filters outgrow in-memory scan.
+Migrations move from `ensureSchema` to drizzle-kit (`npm run db:generate`) once
+the schema stabilises.

@@ -45,7 +45,18 @@ export function ensureSchema(): void {
     CREATE TABLE IF NOT EXISTS project_state (
       project_id TEXT PRIMARY KEY REFERENCES projects(id),
       document TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      published_design TEXT,
+      published_at TEXT
     );
   `)
+
+  // Migrate older DBs that predate the publish columns.
+  for (const col of ['published_design TEXT', 'published_at TEXT']) {
+    try {
+      sqlite.exec(`ALTER TABLE project_state ADD COLUMN ${col}`)
+    } catch {
+      // column already exists — ignore
+    }
+  }
 }

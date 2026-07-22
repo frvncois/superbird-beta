@@ -16,12 +16,15 @@ export function renderDocument(
   styleClasses: Record<string, StyleClass>,
   globalStyles: GlobalStyles,
   ctx: RenderContext,
+  title?: string,
 ): string {
   const css = compileCss(styleClasses, globalStyles)
   const html = renderNodeToHtml(body, ctx)
+  const titleTag = title ? `<title>${title.replace(/</g, '&lt;')}</title>` : ''
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    titleTag +
     `<style>${css}</style></head><body>${html}</body></html>`
   )
 }

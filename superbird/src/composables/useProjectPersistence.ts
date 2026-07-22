@@ -1,12 +1,13 @@
 import { watch, nextTick } from 'vue'
-import { apiGet, apiPut } from '@/lib/api'
+import { apiGet, apiPut, apiPost } from '@/lib/api'
+import { useSetupStore } from '@/stores/setup'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
-import type { ProjectDocument } from '@shared/types'
+import type { ProjectDocument, PublishResult } from '@shared/types'
 import type {
   Page,
   StyleClass,
@@ -108,5 +109,12 @@ export function useProjectPersistence() {
     startAutosave()
   }
 
-  return { load, save }
+  // Publish: flush the latest working state, then snapshot the design as live.
+  async function publish(): Promise<void> {
+    await save()
+    const { publishedAt } = await apiPost<PublishResult>('/api/publish')
+    useSetupStore().markPublished(publishedAt)
+  }
+
+  return { load, save, publish }
 }

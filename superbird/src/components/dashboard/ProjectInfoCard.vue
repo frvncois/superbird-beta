@@ -16,7 +16,7 @@ const handle = computed(
   () => setup.project?.handle ?? name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
 )
 const url = computed(() => `${handle.value}.superbird.site`)
-const isPublished = ref(true)
+const isPublished = computed(() => setup.isPublished)
 
 const copied = ref(false)
 async function copyUrl() {

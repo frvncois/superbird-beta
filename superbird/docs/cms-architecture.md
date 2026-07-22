@@ -111,8 +111,8 @@ This is roughly Webflow's behavior and keeps everyday content publishing lightwe
 1. **Collections model in-app** — ✅ shipped. `collections`/`fields`/`entries` as stores (seeded, pre-persistence); Pages\|Collections dropdown + item submenu; bind templates to collections; preview-entry selection; Option-A inline editing writing to entries. Retire the hardcoded configs.
 2. **Persistence** — 🚧 in progress. SQLite + API; stores become API-backed; media as files+paths. **Shipped:** auth/install (Hono + SQLite/Drizzle, session cookies) **and project persistence** — the whole project (design + content) is one JSON document loaded on sign-in and debounce-autosaved (`project_state` table; `useProjectPersistence`; see `server.md`). Fresh installs seed from the demo. **Deferred:** normalising content (collections/entries) into queryable rows — pulled forward to the SSR slice, where filters need it; media as files+paths.
 3. **Render pipeline** — ✅ shipped (editor preview). Pure `node→HTML` + `styleClasses→CSS` in `src/lib/render/`, driving an isolated iframe Preview; see `render.md`. Faithful real elements + real `@media`/state CSS. Remaining: share the modules with the SSR server, and add responsive-visibility + interaction emission.
-4. **Public SSR runtime** — route resolver (static pages + dynamic collection singles + collection-list queries incl. current-entry filter).
-5. **Draft/Publish + auth** — entry status + site-level design publish; editor login gate.
+4. **Public SSR runtime** — ✅ shipped. Hono catch-all route resolver (static pages + dynamic collection singles + collection-list) rendering via the shared pipeline; served on the API port, editor SPA separate. See `server.md`. (Collection-list current-entry filter for category archives still TODO.)
+5. **Draft/Publish + auth** — ✅ shipped. Auth/login gate (slice 2) + the hybrid publish: public site serves the **published design snapshot** (site-level `POST /api/publish`) plus **live `status:published` entries**. Content publishes independently; design gated behind Publish.
 
 ## Open items (later)
 

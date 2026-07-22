@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "run-p dev:web dev:server",
     "dev:web": "vite",
-    "dev:server": "tsx watch server/index.ts",
+    "dev:server": "tsx watch --tsconfig server/tsconfig.json server/index.ts",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",

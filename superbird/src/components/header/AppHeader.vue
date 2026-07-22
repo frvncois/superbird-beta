@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
+import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -19,6 +21,17 @@ const editorModeOptions = [
   { value: 'design', label: 'Design' },
   { value: 'content', label: 'Content' },
 ]
+
+const publishing = ref(false)
+async function publish() {
+  if (publishing.value) return
+  publishing.value = true
+  try {
+    await useProjectPersistence().publish()
+  } finally {
+    publishing.value = false
+  }
+}
 </script>
 
 <template>
@@ -51,7 +64,9 @@ const editorModeOptions = [
       </ButtonUi>
       <div class="h-4 w-px bg-border mx-2" />
       <ButtonUi variant="outline" size="sm" @click="router.push('/')">Close</ButtonUi>
-      <ButtonUi variant="solid" size="sm">Save</ButtonUi>
+      <ButtonUi variant="solid" size="sm" :disabled="publishing" @click="publish">
+        {{ publishing ? 'Publishing…' : 'Publish' }}
+      </ButtonUi>
     </template>
 
     <template v-else-if="mode === 'settings'">

@@ -34,6 +34,10 @@ export const projectState = sqliteTable('project_state', {
   projectId: text('project_id')
     .primaryKey()
     .references(() => projects.id),
-  document: text('document').notNull(), // JSON string
+  document: text('document').notNull(), // working project JSON (design + content)
   updatedAt: text('updated_at').notNull(),
+  // Published design snapshot (JSON of ProjectDesign) — the public site serves
+  // this, not the working design. Null until the first Publish.
+  publishedDesign: text('published_design'),
+  publishedAt: text('published_at'),
 })

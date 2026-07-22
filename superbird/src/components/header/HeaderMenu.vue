@@ -6,6 +6,7 @@ import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import MenuItemUi from '@/components/ui/MenuItemUi.vue'
 
 const props = defineProps<{
   mode: 'dashboard' | 'editor' | 'settings'
@@ -65,48 +66,18 @@ const triggerLabel = computed(() => {
     </button>
 
     <PopoverUi v-model:open="isOpen" align="left" panel-class="w-56 rounded-2xl p-1.5">
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="goDashboard"
-      >
-        <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
-      </button>
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="openMediaLibrary"
-      >
-        <IconUi name="image" size="size-3.5" class="text-secondary" /> Media Library
-      </button>
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="openSettings"
-      >
-        <IconUi name="settings" size="size-3.5" class="text-secondary" /> Settings
-      </button>
+      <MenuItemUi icon="home" @click="goDashboard">Dashboard</MenuItemUi>
+      <MenuItemUi icon="image" @click="openMediaLibrary">Media Library</MenuItemUi>
+      <MenuItemUi icon="settings" @click="openSettings">Settings</MenuItemUi>
 
       <div class="my-1 border-t border-foreground/8" />
 
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="openEditor('content')"
-      >
-        <IconUi name="document" size="size-3.5" class="text-secondary" /> Edit content
-      </button>
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="openEditor('design')"
-      >
-        <IconUi name="background" size="size-3.5" class="text-secondary" /> Edit design
-      </button>
+      <MenuItemUi icon="document" @click="openEditor('content')">Edit content</MenuItemUi>
+      <MenuItemUi icon="background" @click="openEditor('design')">Edit design</MenuItemUi>
 
       <div class="my-1 border-t border-foreground/8" />
 
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-        @click="logout"
-      >
-        <IconUi name="logout" size="size-3.5" class="text-secondary" /> Logout
-      </button>
+      <MenuItemUi icon="logout" @click="logout">Logout</MenuItemUi>
     </PopoverUi>
   </div>
 </template>

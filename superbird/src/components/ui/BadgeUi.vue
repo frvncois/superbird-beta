@@ -1,16 +1,20 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    variant?: 'default' | 'success' | 'warning' | 'error' | 'info'
+    variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'primary'
     size?: 'xs' | 'sm'
     dot?: boolean
     pulse?: boolean
+    // Mono uppercase "tag" style (category/status labels) instead of the default
+    // medium-weight pill.
+    mono?: boolean
   }>(),
   {
     variant: 'default',
     size: 'sm',
     dot: false,
     pulse: false,
+    mono: false,
   },
 )
 
@@ -20,6 +24,8 @@ const styles = {
   warning: { badge: 'bg-amber-bg text-amber-fg', dot: 'bg-amber-fg' },
   error: { badge: 'bg-red-bg text-red-fg', dot: 'bg-red-fg' },
   info: { badge: 'bg-blue-bg text-blue-fg', dot: 'bg-blue-fg' },
+  neutral: { badge: 'bg-secondary/10 text-secondary', dot: 'bg-secondary' },
+  primary: { badge: 'bg-primary/10 text-primary', dot: 'bg-primary' },
 } as const
 
 const sizes = {
@@ -30,8 +36,8 @@ const sizes = {
 
 <template>
   <span
-    class="inline-flex items-center font-medium transition-colors duration-300"
-    :class="[styles[variant].badge, sizes[size]]"
+    class="inline-flex items-center transition-colors duration-300"
+    :class="[styles[variant].badge, sizes[size], mono ? 'font-mono uppercase tracking-wider' : 'font-medium']"
   >
     <span
       v-if="dot"

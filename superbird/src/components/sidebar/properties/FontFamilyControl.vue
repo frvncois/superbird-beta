@@ -5,6 +5,8 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { fontSetStack } from '@/lib/fonts'
 import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import IconUi from '@/components/ui/IconUi.vue'
+import BadgeUi from '@/components/ui/BadgeUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -67,7 +69,7 @@ function manage() {
       <span :class="['min-w-0 flex-1 truncate text-left', selectedLabel ? 'text-foreground' : 'text-foreground/40']">
         {{ selectedLabel || 'inherit' }}
       </span>
-      <span v-if="selected?.category" class="shrink-0 rounded bg-secondary/10 px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary">{{ selected.category }}</span>
+      <BadgeUi v-if="selected?.category" variant="neutral" size="xs" mono class="shrink-0">{{ selected.category }}</BadgeUi>
       <IconUi name="chevron-down" size="size-3" :class="['shrink-0 text-secondary transition-transform duration-200', open && 'rotate-180']" />
     </button>
 
@@ -91,7 +93,7 @@ function manage() {
         </button>
 
         <template v-if="variableOpts.length">
-          <div class="px-2.5 pb-0.5 pt-2 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Variables</div>
+          <LabelUi size="xs" class="block px-2.5 pb-0.5 pt-2">Variables</LabelUi>
           <button
             v-for="o in variableOpts"
             :key="o.value"
@@ -105,7 +107,7 @@ function manage() {
         </template>
 
         <template v-if="setOpts.length">
-          <div class="px-2.5 pb-0.5 pt-2 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Your fonts</div>
+          <LabelUi size="xs" class="block px-2.5 pb-0.5 pt-2">Your fonts</LabelUi>
           <button
             v-for="o in setOpts"
             :key="o.value"
@@ -119,7 +121,7 @@ function manage() {
           </button>
         </template>
 
-        <div class="px-2.5 pb-0.5 pt-2 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Default</div>
+        <LabelUi size="xs" class="block px-2.5 pb-0.5 pt-2">Default</LabelUi>
         <button
           v-for="o in defaultOpts"
           :key="o.value"
@@ -129,7 +131,7 @@ function manage() {
           @mousedown.prevent="select(o.value)"
         >
           <span class="min-w-0 flex-1 truncate">{{ o.label }}</span>
-          <span v-if="o.category" class="shrink-0 rounded bg-secondary/10 px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary">{{ o.category }}</span>
+          <BadgeUi v-if="o.category" variant="neutral" size="xs" mono class="shrink-0">{{ o.category }}</BadgeUi>
           <IconUi v-if="o.value === modelValue" name="check" size="size-3" class="shrink-0" />
         </button>
 

@@ -8,6 +8,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import BadgeUi from '@/components/ui/BadgeUi.vue'
 
 const auth = useAuthStore()
 
@@ -89,10 +90,7 @@ function initials(u: User): string {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <span class="truncate text-sm font-medium text-foreground">{{ user.name }}</span>
-              <span
-                v-if="auth.currentUser?.id === user.id"
-                class="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-primary"
-              >You</span>
+              <BadgeUi v-if="auth.currentUser?.id === user.id" variant="primary" size="xs" mono>You</BadgeUi>
             </div>
             <span class="truncate text-xs text-secondary">{{ user.email }}</span>
           </div>

@@ -2,12 +2,12 @@
 // Pure and framework-free — powers the editor preview and (later) the SSR
 // public runtime.
 export { renderNodeToHtml } from './html'
-export { compileCss } from './css'
+export { compileCss, compilePageCss } from './css'
 export type { RenderContext } from './context'
 
 import type { CanvasNode, GlobalStyles, StyleClass } from '@/types/canvas'
 import { renderNodeToHtml } from './html'
-import { compileCss } from './css'
+import { compilePageCss } from './css'
 import { interactionsRuntimeScript } from './interactionsRuntime'
 import type { RenderContext } from './context'
 
@@ -17,12 +17,6 @@ export interface DocumentHead {
   description?: string
   noIndex?: boolean
 }
-
-// Tailwind utility classes just work alongside custom classes. Load the CDN with
-// preflight disabled (we ship our own reset in compileCss).
-const TAILWIND_TAGS =
-  '<script src="https://cdn.tailwindcss.com"></script>' +
-  '<script>tailwind.config={corePlugins:{preflight:false}}</script>'
 
 function escAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
@@ -35,7 +29,9 @@ export function renderDocument(
   ctx: RenderContext,
   head: DocumentHead = {},
 ): string {
-  const css = compileCss(styleClasses, globalStyles)
+  // Per-element CSS resolved exactly like the editor canvas (class order honored,
+  // custom + Tailwind unified) — no CDN, so the published page matches the canvas.
+  const css = compilePageCss(body, styleClasses, globalStyles)
   const html = renderNodeToHtml(body, ctx)
   let headTags = ''
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
@@ -46,7 +42,6 @@ export function renderDocument(
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    TAILWIND_TAGS +
     headTags +
     `<style>${css}</style></head><body>${html}${ixScript}</body></html>`
   )

@@ -33,15 +33,14 @@ function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | un
   if (node.visibility?.hideTablet) classes.push('sb-hide-tablet')
   if (node.visibility?.hideMobile) classes.push('sb-hide-mobile')
 
-  const styleStr = Object.entries(node.styles)
-    .filter(([, v]) => v !== '' && v != null)
-    .map(([k, v]) => `${k}:${v}`)
-    .join(';')
-
   let out = ''
   out += attr('id', node.htmlId)
   out += attr('class', classes.join(' ') || undefined)
-  out += attr('style', styleStr || undefined)
+  // Styling comes from per-element CSS keyed to this attribute (compilePageCss),
+  // resolved identically to the editor canvas.
+  if (node.classes.length > 0 || Object.keys(node.styles).length > 0) {
+    out += attr('data-sb-s', node.id)
+  }
   out += attr('title', node.htmlTitle)
   out += attr('role', node.accessibility?.role)
   out += attr('aria-label', node.accessibility?.ariaLabel)

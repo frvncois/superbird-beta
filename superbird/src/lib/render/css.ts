@@ -1,4 +1,6 @@
-import type { Breakpoint, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
+import type { Breakpoint, CanvasNode, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
+import { resolveStyles } from '@/lib/styles'
+import { classToDecls } from '@/lib/tailwindToStyles'
 
 // Compile the global tokens + style-class registry into a real stylesheet:
 // breakpoints as @media, states as pseudo-classes. This is the "emit real
@@ -110,20 +112,116 @@ const VISIBILITY = [
   '@media (min-width:769px){.sb-hide-desktop{display:none!important}}',
 ].join('')
 
-export function compileCss(styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+// Global base: tokens, reset, visibility utilities, typography. Same for every
+// page; author styles layer on top.
+function baseCss(globalStyles: GlobalStyles): string {
   const parts: string[] = []
   parts.push(`:root{${globalVars(globalStyles)}}`)
   parts.push(RESET)
   parts.push(VISIBILITY)
-
-  // Global typography — desktop base, then tablet/mobile overrides.
   parts.push(typographyRules(globalStyles.typography.desktop))
   for (const bp of ['tablet', 'mobile'] as const) {
     parts.push(`@media (max-width:${MEDIA[bp]}px){${typographyRules(globalStyles.typography[bp])}}`)
   }
+  return parts.join('\n')
+}
 
-  for (const [name, cls] of Object.entries(styleClasses)) {
-    parts.push(compileClass(name, cls))
+export function compileCss(styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+  const parts = [baseCss(globalStyles)]
+  for (const [name, cls] of Object.entries(styleClasses)) parts.push(compileClass(name, cls))
+  return parts.join('\n')
+}
+
+// ── Per-element compiler — identical resolution to the editor canvas ──
+// Each element's styles are resolved from its class list IN ORDER (custom
+// classes + base Tailwind utilities), so a class added later overrides an
+// earlier one. Variants (hover:/md:/…) become scoped pseudo/media rules.
+
+const MIN_BP: Record<string, string> = { sm: '640px', md: '768px', lg: '1024px', xl: '1280px', '2xl': '1536px' }
+const V_STATE: Record<string, string> = {
+  hover: ':hover', focus: ':focus', active: ':active', visited: ':visited',
+  'focus-within': ':focus-within', 'focus-visible': ':focus-visible', disabled: ':disabled', checked: ':checked',
+}
+const V_ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
+const CUSTOM_STATES: StyleState[] = ['hover', 'focus', 'active', 'visited']
+
+function diff(a: Record<string, string>, b: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const k in a) if (a[k] !== b[k]) out[k] = a[k]!
+  return out
+}
+function declsImportant(o: Record<string, string>): string {
+  return Object.entries(o).map(([k, v]) => `${k}:${v} !important`).join(';')
+}
+
+function elementRules(
+  node: CanvasNode,
+  styleClasses: Record<string, StyleClass>,
+  base: string[],
+  maxMedia: Record<string, string[]>,
+  minMedia: Record<string, string[]>,
+) {
+  const sel = `[data-sb-s="${node.id}"]`
+  const resolved: Record<Breakpoint, Record<string, string>> = {
+    desktop: resolveStyles(node, styleClasses, 'desktop', 'default'),
+    tablet: resolveStyles(node, styleClasses, 'tablet', 'default'),
+    mobile: resolveStyles(node, styleClasses, 'mobile', 'default'),
   }
+  // Base (desktop) + responsive deltas (desktop-first, max-width).
+  if (Object.keys(resolved.desktop).length) base.push(`${sel}{${decls(resolved.desktop)}}`)
+  const tDelta = diff(resolved.tablet, resolved.desktop)
+  if (Object.keys(tDelta).length) (maxMedia['768px'] ??= []).push(`${sel}{${decls(tDelta)}}`)
+  const mDelta = diff(resolved.mobile, resolved.tablet)
+  if (Object.keys(mDelta).length) (maxMedia['375px'] ??= []).push(`${sel}{${decls(mDelta)}}`)
+
+  // Custom class states per breakpoint (delta vs that breakpoint's default).
+  for (const bp of ['desktop', 'tablet', 'mobile'] as const) {
+    for (const st of CUSTOM_STATES) {
+      const d = diff(resolveStyles(node, styleClasses, bp, st), resolved[bp])
+      if (!Object.keys(d).length) continue
+      const rule = `${sel}:${st}{${decls(d)}}`
+      if (bp === 'desktop') base.push(rule)
+      else (maxMedia[bp === 'tablet' ? '768px' : '375px'] ??= []).push(rule)
+    }
+  }
+
+  // Tailwind variant utilities → pseudo / min-width media, !important.
+  for (const cls of node.classes) {
+    const parts = cls.split(':')
+    const util = parts.pop()!
+    if (parts.length === 0) continue
+    const d = classToDecls(util)
+    if (!d) continue
+    let pseudo = ''
+    let ancestor = ''
+    let mq: string | null = null
+    for (const v of parts) {
+      if (v in MIN_BP) mq = MIN_BP[v]!
+      else if (v in V_STATE) pseudo += V_STATE[v]
+      else if (v in V_ANCESTOR) ancestor = V_ANCESTOR[v]! + ancestor
+    }
+    const rule = `${ancestor}${sel}${pseudo}{${declsImportant(d)}}`
+    if (mq) (minMedia[mq] ??= []).push(rule)
+    else base.push(rule)
+  }
+}
+
+/** Compile a full page: global base + per-element rules (identical to canvas). */
+export function compilePageCss(body: CanvasNode, styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
+  const base: string[] = []
+  const maxMedia: Record<string, string[]> = {}
+  const minMedia: Record<string, string[]> = {}
+
+  const walk = (node: CanvasNode) => {
+    if (node.classes.length > 0 || Object.keys(node.styles).length > 0) {
+      elementRules(node, styleClasses, base, maxMedia, minMedia)
+    }
+    for (const child of node.children) walk(child)
+  }
+  walk(body)
+
+  const parts = [baseCss(globalStyles), base.join('')]
+  for (const w of ['768px', '375px']) if (maxMedia[w]) parts.push(`@media (max-width:${w}){${maxMedia[w]!.join('')}}`)
+  for (const w of ['640px', '768px', '1024px', '1280px', '1536px']) if (minMedia[w]) parts.push(`@media (min-width:${w}){${minMedia[w]!.join('')}}`)
   return parts.join('\n')
 }

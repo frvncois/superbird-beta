@@ -3,7 +3,7 @@ import { computed, provide, ref } from 'vue'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { GlobalTokensKey } from '@/constants/injectionKeys'
 import EditorLayout from '@/layouts/EditorLayout.vue'
-import EditorHeader from '@/components/header/EditorHeader.vue'
+import AppHeader from '@/components/header/AppHeader.vue'
 import EditorCanvas from '@/components/canvas/EditorCanvas.vue'
 import CollapsibleSidebar from '@/components/sidebar/CollapsibleSidebar.vue'
 import SidebarLayers from '@/components/sidebar/layers/SidebarLayers.vue'
@@ -47,7 +47,7 @@ const rightTabs = [
 <template>
   <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed">
     <template #header>
-      <EditorHeader />
+      <AppHeader mode="editor" />
     </template>
 
     <template #sidebar-left>

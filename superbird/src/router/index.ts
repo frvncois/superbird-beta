@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import DashboardView from '@/views/DashboardView.vue'
 import EditorView from '@/views/EditorView.vue'
 
 const router = createRouter({
@@ -6,6 +7,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'dashboard',
+      component: DashboardView,
+    },
+    {
+      path: '/editor',
       name: 'editor',
       component: EditorView,
     },

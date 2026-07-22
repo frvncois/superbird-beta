@@ -3,15 +3,12 @@ import { computed, provide, ref } from 'vue'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { GlobalTokensKey } from '@/constants/injectionKeys'
 import AppHeader from '@/components/header/AppHeader.vue'
-import TabsUi from '@/components/ui/TabsUi.vue'
-import GeneralTab from '@/components/modals/global-styles/GeneralTab.vue'
-import SiteTab from '@/components/modals/global-styles/SiteTab.vue'
-import MediaTab from '@/components/modals/global-styles/MediaTab.vue'
-import StylesTab from '@/components/modals/global-styles/StylesTab.vue'
-import SeoTab from '@/components/modals/global-styles/SeoTab.vue'
-import CodeTab from '@/components/modals/global-styles/CodeTab.vue'
-import RedirectsTab from '@/components/modals/global-styles/RedirectsTab.vue'
-import IntegrationsTab from '@/components/modals/global-styles/IntegrationsTab.vue'
+import IconUi from '@/components/ui/IconUi.vue'
+import GeneralPanel from '@/components/settings/GeneralPanel.vue'
+import DesignPanel from '@/components/settings/DesignPanel.vue'
+import MediaPanel from '@/components/settings/MediaPanel.vue'
+import SeoPanel from '@/components/settings/SeoPanel.vue'
+import AdvancedPanel from '@/components/settings/AdvancedPanel.vue'
 
 // Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches).
 const globalStylesStore = useGlobalStylesStore()
@@ -20,17 +17,17 @@ provide(GlobalTokensKey, computed(() => ({
   sizes: globalStylesStore.globalStyles.sizes,
 })))
 
-const activeTab = ref('general')
-const tabs = [
-  { key: 'general', label: 'General' },
-  { key: 'site', label: 'Site' },
-  { key: 'media', label: 'Media' },
-  { key: 'styles', label: 'Styles' },
-  { key: 'seo', label: 'SEO' },
-  { key: 'code', label: 'Code' },
-  { key: 'redirects', label: 'Redirects' },
-  { key: 'integrations', label: 'Integrations' },
-]
+const categories = [
+  { key: 'general', label: 'General', icon: 'settings', component: GeneralPanel },
+  { key: 'design', label: 'Design', icon: 'background', component: DesignPanel },
+  { key: 'media', label: 'Media', icon: 'image', component: MediaPanel },
+  { key: 'seo', label: 'SEO', icon: 'search', component: SeoPanel },
+  { key: 'advanced', label: 'Advanced', icon: 'embed', component: AdvancedPanel },
+] as const
+
+const active = ref<(typeof categories)[number]['key']>('general')
+const activePanel = computed(() => categories.find((c) => c.key === active.value)?.component ?? GeneralPanel)
+const activeLabel = computed(() => categories.find((c) => c.key === active.value)?.label ?? '')
 </script>
 
 <template>
@@ -39,35 +36,32 @@ const tabs = [
       <AppHeader mode="settings" />
     </header>
 
-    <main class="min-h-0 flex-1 overflow-hidden">
-      <div class="mx-auto flex h-full max-w-3xl flex-col px-6">
-        <TabsUi v-model="activeTab" :tabs="tabs" class="settings-tabs h-full">
-          <template #general><GeneralTab /></template>
-          <template #site><SiteTab /></template>
-          <template #media><MediaTab /></template>
-          <template #styles><StylesTab /></template>
-          <template #seo><SeoTab /></template>
-          <template #code><CodeTab /></template>
-          <template #redirects><RedirectsTab /></template>
-          <template #integrations><IntegrationsTab /></template>
-        </TabsUi>
-      </div>
-    </main>
+    <div class="flex min-h-0 flex-1">
+      <!-- Left nav -->
+      <nav class="w-56 shrink-0 space-y-0.5 overflow-y-auto border-r p-3">
+        <button
+          v-for="cat in categories"
+          :key="cat.key"
+          :class="[
+            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors duration-100',
+            active === cat.key
+              ? 'bg-foreground/5 font-medium text-foreground'
+              : 'text-secondary hover:bg-foreground/5 hover:text-foreground',
+          ]"
+          @click="active = cat.key"
+        >
+          <IconUi :name="cat.icon" size="size-4" :class="active === cat.key ? 'text-foreground' : 'text-secondary'" />
+          {{ cat.label }}
+        </button>
+      </nav>
+
+      <!-- Content -->
+      <main class="min-w-0 flex-1 overflow-y-auto">
+        <div class="mx-auto max-w-2xl px-8 py-8">
+          <h1 class="mb-6 text-lg font-semibold text-foreground">{{ activeLabel }}</h1>
+          <component :is="activePanel" />
+        </div>
+      </main>
+    </div>
   </div>
 </template>
-
-<style scoped>
-/* Pin the tab bar; scroll the tab content. */
-.settings-tabs {
-  display: flex;
-  flex-direction: column;
-}
-.settings-tabs > :deep(div:first-child) {
-  flex-shrink: 0;
-}
-.settings-tabs > :deep(div:last-child) {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-</style>

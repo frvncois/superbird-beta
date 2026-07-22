@@ -135,6 +135,13 @@ export const useCanvasStore = defineStore('canvas', () => {
     previewOpen.value = false
   }
 
+  // Interactions master-detail: which interaction (of the selected node) is
+  // open for editing. Cleared when the selection changes.
+  const openInteractionId = ref<string | null>(null)
+  function setOpenInteraction(id: string | null) {
+    openInteractionId.value = id
+  }
+
   // --- Selection & Drag ---
 
   const selectedNodeId = ref<string | null>(null)
@@ -150,6 +157,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   function selectNode(id: string | null) {
     selectedNodeId.value = id
     globalStylesStore.setActiveClass(null)
+    openInteractionId.value = null
   }
 
   function setDraggedNode(id: string | null) {
@@ -691,6 +699,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     previewOpen,
     openPreview,
     closePreview,
+    openInteractionId,
+    setOpenInteraction,
     // Selection & drag
     bodyNode,
     nodes,

@@ -12,7 +12,6 @@ import SidebarComponents from '@/components/sidebar/components/SidebarComponents
 import SidebarProperties from '@/components/sidebar/properties/SidebarProperties.vue'
 import SidebarSettings from '@/components/sidebar/settings/SidebarSettings.vue'
 import SidebarInteractions from '@/components/sidebar/interactions/SidebarInteractions.vue'
-import GlobalStylesPanel from '@/components/modals/global-styles/GlobalStylesPanel.vue'
 import MediaLibraryModal from '@/components/modals/media-library/MediaLibraryModal.vue'
 import TabsUi from '@/components/ui/TabsUi.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
@@ -95,6 +94,5 @@ const rightTabs = [
     </template>
   </EditorLayout>
 
-  <GlobalStylesPanel />
   <MediaLibraryModal />
 </template>

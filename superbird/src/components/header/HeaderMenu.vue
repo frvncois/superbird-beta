@@ -10,7 +10,7 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
 const props = defineProps<{
-  mode: 'dashboard' | 'editor'
+  mode: 'dashboard' | 'editor' | 'settings'
 }>()
 
 const store = useCanvasStore()
@@ -28,7 +28,7 @@ function openEditor() {
   close()
 }
 function openSettings() {
-  // TODO: wire to app/site settings
+  router.push('/settings')
   close()
 }
 function logout() {
@@ -72,7 +72,11 @@ const context = computed(() => {
 
 // On the dashboard the trigger just reads "Dashboard"; in the editor it
 // reflects the active page / collection / item.
-const triggerLabel = computed(() => (props.mode === 'dashboard' ? 'Dashboard' : context.value.name))
+const triggerLabel = computed(() => {
+  if (props.mode === 'dashboard') return 'Dashboard'
+  if (props.mode === 'settings') return 'Settings'
+  return context.value.name
+})
 
 // Pages tab: regular pages grouped by type (collection templates excluded — no config).
 const sections = computed(() =>

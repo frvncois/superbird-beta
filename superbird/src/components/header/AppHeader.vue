@@ -8,7 +8,7 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import { useHistory } from '@/composables/useHistory'
-import HeaderPageSelect from './HeaderPageSelect.vue'
+import HeaderMenu from './HeaderMenu.vue'
 import HeaderContextBar from './HeaderContextBar.vue'
 
 defineProps<{
@@ -32,14 +32,13 @@ function toggleTheme() {
 </script>
 
 <template>
-  <!-- Left: logo + (page select in editor, wordmark on dashboard) -->
+  <!-- Left: logo + app menu (both modes) -->
   <div class="flex items-center gap-4">
     <div class="size-6 text-foreground">
       <SuperbirdIcon />
     </div>
     <div class="h-4 w-px bg-border" />
-    <HeaderPageSelect v-if="mode === 'editor'" />
-    <span v-else class="text-sm font-semibold text-foreground">Superbird</span>
+    <HeaderMenu />
   </div>
 
   <!-- Center: context bar (editor only) -->

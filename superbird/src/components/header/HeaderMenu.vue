@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
 import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
@@ -10,8 +11,22 @@ import IconUi from '@/components/ui/IconUi.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
+const router = useRouter()
 
 const isOpen = ref(false)
+
+function goDashboard() {
+  router.push('/')
+  close()
+}
+function openSettings() {
+  // TODO: wire to app/site settings
+  close()
+}
+function logout() {
+  // TODO: wire to auth
+  close()
+}
 
 // add page
 const isAdding = ref(false)
@@ -131,6 +146,22 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
     </button>
 
     <PopoverUi v-model:open="isOpen" align="left" panel-class="w-64 rounded-2xl p-1.5">
+      <!-- App nav -->
+      <button
+        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="goDashboard"
+      >
+        <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
+      </button>
+      <button
+        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="openSettings"
+      >
+        <IconUi name="settings" size="size-3.5" class="text-secondary" /> Settings
+      </button>
+
+      <div class="my-1 border-t border-foreground/8" />
+
       <!-- Pages (grouped by type) -->
       <template v-for="section in sections" :key="section.config.key">
         <div class="px-2.5 pt-1.5 pb-1">
@@ -241,6 +272,15 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
         @click="startAddingCollection"
       >
         <IconUi name="plus" size="size-3" /> New collection
+      </button>
+
+      <div class="my-1 border-t border-foreground/8" />
+
+      <button
+        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="logout"
+      >
+        <IconUi name="logout" size="size-3.5" class="text-secondary" /> Logout
       </button>
     </PopoverUi>
   </div>

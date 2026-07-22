@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue'
+import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { GlobalTokensKey } from '@/constants/injectionKeys'
 import EditorLayout from '@/layouts/EditorLayout.vue'
@@ -25,6 +26,9 @@ provide(GlobalTokensKey, computed(() => ({
   sizes: globalStylesStore.globalStyles.sizes,
 })))
 
+const canvasStore = useCanvasStore()
+const contentMode = computed(() => canvasStore.editorMode === 'content')
+
 const leftTab = ref('layers')
 const rightTab = ref('properties')
 const leftCollapsed = ref(false)
@@ -44,7 +48,7 @@ const rightTabs = [
 </script>
 
 <template>
-  <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed">
+  <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed" :content-mode="contentMode">
     <template #header>
       <AppHeader mode="editor" />
     </template>

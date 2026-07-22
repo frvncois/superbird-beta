@@ -231,6 +231,15 @@ export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'col
 // Elements that support inline text editing
 export const TEXT_EDITABLE_TYPES: NodeType[] = ['text', 'heading', 'button', 'link', 'span', 'label', 'list-item', 'blockquote']
 
+// Content-bearing elements the user edits in "content" mode — typography,
+// media, and interactive elements. In content mode only these show selection
+// and hover outlines; structural/layout elements stay out of the way.
+export const CONTENT_TYPES: NodeType[] = [
+  'heading', 'text', 'markdown', 'link', 'span', 'list', 'list-item', 'blockquote',
+  'image', 'video',
+  'button', 'link-block',
+]
+
 // Form elements that require a form parent
 export const FORM_CHILD_TYPES: NodeType[] = ['input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload', 'label']
 

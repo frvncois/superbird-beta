@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
+import { useCanvasStore } from '@/stores/canvas'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import HeaderMenu from './HeaderMenu.vue'
 import HeaderContextBar from './HeaderContextBar.vue'
 
@@ -13,6 +15,12 @@ defineProps<{
 
 const router = useRouter()
 const mediaStore = useMediaStore()
+const canvasStore = useCanvasStore()
+
+const editorModeOptions = [
+  { value: 'design', label: 'Design' },
+  { value: 'content', label: 'Content' },
+]
 </script>
 
 <template>
@@ -33,6 +41,13 @@ const mediaStore = useMediaStore()
   <!-- Right: actions -->
   <div class="flex items-center gap-2">
     <template v-if="mode === 'editor'">
+      <!-- Design / Content mode -->
+      <SegmentedControlUi
+        :model-value="canvasStore.editorMode"
+        :options="editorModeOptions"
+        @update:model-value="canvasStore.setEditorMode($event as 'design' | 'content')"
+      />
+      <div class="h-4 w-px bg-border mx-2" />
       <!-- Media Library -->
       <ButtonUi variant="outline" size="sm" @click="mediaStore.openLibrary()">
         <IconUi name="image" size="size-4" />

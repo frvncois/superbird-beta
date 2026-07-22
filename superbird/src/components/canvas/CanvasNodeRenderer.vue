@@ -4,7 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
-import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES, CONTENT_TYPES } from '@/constants/canvas'
 import { renderMarkdown } from '@/lib/markdown'
 import type { CanvasNode, Entry } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -55,6 +55,12 @@ const isPlaceholder = computed(() =>
   ['image', 'video', 'embed', 'input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type),
 )
 const isDynamic = computed(() => !!props.node.dynamicField)
+// In content mode, only content-bearing elements (typography, media,
+// interactive) show selection / hover outlines — structural elements stay
+// visually quiet so the user can focus on editing content.
+const showOutlines = computed(
+  () => store.editorMode === 'design' || CONTENT_TYPES.includes(props.node.type),
+)
 
 // Resolve a node's content, preferring the preview entry when this subtree is
 // a collection-list preview; otherwise the store (which handles the active entry
@@ -176,11 +182,11 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       'canvas-node relative',
       isBody && isDesktop && 'bg-background h-full',
       isBody && !isDesktop && 'rounded-2xl border bg-background shadow-sm min-h-full',
-      isSelected && !isComponentInstance && !isDynamic && 'ring-2 ring-primary ring-offset-1',
-      isSelected && isComponentInstance && 'ring-2 ring-green-fg ring-offset-1',
-      isSelected && isDynamic && !isComponentInstance && 'ring-2 ring-purple-fg ring-offset-1',
-      !isSelected && !preview && isComponentInstance && 'ring-1 ring-green-fg/20',
-      !isSelected && !preview && isDynamic && !isComponentInstance && 'ring-1 ring-purple-fg/20',
+      showOutlines && isSelected && !isComponentInstance && !isDynamic && 'ring-2 ring-primary ring-offset-1',
+      showOutlines && isSelected && isComponentInstance && 'ring-2 ring-green-fg ring-offset-1',
+      showOutlines && isSelected && isDynamic && !isComponentInstance && 'ring-2 ring-purple-fg ring-offset-1',
+      showOutlines && !isSelected && !preview && isComponentInstance && 'ring-1 ring-green-fg/20',
+      showOutlines && !isSelected && !preview && isDynamic && !isComponentInstance && 'ring-1 ring-purple-fg/20',
       dropPosition === 'inside' && 'bg-primary/5',
       isHiddenAtBreakpoint && 'opacity-30',
     ]"
@@ -202,14 +208,14 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
   >
     <!-- Hover outline -->
     <div
-      v-if="isHovered && !isSelected && !isBody && !preview"
+      v-if="isHovered && !isSelected && !isBody && !preview && showOutlines"
       class="pointer-events-none absolute inset-0 z-20 rounded-[inherit]"
       :class="isComponentInstance ? 'ring-1 ring-green-fg/50' : isDynamic ? 'ring-1 ring-purple-fg/50' : 'ring-1 ring-primary/50'"
     />
 
     <!-- Hover label -->
     <div
-      v-if="isHovered && !isSelected && !isBody && !preview"
+      v-if="isHovered && !isSelected && !isBody && !preview && showOutlines"
       class="pointer-events-none absolute -top-5 left-0 z-20 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none text-white"
       :class="isComponentInstance ? 'bg-green-fg' : isDynamic ? 'bg-purple-fg' : 'bg-primary'"
     >

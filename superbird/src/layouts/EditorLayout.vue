@@ -1,22 +1,26 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = defineProps<{
   leftCollapsed?: boolean
   rightCollapsed?: boolean
+  contentMode?: boolean
 }>()
+
+const gridTemplateColumns = computed(() =>
+  props.contentMode
+    ? '0 1fr 0'
+    : `${props.leftCollapsed ? '44px' : '280px'} 1fr ${props.rightCollapsed ? '44px' : '280px'}`,
+)
 </script>
 
 <template>
-  <div
-    class="editor-layout"
-    :style="{
-      gridTemplateColumns: `${props.leftCollapsed ? '44px' : '280px'} 1fr ${props.rightCollapsed ? '44px' : '300px'}`,
-    }"
-  >
+  <div class="editor-layout" :style="{ gridTemplateColumns }">
     <header class="editor-header border-b p-4 flex items-center justify-between">
       <slot name="header" />
     </header>
 
-    <aside class="editor-sidebar-left border-r overflow-hidden">
+    <aside v-show="!contentMode" class="editor-sidebar-left border-r overflow-hidden">
       <slot name="sidebar-left" />
     </aside>
 
@@ -24,7 +28,7 @@ const props = defineProps<{
       <slot name="canvas" />
     </main>
 
-    <aside class="editor-sidebar-right border-l overflow-hidden">
+    <aside v-show="!contentMode" class="editor-sidebar-right border-l overflow-hidden">
       <slot name="sidebar-right" />
     </aside>
   </div>

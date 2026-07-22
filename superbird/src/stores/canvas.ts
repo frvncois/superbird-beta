@@ -109,6 +109,15 @@ export const useCanvasStore = defineStore('canvas', () => {
     if (page) Object.assign(page, patch)
   }
 
+  // --- Editor mode ---
+  // 'design' = full editor; 'content' = distraction-free content editing
+  // (sidebars hidden, outlines only on content-bearing elements). UI-only
+  // state — deliberately outside the undo/redo snapshot.
+  const editorMode = ref<'design' | 'content'>('design')
+  function setEditorMode(mode: 'design' | 'content') {
+    editorMode.value = mode
+  }
+
   // --- Selection & Drag ---
 
   const selectedNodeId = ref<string | null>(null)
@@ -658,6 +667,9 @@ export const useCanvasStore = defineStore('canvas', () => {
     removePage,
     renamePage,
     updatePage,
+    // Editor mode
+    editorMode,
+    setEditorMode,
     // Selection & drag
     bodyNode,
     nodes,

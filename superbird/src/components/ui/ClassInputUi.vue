@@ -4,6 +4,7 @@ import { STYLE_STATES } from '@/constants/canvas'
 import { isTailwindUtility } from '@/lib/tailwindToStyles'
 import type { StyleState } from '@/types/canvas'
 import IconUi from './IconUi.vue'
+import PopoverUi from './PopoverUi.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -237,16 +238,8 @@ function selectState(state: StyleState) {
       />
     </div>
 
-    <!-- Dropdown (on focus) -->
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div v-if="isFocused" class="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border bg-background p-1 shadow-lg">
+    <!-- Dropdown (on focus; no backdrop — the field stays typable) -->
+    <PopoverUi v-model:open="isFocused" align="full" :backdrop="false" panel-class="p-1">
         <!-- Create / suggestions (top) -->
         <template v-if="query.trim()">
           <button
@@ -312,7 +305,6 @@ function selectState(state: StyleState) {
             </button>
           </div>
         </div>
-      </div>
-    </Transition>
+    </PopoverUi>
   </div>
 </template>

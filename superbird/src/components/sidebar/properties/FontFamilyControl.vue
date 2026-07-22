@@ -7,6 +7,7 @@ import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
+import PopoverUi from '@/components/ui/PopoverUi.vue'
 
 const props = defineProps<{ modelValue: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -73,17 +74,8 @@ function manage() {
       <IconUi name="chevron-down" size="size-3" :class="['shrink-0 text-secondary transition-transform duration-200', open && 'rotate-180']" />
     </button>
 
-    <div v-if="open" class="fixed inset-0 z-40" @mousedown="open = false" />
-
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 -translate-y-1 scale-[0.98]"
-      enter-to-class="opacity-100 translate-y-0 scale-100"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 -translate-y-1 scale-[0.98]"
-    >
-      <div v-if="open" class="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 origin-top overflow-y-auto rounded-xl border bg-background p-1 shadow-lg">
+    <PopoverUi v-model:open="open" align="full" transition="scale" panel-class="">
+      <div class="max-h-72 overflow-y-auto p-1">
         <button
           type="button"
           class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-foreground/60 hover:bg-secondary/10 transition-colors duration-100"
@@ -146,6 +138,6 @@ function manage() {
           </button>
         </div>
       </div>
-    </Transition>
+    </PopoverUi>
   </div>
 </template>

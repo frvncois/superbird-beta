@@ -17,6 +17,7 @@ Superbird is a Vue 3 web application. All source code lives inside the `superbir
 - `docs/lib-and-composables.md` — pure helpers, constants, composables, types index
 - `docs/patterns.md` — recipes for the recurring moves
 - `docs/server.md` — backend tier (Hono + SQLite/Drizzle), API routes, client seams, dev workflow
+- `docs/render.md` — faithful render pipeline (node→HTML, classes→CSS) + editor Preview
 
 Start at `docs/README.md`. The design-system spec is `superbird/DESIGN.md`.
 

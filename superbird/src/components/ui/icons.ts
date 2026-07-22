@@ -55,6 +55,7 @@ import {
   HashtagIcon,
   CalendarDaysIcon,
   EyeSlashIcon,
+  EyeIcon,
   SwatchIcon,
   ComputerDesktopIcon,
   DeviceTabletIcon,
@@ -97,6 +98,8 @@ export const ICONS: Record<string, Component> = {
   submissions: InboxArrowDownIcon,
   'trend-up': ArrowTrendingUpIcon,
   'trend-down': ArrowTrendingDownIcon,
+  eye: EyeIcon,
+  preview: EyeIcon,
 
   // Viewports
   desktop: ComputerDesktopIcon,

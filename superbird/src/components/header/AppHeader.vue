@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import HeaderMenu from './HeaderMenu.vue'
 import HeaderContextBar from './HeaderContextBar.vue'
@@ -44,6 +45,10 @@ const editorModeOptions = [
         :options="editorModeOptions"
         @update:model-value="canvasStore.setEditorMode($event as 'design' | 'content')"
       />
+      <ButtonUi variant="outline" size="sm" @click="canvasStore.openPreview()">
+        <IconUi name="eye" size="size-4" />
+        Preview
+      </ButtonUi>
       <div class="h-4 w-px bg-border mx-2" />
       <ButtonUi variant="outline" size="sm" @click="router.push('/')">Close</ButtonUi>
       <ButtonUi variant="solid" size="sm">Save</ButtonUi>

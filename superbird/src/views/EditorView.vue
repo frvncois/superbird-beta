@@ -14,6 +14,7 @@ import SidebarProperties from '@/components/sidebar/properties/SidebarProperties
 import SidebarSettings from '@/components/sidebar/settings/SidebarSettings.vue'
 import SidebarInteractions from '@/components/sidebar/interactions/SidebarInteractions.vue'
 import TabsUi from '@/components/ui/TabsUi.vue'
+import PreviewOverlay from '@/components/preview/PreviewOverlay.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 useKeyboardShortcuts()
@@ -96,4 +97,6 @@ const rightTabs = [
       </CollapsibleSidebar>
     </template>
   </EditorLayout>
+
+  <PreviewOverlay v-if="canvasStore.previewOpen" />
 </template>

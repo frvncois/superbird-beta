@@ -126,6 +126,15 @@ export const useCanvasStore = defineStore('canvas', () => {
     editorMode.value = mode
   }
 
+  // Preview overlay (faithful published render of the active page).
+  const previewOpen = ref(false)
+  function openPreview() {
+    previewOpen.value = true
+  }
+  function closePreview() {
+    previewOpen.value = false
+  }
+
   // --- Selection & Drag ---
 
   const selectedNodeId = ref<string | null>(null)
@@ -679,6 +688,9 @@ export const useCanvasStore = defineStore('canvas', () => {
     // Editor mode
     editorMode,
     setEditorMode,
+    previewOpen,
+    openPreview,
+    closePreview,
     // Selection & drag
     bodyNode,
     nodes,

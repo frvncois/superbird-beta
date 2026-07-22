@@ -25,7 +25,12 @@ function attr(name: string, value: string | undefined | null): string {
   return ` ${name}="${escapeAttr(value)}"`
 }
 
-function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined): string {
+function buildAttributes(
+  node: CanvasNode,
+  ctx: RenderContext,
+  entry: Entry | undefined,
+  repeated: boolean,
+): string {
   const classes = [...node.classes]
   if (node.advanced?.customCssClass) classes.push(node.advanced.customCssClass)
   // Responsive visibility
@@ -34,7 +39,9 @@ function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | un
   if (node.visibility?.hideMobile) classes.push('sb-hide-mobile')
 
   let out = ''
-  out += attr('id', node.htmlId)
+  // A user-set DOM id must be unique — never emit it on repeated collection
+  // items (it would produce duplicate ids across every row).
+  out += attr('id', repeated ? undefined : node.htmlId)
   out += attr('class', classes.join(' ') || undefined)
   // Styling comes from per-element CSS keyed to this attribute (compilePageCss),
   // resolved identically to the editor canvas.
@@ -117,21 +124,22 @@ function linkHref(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined
   return node.link?.url
 }
 
-export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry): string {
+export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry, repeated = false): string {
   // A linked button becomes an <a> so it actually navigates.
   const tag = node.type === 'button' && hasLink(node) ? 'a' : node.tag || 'div'
 
   // Collection list: render the container, repeating its item template per entry.
+  // Items are `repeated` so their author-set htmlIds aren't duplicated per row.
   if (node.type === 'collection-list') {
     const limit = parseInt(node.props.limit ?? '3', 10) || 3
     const list = ctx.entriesFor(node.props.source, limit)
     const inner = list
-      .map((e) => node.children.map((child) => renderNodeToHtml(child, ctx, e)).join(''))
+      .map((e) => node.children.map((child) => renderNodeToHtml(child, ctx, e, true)).join(''))
       .join('')
-    return `<${tag}${buildAttributes(node, ctx, entry)}>${inner}</${tag}>`
+    return `<${tag}${buildAttributes(node, ctx, entry, repeated)}>${inner}</${tag}>`
   }
 
-  const attrs = buildAttributes(node, ctx, entry)
+  const attrs = buildAttributes(node, ctx, entry, repeated)
 
   // Void elements — no children/content.
   if (VOID_TAGS.has(tag)) return `<${tag}${attrs} />`
@@ -141,7 +149,7 @@ export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: E
   if (node.type === 'markdown') {
     inner = renderMarkdown(ctx.content(node, entry))
   } else if (node.children.length > 0 || isContainer(node)) {
-    inner = node.children.map((child) => renderNodeToHtml(child, ctx, entry)).join('')
+    inner = node.children.map((child) => renderNodeToHtml(child, ctx, entry, repeated)).join('')
   } else {
     inner = escapeHtml(ctx.content(node, entry))
   }

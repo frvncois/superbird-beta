@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { currentUser } from '../lib/session'
-import { saveCustomFace } from '../lib/fonts'
+import { saveCustomFace, deleteFontFiles } from '../lib/fonts'
 
 const fontsApi = new Hono()
 
@@ -21,6 +21,14 @@ fontsApi.post('/fonts/upload', async (c) => {
   const bytes = Buffer.from(await file.arrayBuffer())
   const face = saveCustomFace(bytes, file.name, weight, style)
   return c.json(face, 201)
+})
+
+// Delete self-hosted upload files for a removed font family (reclaims disk).
+// Only touches uploaded files in data/fonts/; bundled defaults are untouched.
+fontsApi.post('/fonts/delete', async (c) => {
+  const { urls } = (await c.req.json()) as { urls?: string[] }
+  if (Array.isArray(urls) && urls.length) deleteFontFiles(urls)
+  return c.json({ ok: true })
 })
 
 export default fontsApi

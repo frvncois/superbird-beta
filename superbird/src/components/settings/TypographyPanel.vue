@@ -5,7 +5,7 @@ import { BREAKPOINTS } from '@/constants/canvas'
 import type { Breakpoint } from '@/types/canvas'
 import { fontSetStack } from '@/lib/fonts'
 import { DEFAULT_FONTS } from '@/data/defaultFonts'
-import { uploadFontFace } from '@/lib/fontApi'
+import { uploadFontFace, deleteFontFiles } from '@/lib/fontApi'
 import SettingsSection from './SettingsSection.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
@@ -54,8 +54,18 @@ async function onUploadFile(e: Event) {
   }
 }
 
-function removeFamily(id: string) {
+async function removeFamily(id: string) {
+  const family = store.globalStyles.fontSet?.find((f) => f.id === id)
   store.removeFontFamily(id)
+  // Reclaim the self-hosted files (best-effort; the family is already removed).
+  const urls = family?.faces.map((f) => f.url).filter(Boolean) ?? []
+  if (urls.length) {
+    try {
+      await deleteFontFiles(urls)
+    } catch {
+      /* files are orphaned at worst; not worth blocking the UI */
+    }
+  }
 }
 
 // ── Font variables (design tokens) ──

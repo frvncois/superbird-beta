@@ -238,6 +238,46 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  // Find a class name not yet taken by any style class.
+  function uniqueClassName(base: string): string {
+    if (!globalStylesStore.styleClasses[base]) return base
+    let n = 2
+    while (globalStylesStore.styleClasses[`${base}-${n}`]) n++
+    return `${base}-${n}`
+  }
+
+  // Duplicate a style class into a new one (styles copied) and swap it in on the
+  // node in place of the original, so this element can diverge. Tailwind
+  // utilities aren't real style classes — nothing to duplicate. Returns the new
+  // name (for inline rename).
+  function duplicateClass(nodeId: string, className: string): string | null {
+    const cls = globalStylesStore.styleClasses[className]
+    if (!cls) return null
+    const newName = uniqueClassName(`${className}-copy`)
+    globalStylesStore.styleClasses[newName] = {
+      name: newName,
+      styles: JSON.parse(JSON.stringify(cls.styles)),
+    }
+    const body = activePage.value.body
+    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
+    if (node) {
+      const i = node.classes.indexOf(className)
+      if (i !== -1) node.classes.splice(i, 1, newName)
+    }
+    globalStylesStore.setActiveClass(newName)
+    return newName
+  }
+
+  // Create a fresh, empty custom style class and append it to the node. Used when
+  // the user tries to edit properties while a Tailwind utility is the active
+  // class — we never mutate Tailwind classes, so styling spills into a new class
+  // added at the end (last wins). Returns the new name.
+  function createCustomClassOnNode(nodeId: string): string {
+    const name = uniqueClassName('class')
+    addClassToNode(nodeId, name)
+    return name
+  }
+
   // --- Node Mutations ---
 
   function hasAncestorOfType(nodeId: string, ancestorType: NodeType): boolean {
@@ -721,6 +761,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     // Class <-> node bindings
     renameClass,
     deleteStyleClass,
+    duplicateClass,
+    createCustomClassOnNode,
     addClassToNode,
     removeClassFromNode,
     // Node mutations

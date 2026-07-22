@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { STYLE_STATES } from '@/constants/canvas'
 import { isTailwindUtility } from '@/lib/tailwindToStyles'
 import type { StyleState } from '@/types/canvas'
@@ -16,16 +16,72 @@ const props = withDefaults(
 )
 
 const activeState = defineModel<StyleState>('activeState', { default: 'default' })
+// Parent sets this to a class name to open it directly in inline-rename mode
+// (used right after Duplicate). Cleared back to null once consumed.
+const renameTarget = defineModel<string | null>('renameTarget', { default: null })
 
 const emit = defineEmits<{
   add: [name: string]
   remove: [name: string]
   select: [name: string]
+  delete: [name: string]
+  duplicate: [name: string]
+  rename: [oldName: string, newName: string]
 }>()
 
 const query = ref('')
 const isFocused = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
+
+// Per-chip menu + inline rename (transient interaction state).
+const menuFor = ref<string | null>(null)
+const renaming = ref<string | null>(null)
+const renameValue = ref('')
+const renameRef = ref<HTMLInputElement | null>(null)
+function setRenameRef(el: HTMLInputElement | null) {
+  renameRef.value = el
+}
+
+// A chip is a real, editable style class iff it's in the registry. Tailwind
+// utilities never are — they can only be removed, not deleted/duplicated/renamed.
+function isCustomClass(cls: string): boolean {
+  return props.allClassNames.includes(cls)
+}
+
+function openMenu(cls: string) {
+  menuFor.value = menuFor.value === cls ? null : cls
+}
+function closeMenu() {
+  menuFor.value = null
+}
+
+function startRename(cls: string) {
+  closeMenu()
+  renaming.value = cls
+  renameValue.value = cls
+  nextTick(() => {
+    renameRef.value?.focus()
+    renameRef.value?.select()
+  })
+}
+function commitRename() {
+  const from = renaming.value
+  const to = renameValue.value.trim()
+  renaming.value = null
+  if (!from || !to || to === from) return
+  if (props.allClassNames.includes(to)) return
+  emit('rename', from, to)
+}
+function cancelRename() {
+  renaming.value = null
+}
+
+// Consume a rename request from the parent (post-duplicate).
+watch(renameTarget, (t) => {
+  if (!t) return
+  renameTarget.value = null
+  startRename(t)
+})
 
 // Matches while typing (existing classes not already applied).
 const suggestions = computed(() => {
@@ -86,6 +142,9 @@ function selectState(state: StyleState) {
 
 <template>
   <div class="relative">
+    <!-- Click-away for the chip menu -->
+    <div v-if="menuFor" class="fixed inset-0 z-[55]" @click="closeMenu" />
+
     <!-- Chips + input -->
     <div
       :class="[
@@ -94,18 +153,78 @@ function selectState(state: StyleState) {
       ]"
       @click="focusInput"
     >
-      <button
-        v-for="cls in classes"
-        :key="cls"
-        :class="[
-          'group inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-mono leading-tight cursor-pointer transition-colors duration-100 shrink-0',
-          activeClass === cls ? 'bg-primary/15 text-primary' : 'bg-secondary/10 text-foreground/70 hover:bg-secondary/15',
-        ]"
-        @click.stop="emit('select', cls)"
-      >
-        {{ cls }}
-        <IconUi name="close" size="size-2.5" @click.stop="emit('remove', cls)" />
-      </button>
+      <div v-for="cls in classes" :key="cls" class="relative shrink-0">
+        <!-- Inline rename -->
+        <input
+          v-if="renaming === cls"
+          :ref="(el) => setRenameRef(el as HTMLInputElement | null)"
+          v-model="renameValue"
+          class="rounded-md px-2.5 py-1 text-[10px] font-mono leading-tight bg-primary/15 text-primary outline-none ring-1 ring-primary/40 w-[--rename-w] min-w-[40px]"
+          :style="{ '--rename-w': (renameValue.length + 1) + 'ch' }"
+          @keydown.enter.prevent="commitRename"
+          @keydown.esc.prevent="cancelRename"
+          @blur="commitRename"
+          @click.stop
+        />
+
+        <!-- Chip -->
+        <div
+          v-else
+          :class="[
+            'inline-flex items-center rounded-md text-[10px] font-mono leading-tight transition-colors duration-100',
+            activeClass === cls ? 'bg-primary/15 text-primary' : 'bg-secondary/10 text-foreground/70 hover:bg-secondary/15',
+          ]"
+        >
+          <button class="pl-2.5 pr-1 py-1 cursor-pointer" @click.stop="emit('select', cls)">
+            {{ cls }}
+          </button>
+          <button
+            class="pr-1.5 pl-0.5 py-1 cursor-pointer opacity-60 hover:opacity-100"
+            :aria-label="`${cls} options`"
+            @click.stop="openMenu(cls)"
+          >
+            <IconUi name="chevron-down" size="size-2.5" />
+          </button>
+        </div>
+
+        <!-- Chip menu -->
+        <div
+          v-if="menuFor === cls"
+          class="absolute left-0 top-full z-[60] mt-1 w-36 rounded-xl border bg-background p-1 shadow-lg"
+          @click.stop
+        >
+          <button
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            @click="emit('remove', cls); closeMenu()"
+          >
+            <IconUi name="close" size="size-3" class="text-secondary" />
+            Remove class
+          </button>
+          <template v-if="isCustomClass(cls)">
+            <button
+              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+              @click="startRename(cls)"
+            >
+              <IconUi name="rename" size="size-3" class="text-secondary" />
+              Rename class
+            </button>
+            <button
+              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+              @click="emit('duplicate', cls); closeMenu()"
+            >
+              <IconUi name="duplicate" size="size-3" class="text-secondary" />
+              Duplicate class
+            </button>
+            <button
+              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-red-fg cursor-pointer hover:bg-red-bg/40 transition-colors duration-100"
+              @click="emit('delete', cls); closeMenu()"
+            >
+              <IconUi name="delete" size="size-3" />
+              Delete class
+            </button>
+          </template>
+        </div>
+      </div>
 
       <input
         ref="inputRef"

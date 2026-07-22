@@ -48,9 +48,18 @@ export function useNodeStyles() {
   const isGrid = computed(() => activeStyles.value.display === 'grid')
 
   function updateStyle(key: string, value: string) {
-    // If a class is active, edit the class
-    if (globalStylesStore.activeClassName) {
-      globalStylesStore.updateClassStyle(globalStylesStore.activeClassName, key, value)
+    const active = globalStylesStore.activeClassName
+    if (active) {
+      // Tailwind utilities aren't editable style classes — never mutate them.
+      // Spill the edit into a fresh custom class appended at the end (last wins),
+      // e.g. `.hero-home .mb-4` → `.hero-home .mb-4 .class`.
+      if (!globalStylesStore.styleClasses[active]) {
+        if (!node.value) return
+        const newName = store.createCustomClassOnNode(node.value.id)
+        globalStylesStore.updateClassStyle(newName, key, value)
+        return
+      }
+      globalStylesStore.updateClassStyle(active, key, value)
       return
     }
     // Otherwise, edit instance styles directly

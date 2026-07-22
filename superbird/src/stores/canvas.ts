@@ -273,9 +273,18 @@ export const useCanvasStore = defineStore('canvas', () => {
   // class — we never mutate Tailwind classes, so styling spills into a new class
   // added at the end (last wins). Returns the new name.
   function createCustomClassOnNode(nodeId: string): string {
-    const name = uniqueClassName('class')
+    let name = randomClassName()
+    while (globalStylesStore.styleClasses[name]) name = randomClassName()
     addClassToNode(nodeId, name)
     return name
+  }
+
+  // A short random class name (5 lowercase letters) — leading letter keeps it a
+  // valid CSS identifier.
+  function randomClassName(): string {
+    let s = ''
+    for (let i = 0; i < 5; i++) s += String.fromCharCode(97 + Math.floor(Math.random() * 26))
+    return s
   }
 
   // --- Node Mutations ---

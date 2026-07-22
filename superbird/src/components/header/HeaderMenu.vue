@@ -70,23 +70,6 @@ const triggerLabel = computed(() => {
       >
         <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
       </button>
-
-      <!-- Jump into the editor in a given mode (not shown while already editing) -->
-      <template v-if="mode !== 'editor'">
-        <button
-          class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @click="openEditor('design')"
-        >
-          <IconUi name="background" size="size-3.5" class="text-secondary" /> Edit design
-        </button>
-        <button
-          class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @click="openEditor('content')"
-        >
-          <IconUi name="document" size="size-3.5" class="text-secondary" /> Edit content
-        </button>
-      </template>
-
       <button
         class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openMediaLibrary"
@@ -98,6 +81,21 @@ const triggerLabel = computed(() => {
         @click="openSettings"
       >
         <IconUi name="settings" size="size-3.5" class="text-secondary" /> Settings
+      </button>
+
+      <div class="my-1 border-t border-foreground/8" />
+
+      <button
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="openEditor('content')"
+      >
+        <IconUi name="document" size="size-3.5" class="text-secondary" /> Edit content
+      </button>
+      <button
+        class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="openEditor('design')"
+      >
+        <IconUi name="background" size="size-3.5" class="text-secondary" /> Edit design
       </button>
 
       <div class="my-1 border-t border-foreground/8" />

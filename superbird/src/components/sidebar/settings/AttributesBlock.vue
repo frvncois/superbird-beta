@@ -19,9 +19,11 @@ function updateHtmlId(value: string) {
   store.setNodeSettings(node.value.id, { htmlId: value || undefined })
 }
 
-function updateHtmlTitle(value: string) {
+function updateAriaLabel(value: string) {
   if (!node.value) return
-  store.setNodeSettings(node.value.id, { htmlTitle: value || undefined })
+  store.setNodeSettings(node.value.id, {
+    accessibility: { ...(node.value.accessibility ?? {}), ariaLabel: value || undefined },
+  })
 }
 
 function addCustomAttribute() {
@@ -47,11 +49,11 @@ function removeCustomAttribute(key: string) {
           @update:model-value="updateHtmlId"
         />
       </FieldRowUi>
-      <FieldRowUi label="Title" label-width="sm">
+      <FieldRowUi label="Aria label" label-width="sm">
         <InputUi
-          :model-value="node.htmlTitle ?? ''"
-          placeholder="Tooltip text"
-          @update:model-value="updateHtmlTitle"
+          :model-value="node.accessibility?.ariaLabel ?? ''"
+          placeholder="Accessible label"
+          @update:model-value="updateAriaLabel"
         />
       </FieldRowUi>
 

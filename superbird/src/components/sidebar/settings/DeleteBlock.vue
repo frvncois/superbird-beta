@@ -13,7 +13,7 @@ function removeNode() {
 </script>
 
 <template>
-  <section v-if="node" class="pt-3">
+  <section v-if="node">
     <ButtonUi variant="danger" size="sm" class="w-full" @click="removeNode">
       Delete element
     </ButtonUi>

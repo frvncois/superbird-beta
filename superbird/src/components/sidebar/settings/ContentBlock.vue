@@ -21,7 +21,7 @@ function updateContent(value: string) {
 </script>
 
 <template>
-  <section v-if="node" class="space-y-2 pb-3">
+  <section v-if="node" class="space-y-2">
     <div class="flex items-center justify-between">
       <LabelUi>Content</LabelUi>
       <span

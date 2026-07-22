@@ -102,10 +102,19 @@ const RESET = [
   '[hidden]{display:none}',
 ].join('')
 
+// Responsive visibility utilities. Non-overlapping ranges matching the editor's
+// desktop/tablet/mobile breakpoints; !important so hiding always wins.
+const VISIBILITY = [
+  '@media (max-width:375px){.sb-hide-mobile{display:none!important}}',
+  '@media (min-width:376px) and (max-width:768px){.sb-hide-tablet{display:none!important}}',
+  '@media (min-width:769px){.sb-hide-desktop{display:none!important}}',
+].join('')
+
 export function compileCss(styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
   const parts: string[] = []
   parts.push(`:root{${globalVars(globalStyles)}}`)
   parts.push(RESET)
+  parts.push(VISIBILITY)
 
   // Global typography — desktop base, then tablet/mobile overrides.
   parts.push(typographyRules(globalStyles.typography.desktop))

@@ -28,6 +28,10 @@ function attr(name: string, value: string | undefined | null): string {
 function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined): string {
   const classes = [...node.classes]
   if (node.advanced?.customCssClass) classes.push(node.advanced.customCssClass)
+  // Responsive visibility
+  if (node.visibility?.hideDesktop) classes.push('sb-hide-desktop')
+  if (node.visibility?.hideTablet) classes.push('sb-hide-tablet')
+  if (node.visibility?.hideMobile) classes.push('sb-hide-mobile')
 
   const styleStr = Object.entries(node.styles)
     .filter(([, v]) => v !== '' && v != null)
@@ -69,6 +73,11 @@ function buildAttributes(node: CanvasNode, ctx: RenderContext, entry: Entry | un
   if (node.type === 'input' || node.type === 'textarea') {
     out += attr('placeholder', node.props.placeholder)
     out += attr('name', node.props.name)
+  }
+
+  // Interactions — the runtime (see interactionsRuntime) reads this and plays them.
+  if (node.interactions && node.interactions.length > 0) {
+    out += attr('data-sb-ix', JSON.stringify(node.interactions))
   }
 
   // Custom attributes last (author override).

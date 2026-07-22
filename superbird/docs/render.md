@@ -21,12 +21,24 @@ in-editor **Preview** now and the public site later.
 from editor styles. Desktop/tablet/mobile width toggles exercise the `@media`
 rules. Opened via the header **Preview** button (`canvas.previewOpen`).
 
+## Responsive visibility
+
+`node.visibility.hide{Desktop,Tablet,Mobile}` → the renderer adds
+`sb-hide-{desktop,tablet,mobile}` classes and `compileCss` emits three
+non-overlapping `@media` utility rules (mobile ≤375, tablet 376–768, desktop
+≥769; `display:none!important`).
+
+## Interaction playback
+
+Nodes with `interactions` are stamped `data-sb-ix="<json>"`; `renderDocument`
+injects `interactionsRuntime.ts` (a vanilla-JS `<script>`, only when the page
+uses interactions). It's a hand-kept port of `lib/animations.ts` +
+`useInteractionRunner`'s trigger switch (page-load / click / hover /
+scroll-into-view / scroll-position), playing via `element.animate`. Runs in the
+published site and the Preview iframe. **Keep it in sync with `animations.ts`.**
+
 ## Deferred
 
-- **Responsive visibility hide** (`NodeVisibility.hide*`) — needs per-node
-  `@media display:none` rules; not emitted yet.
-- **Interaction playback** — the editor runs interactions at runtime; the
-  published renderer doesn't emit them yet.
-- **Sharing with the server** — the modules are framework-free but currently
-  import via the `@/` alias; the SSR slice will make them importable server-side
-  (relocate to `shared/` or expose a server-resolvable path).
+- **Content-conditional visibility** (`NodeVisibility.condition`, entry-field
+  based) and the `class-change` interaction trigger — neither is implemented in
+  the editor either.

@@ -246,10 +246,16 @@ function escapeClass(cls: string): string {
   return cls.replace(/[:./%[\]!]/g, '\\$&')
 }
 function declsToText(d: Decls): string {
-  return Object.entries(d).map(([k, v]) => `${k}:${v}`).join(';')
+  // !important so variant states/breakpoints win over the inline base styles
+  // (base utilities are resolved inline by resolveStyles, in class order).
+  return Object.entries(d).map(([k, v]) => `${k}:${v} !important`).join(';')
 }
 
-/** Compile a set of Tailwind classes to CSS rules scoped under `scope`. */
+/**
+ * Compile the VARIANT Tailwind classes (hover:/md:/…) to CSS rules scoped under
+ * `scope`. Base utilities are handled inline by resolveStyles (so class order
+ * decides overrides); only conditional variants need real rules here.
+ */
 export function compileTailwindCss(classes: string[], scope: string): string {
   const base: string[] = []
   const byMedia: Record<string, string[]> = {}
@@ -260,6 +266,7 @@ export function compileTailwindCss(classes: string[], scope: string): string {
     seen.add(cls)
     const parts = cls.split(':')
     const util = parts.pop()!
+    if (parts.length === 0) continue // base utility → resolved inline
     const decls = classToDecls(util)
     if (!decls) continue
 

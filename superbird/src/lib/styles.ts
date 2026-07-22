@@ -1,9 +1,13 @@
 import type { Breakpoint, CanvasNode, StyleClass, StyleState } from '@/types/canvas'
+import { classToDecls } from '@/lib/tailwindToStyles'
 
 /**
- * Resolve the effective styles for a node: class styles cascaded across
- * breakpoints (desktop is base, tablet overrides, mobile overrides tablet),
- * state styles layered on top of default, instance styles last.
+ * Resolve the effective styles for a node: each class applied in the order it
+ * appears on the node (later overrides earlier), cascaded across breakpoints
+ * (desktop base → tablet → mobile) with the active state layered on default;
+ * instance styles last. Custom style classes and base Tailwind utilities are
+ * resolved together so a Tailwind class added after a custom one overrides it
+ * (variant utilities like hover:/md: are handled by generated CSS instead).
  */
 export function resolveStyles(
   node: CanvasNode,
@@ -20,7 +24,12 @@ export function resolveStyles(
 
   for (const className of node.classes) {
     const cls = styleClasses[className]
-    if (!cls) continue
+    if (!cls) {
+      // Not a custom style class → try a base Tailwind utility (in order).
+      const d = classToDecls(className)
+      if (d) Object.assign(merged, d)
+      continue
+    }
     // Apply each breakpoint in cascade order
     for (const b of cascade) {
       const bpStyles = cls.styles[b]

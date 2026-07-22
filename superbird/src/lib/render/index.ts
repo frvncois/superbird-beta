@@ -16,9 +16,13 @@ export interface DocumentHead {
   title?: string
   description?: string
   noIndex?: boolean
-  // Load the Tailwind CDN so Tailwind utility classes render.
-  tailwind?: boolean
 }
+
+// Tailwind utility classes just work alongside custom classes. Load the CDN with
+// preflight disabled (we ship our own reset in compileCss).
+const TAILWIND_TAGS =
+  '<script src="https://cdn.tailwindcss.com"></script>' +
+  '<script>tailwind.config={corePlugins:{preflight:false}}</script>'
 
 function escAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
@@ -37,12 +41,12 @@ export function renderDocument(
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
   if (head.description) headTags += `<meta name="description" content="${escAttr(head.description)}">`
   if (head.noIndex) headTags += '<meta name="robots" content="noindex, nofollow">'
-  if (head.tailwind) headTags += '<script src="https://cdn.tailwindcss.com"></script>'
   // Only ship the interaction runtime when the page actually uses interactions.
   const ixScript = html.includes('data-sb-ix') ? `<script>${interactionsRuntimeScript()}</script>` : ''
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    TAILWIND_TAGS +
     headTags +
     `<style>${css}</style></head><body>${html}${ixScript}</body></html>`
   )

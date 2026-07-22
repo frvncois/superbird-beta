@@ -28,6 +28,5 @@ export function createDefaultSiteSettings(): SiteSettings {
       maxHeight: 2000,
       quality: 90,
     },
-    cssMode: 'custom',
   }
 }

@@ -66,10 +66,8 @@ site.get('*', (c) => {
   const collections = (working?.content.collections ?? []) as Collection[]
   const published = ((working?.content.entries ?? []) as Entry[]).filter((e) => e.status === 'published')
 
-  const tailwind = (design.siteSettings as { cssMode?: string } | undefined)?.cssMode === 'tailwind'
-
   const render = (body: CanvasNode, ctx: RenderContext, head: Parameters<typeof renderDocument>[4]) =>
-    renderDocument(body, styleClasses, globalStyles, ctx, { ...head, tailwind })
+    renderDocument(body, styleClasses, globalStyles, ctx, head)
 
   const pageHead = (p: Page) => ({
     title: p.seo?.title || p.name,

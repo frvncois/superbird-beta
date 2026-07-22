@@ -93,6 +93,11 @@ function resolveTargets(triggerEl: HTMLElement, step: InteractionStep): HTMLElem
   switch (type) {
     case 'self':
       return [triggerEl]
+    case 'root': {
+      // In the editor, scope to the canvas root so we never touch the admin app.
+      const root = triggerEl.closest('[data-canvas-scroll]') as HTMLElement | null
+      return [root ?? document.body]
+    }
     case 'children':
       return Array.from(triggerEl.children) as HTMLElement[]
     case 'child': {

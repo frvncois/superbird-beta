@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { ACTION_PROPERTIES } from '@/constants/canvas'
 import type { AnimateAction, ClassAction, ClassOp, InteractionAction } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -18,6 +19,7 @@ const props = defineProps<{
 }>()
 
 const store = useCanvasStore()
+const styles = useGlobalStylesStore()
 
 const isClass = computed(() => props.action.type === 'class')
 const asAnimate = computed(() => props.action as AnimateAction)
@@ -36,6 +38,34 @@ const classOpOptions: { value: ClassOp; label: string }[] = [
   { value: 'toggle', label: 'Toggle' },
 ]
 
+// The "variant set" = existing project classes, plus a custom-entry option.
+const classOptions = computed(() => [
+  { value: '__custom__', label: 'Custom…', icon: 'plus', accentClass: 'text-purple-fg' },
+  ...styles.allClassNames.map((c) => ({ value: c, label: c })),
+])
+
+// Custom vs pick-from-existing. Seed from the stored value; only re-derive when
+// the underlying action changes (not while typing a custom name).
+const custom = ref(false)
+watch(
+  () => props.index,
+  () => {
+    const cn = props.action.type === 'class' ? props.action.className : ''
+    custom.value = !!cn && !styles.allClassNames.includes(cn)
+  },
+  { immediate: true },
+)
+
+function onSelectClass(v: string) {
+  if (v === '__custom__') {
+    custom.value = true
+    updateAction({ className: '' })
+  } else {
+    custom.value = false
+    updateAction({ className: v })
+  }
+}
+
 function updateAction(updates: Partial<AnimateAction> | Partial<ClassAction>) {
   store.updateActionInStep(props.nodeId, props.ixId, props.stepId, props.index, updates)
 }
@@ -47,7 +77,6 @@ function removeAction() {
 <template>
   <!-- Class action -->
   <div v-if="isClass" class="flex items-center gap-1 rounded-lg bg-purple-bg/40 px-2 py-1.5">
-    <IconUi name="link" size="size-3" class="shrink-0 text-purple-fg" />
     <div class="w-16 shrink-0">
       <SelectUi
         :model-value="asClass.op"
@@ -55,13 +84,26 @@ function removeAction() {
         @update:model-value="(v: string) => updateAction({ op: v as ClassOp })"
       />
     </div>
-    <InputUi
+    <SelectUi
+      v-if="!custom"
+      class="min-w-0 flex-1"
       :model-value="asClass.className"
-      size="xs"
-      placeholder="class-name"
-      class="min-w-0 flex-1 font-mono"
-      @update:model-value="(v: string) => updateAction({ className: v })"
+      :options="classOptions"
+      placeholder="Class…"
+      @update:model-value="onSelectClass"
     />
+    <template v-else>
+      <InputUi
+        class="min-w-0 flex-1 font-mono"
+        :model-value="asClass.className"
+        size="xs"
+        placeholder="class-name"
+        @update:model-value="(v: string) => updateAction({ className: v })"
+      />
+      <IconButtonUi size="xs" title="Choose existing class" @click="custom = false">
+        <IconUi name="list" size="size-2.5" />
+      </IconButtonUi>
+    </template>
     <IconButtonUi size="xs" variant="danger" title="Remove action" @click="removeAction">
       <IconUi name="close" size="size-2.5" />
     </IconButtonUi>

@@ -42,6 +42,7 @@ export const TRIGGER_TYPES: { key: TriggerType; label: string; icon: string }[] 
 
 export const TARGET_TYPES: { key: TargetType; label: string }[] = [
   { key: 'self', label: 'Self' },
+  { key: 'root', label: 'Page root' },
   { key: 'children', label: 'All Children' },
   { key: 'child', label: 'Specific Child' },
   { key: 'sibling', label: 'Sibling' },

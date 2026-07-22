@@ -92,7 +92,7 @@ export interface NodeAdvanced {
 
 export type TriggerType = 'page-load' | 'scroll-into-view' | 'scroll-position' | 'click' | 'hover' | 'class-change'
 
-export type TargetType = 'self' | 'children' | 'child' | 'sibling' | 'parent' | 'class' | 'id'
+export type TargetType = 'self' | 'children' | 'child' | 'sibling' | 'parent' | 'class' | 'id' | 'root'
 
 export type ActionProperty =
   | 'opacity'

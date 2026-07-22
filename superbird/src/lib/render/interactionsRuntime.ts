@@ -35,6 +35,7 @@ export function interactionsRuntimeScript(): string {
     var t=step.target||{};
     switch(t.type){
       case 'self': return [el];
+      case 'root': return [document.documentElement];
       case 'children': return Array.prototype.slice.call(el.children);
       case 'child': var f=el.querySelector('*'); return f?[f]:[];
       case 'sibling': return el.parentElement ? Array.prototype.slice.call(el.parentElement.children).filter(function(c){return c!==el;}) : [];

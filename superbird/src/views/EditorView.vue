@@ -16,6 +16,7 @@ import SidebarSettings from '@/components/sidebar/settings/SidebarSettings.vue'
 import SidebarInteractions from '@/components/sidebar/interactions/SidebarInteractions.vue'
 import TabsUi from '@/components/ui/TabsUi.vue'
 import PreviewOverlay from '@/components/preview/PreviewOverlay.vue'
+import McpOverlay from '@/components/mcp/McpOverlay.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 useKeyboardShortcuts()
@@ -105,4 +106,7 @@ const rightTabs = [
   </EditorLayout>
 
   <PreviewOverlay v-if="canvasStore.previewOpen" />
+
+  <!-- Locks the editor while the MCP assistant is actively editing. -->
+  <McpOverlay />
 </template>

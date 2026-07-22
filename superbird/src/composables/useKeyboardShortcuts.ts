@@ -1,10 +1,12 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useMcpStore } from '@/stores/mcp'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import { useHistory } from './useHistory'
 
 export function useKeyboardShortcuts() {
   const store = useCanvasStore()
+  const mcp = useMcpStore()
   const { undo, redo } = useHistory()
 
   function isInputFocused(): boolean {
@@ -15,6 +17,10 @@ export function useKeyboardShortcuts() {
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    // The assistant is driving the editor — ignore shortcuts so the user can't
+    // fight it. "Take over" (pause) releases the lock.
+    if (mcp.active && !mcp.paused) return
+
     const isMeta = e.metaKey || e.ctrlKey
 
     // Cmd+Z / Cmd+Shift+Z — undo/redo (works even in inputs)

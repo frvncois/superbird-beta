@@ -1,4 +1,4 @@
-import type { FontFamily } from '@/types/canvas'
+import type { FontFace, FontFamily } from '@/types/canvas'
 
 // Pure font helpers shared by the editor canvas and the render pipeline.
 
@@ -15,10 +15,16 @@ function formatFor(url: string, hint?: string): string {
   return FORMAT_HINT[ext] ?? 'woff2'
 }
 
-/** Emit @font-face rules for every self-hosted face in the project's font set. */
-export function fontFaceCss(fontSet: FontFamily[]): string {
+// Anything with a name + self-hosted faces (a FontFamily or a default font).
+interface FaceCarrier {
+  name: string
+  faces: FontFace[]
+}
+
+/** Emit @font-face rules for every self-hosted face in the given families. */
+export function fontFaceCss(families: FaceCarrier[]): string {
   const out: string[] = []
-  for (const family of fontSet) {
+  for (const family of families) {
     for (const face of family.faces) {
       if (!face.url) continue
       const decls = [
@@ -33,25 +39,6 @@ export function fontFaceCss(fontSet: FontFamily[]): string {
   }
   return out.join('')
 }
-
-// The 10 web-safe base fonts offered in the font-family picker. Value is a full
-// CSS font stack; label is what the user sees.
-export interface BasicFont {
-  label: string
-  stack: string
-}
-export const BASIC_FONTS: BasicFont[] = [
-  { label: 'System UI', stack: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
-  { label: 'Arial', stack: 'Arial, Helvetica, sans-serif' },
-  { label: 'Helvetica', stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-  { label: 'Verdana', stack: 'Verdana, Geneva, sans-serif' },
-  { label: 'Tahoma', stack: 'Tahoma, Verdana, Segoe, sans-serif' },
-  { label: 'Trebuchet MS', stack: '"Trebuchet MS", Tahoma, sans-serif' },
-  { label: 'Georgia', stack: 'Georgia, "Times New Roman", serif' },
-  { label: 'Times New Roman', stack: '"Times New Roman", Times, serif' },
-  { label: 'Garamond', stack: 'Garamond, "Times New Roman", serif' },
-  { label: 'Courier New', stack: '"Courier New", Courier, monospace' },
-]
 
 /** Build the CSS font-family value for a font-set family (quoted + fallback). */
 export function fontSetStack(family: FontFamily): string {

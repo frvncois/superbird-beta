@@ -60,8 +60,6 @@ export interface PublishResult {
 
 // ── Fonts ──
 
-export type FontSource = 'google' | 'fontshare' | 'custom'
-
 export interface FontFaceDTO {
   weight: string
   style: 'normal' | 'italic'
@@ -72,23 +70,8 @@ export interface FontFaceDTO {
 export interface FontFamilyDTO {
   id: string
   name: string
-  source: FontSource
+  source: 'custom'
   faces: FontFaceDTO[]
-}
-
-// An entry in the browsable catalog (Google via API, Fontshare bundled).
-export interface FontCatalogEntry {
-  family: string
-  source: 'google' | 'fontshare'
-  weights: string[]
-  category?: string
-  hasItalic: boolean
-}
-
-export interface FontImportPayload {
-  source: 'google' | 'fontshare'
-  family: string
-  weights: string[] // e.g. ['400','700']; italics fetched when available
 }
 
 // ── Project document ──

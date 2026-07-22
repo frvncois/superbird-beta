@@ -4,6 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { compileTailwindCss } from '@/lib/tailwindToStyles'
 import { fontFaceCss } from '@/lib/fonts'
+import { defaultFontFamilies } from '@/data/defaultFonts'
 import type { CanvasNode } from '@/types/canvas'
 import CanvasNodeRenderer from './CanvasNodeRenderer.vue'
 
@@ -35,7 +36,7 @@ const fontEl = document.createElement('style')
 fontEl.setAttribute('data-canvas-fonts', '')
 document.head.appendChild(fontEl)
 watchEffect(() => {
-  fontEl.textContent = fontFaceCss(globalStylesStore.globalStyles.fontSet ?? [])
+  fontEl.textContent = fontFaceCss([...defaultFontFamilies(), ...(globalStylesStore.globalStyles.fontSet ?? [])])
 })
 onBeforeUnmount(() => fontEl.remove())
 

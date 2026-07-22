@@ -2,6 +2,7 @@ import type { Breakpoint, CanvasNode, GlobalStyles, StyleClass, StyleState, Typo
 import { resolveStyles } from '@/lib/styles'
 import { classToDecls } from '@/lib/tailwindToStyles'
 import { fontFaceCss } from '@/lib/fonts'
+import { defaultFontFamilies } from '@/data/defaultFonts'
 
 // Compile the global tokens + style-class registry into a real stylesheet:
 // breakpoints as @media, states as pseudo-classes. This is the "emit real
@@ -116,7 +117,7 @@ const VISIBILITY = [
 // page; author styles layer on top.
 function baseCss(globalStyles: GlobalStyles): string {
   const parts: string[] = []
-  const faces = fontFaceCss(globalStyles.fontSet ?? [])
+  const faces = fontFaceCss([...defaultFontFamilies(), ...(globalStyles.fontSet ?? [])])
   if (faces) parts.push(faces)
   parts.push(`:root{${globalVars(globalStyles)}}`)
   parts.push(RESET)

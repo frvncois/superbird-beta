@@ -2,7 +2,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
-import { BASIC_FONTS, fontSetStack } from '@/lib/fonts'
+import { fontSetStack } from '@/lib/fonts'
+import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import IconUi from '@/components/ui/IconUi.vue'
 
 const props = defineProps<{ modelValue: string }>()
@@ -32,11 +33,11 @@ const setOpts = computed<Opt[]>(() =>
     return { value: stack, label: f.name, preview: stack }
   }),
 )
-const basicOpts = computed<Opt[]>(() =>
-  BASIC_FONTS.map((b) => ({ value: b.stack, label: b.label, preview: b.stack })),
+const defaultOpts = computed<Opt[]>(() =>
+  DEFAULT_FONTS.map((b) => ({ value: b.value, label: b.name, preview: b.value })),
 )
 
-const allOpts = computed(() => [...variableOpts.value, ...setOpts.value, ...basicOpts.value])
+const allOpts = computed(() => [...variableOpts.value, ...setOpts.value, ...defaultOpts.value])
 const selectedLabel = computed(() => {
   const match = allOpts.value.find((o) => o.value === props.modelValue)
   if (match) return match.label
@@ -118,9 +119,9 @@ function manage() {
           </button>
         </template>
 
-        <div class="px-2.5 pb-0.5 pt-2 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Basic</div>
+        <div class="px-2.5 pb-0.5 pt-2 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Default</div>
         <button
-          v-for="o in basicOpts"
+          v-for="o in defaultOpts"
           :key="o.value"
           type="button"
           :class="['flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors duration-100', o.value === modelValue ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-secondary/10']"

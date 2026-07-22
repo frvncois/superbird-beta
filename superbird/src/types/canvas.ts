@@ -382,7 +382,7 @@ export interface FontFace {
 export interface FontFamily {
   id: string
   name: string
-  source: 'google' | 'fontshare' | 'custom'
+  source: 'custom'
   faces: FontFace[]
 }
 

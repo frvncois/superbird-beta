@@ -14,7 +14,7 @@ import EffectsSection from './EffectsSection.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const globalStylesStore = useGlobalStylesStore()
-const { node, activeStyles, isContainer, isTextNode } = useNodeStyles()
+const { node, activeStyles, isContainer } = useNodeStyles()
 
 watch(() => node.value?.id, () => {
   if (node.value && node.value.classes.length > 0) {
@@ -41,7 +41,7 @@ watch(() => node.value?.id, () => {
         <PositionSection />
         <SizeSection />
         <SpacingSection />
-        <TypographySection v-if="isTextNode" />
+        <TypographySection />
         <BackgroundSection />
         <BorderSection />
         <EffectsSection />

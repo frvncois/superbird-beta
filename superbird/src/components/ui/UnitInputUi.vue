@@ -49,7 +49,7 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="relative flex h-8 min-w-0 items-center rounded-xl border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
+  <div class="relative flex h-8 min-w-0 items-center font-mono rounded-lg border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
     <!-- Number input -->
     <input
       :value="parsed.unit === 'auto' ? '' : parsed.num"
@@ -62,7 +62,7 @@ function handleKeydown(e: KeyboardEvent) {
 
     <!-- Unit selector -->
     <button
-      class="flex h-full shrink-0 items-center gap-0.5 border-l border-foreground/10 px-1.5 text-[10px] font-mono text-secondary cursor-pointer hover:text-foreground transition-colors duration-100"
+      class="flex h-full shrink-0 items-center gap-0.5 border-l border-foreground/10 px-1.5 text-[10px] text-secondary cursor-pointer hover:text-foreground transition-colors duration-100"
       @click.stop="unitOpen = !unitOpen"
     >
       {{ parsed.unit === 'auto' ? 'auto' : parsed.unit || 'px' }}

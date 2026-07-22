@@ -49,7 +49,7 @@ function onPointerUp() {
 
 <template>
   <span
-    :class="['cursor-ew-resize select-none', isDragging && 'text-primary']"
+    :class="['cursor-ew-resize select-none font-mono tracking-wider uppercase', isDragging && 'text-primary']"
     @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
     @pointerup="onPointerUp"

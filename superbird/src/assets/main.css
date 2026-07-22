@@ -18,6 +18,7 @@
   --color-icon-txt: #fafafa;
   --color-primary: #6366f1;
   --color-primary-hover: #818cf8;
+  --color-input: #ffffff;
 
   /* Semantic color pairs */
   --color-green-bg: #dcfce7;
@@ -150,16 +151,37 @@
 
 /* ─── Dark Mode Overrides ─── */
 .dark {
-  --color-background: #0a0a0a;
-  --color-foreground: #fafafa;
-  --color-border: #202224;
-  --color-secondary: #626466;
+  --color-background: #161616;
+  --color-foreground: #c5c5c5;
+  --color-border: #252525;
+  --color-secondary: #68686a;
   --color-icon-bg: #1a1a1a;
-  --color-muted-bg: #212222;
-  --color-muted-fg: #6e737d;
+  --color-input: #131313;
+
+  /* Semantic color pairs */
+  --color-green-bg: #14271a;
+  --color-green-fg: #4ade80;
+  --color-blue-bg: #14203a;
+  --color-blue-fg: #60a5fa;
+  --color-purple-bg: #241a35;
+  --color-purple-fg: #c084fc;
+  --color-amber-bg: #2b2011;
+  --color-amber-fg: #fbbf24;
   --color-red-bg: #2d1515;
   --color-red-border: #5c2222;
   --color-red-fg: #fca5a5;
+  --color-red-strong: #f87171;
+  --color-orange-bg: #2b1a10;
+  --color-orange-fg: #fb923c;
+  --color-yellow-bg: #29260f;
+  --color-yellow-fg: #fde047;
+  --color-muted-bg: #212222;
+  --color-muted-fg: #6e737d;
+
+  /* Score colors */
+  --color-score-green: #4ade80;
+  --color-score-amber: #fbbf24;
+  --color-score-red: #f87171;
 }
 
 /* ─── Base Reset ─── */

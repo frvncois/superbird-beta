@@ -82,7 +82,7 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="relative flex h-8 min-w-0 items-center rounded-xl border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
+  <div class="relative flex h-8 min-w-0 items-center bg-input rounded-xl border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
     <!-- Token button (only if tokens exist and no token active) -->
     <button
       v-if="hasTokens && !tokenName"

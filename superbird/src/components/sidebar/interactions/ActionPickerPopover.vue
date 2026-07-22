@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ACTION_PROPERTIES } from '@/constants/canvas'
-import type { ActionProperty } from '@/types/canvas'
+import type { ActionProperty, ClassOp } from '@/types/canvas'
 
 defineProps<{
   position: { x: number; y: number }
 }>()
 
+// Emit either an animate property or a class operation.
 const emit = defineEmits<{
-  select: [property: ActionProperty]
+  select: [choice: { kind: 'animate'; property: ActionProperty } | { kind: 'class'; op: ClassOp }]
   close: []
 }>()
 
-// Group action properties
 const actionGroups = computed(() => {
   const groups: Record<string, typeof ACTION_PROPERTIES> = {}
   for (const prop of ACTION_PROPERTIES) {
@@ -20,10 +20,16 @@ const actionGroups = computed(() => {
   }
   return groups
 })
+
+const classOps: { op: ClassOp; label: string }[] = [
+  { op: 'add', label: 'Add class' },
+  { op: 'remove', label: 'Remove class' },
+  { op: 'toggle', label: 'Toggle class' },
+]
 </script>
 
 <!--
-  Teleported dropdown listing action properties grouped by category.
+  Teleported dropdown of animate properties (grouped) plus class operations.
   Rendered to <body> so it layers above the sidebar overflow.
 -->
 <template>
@@ -39,11 +45,22 @@ const actionGroups = computed(() => {
           v-for="prop in items"
           :key="prop.key"
           class="flex w-full items-center rounded-lg px-2 py-1 text-[10px] cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @click="emit('select', prop.key)"
+          @click="emit('select', { kind: 'animate', property: prop.key })"
         >
           {{ prop.label }}
         </button>
       </template>
+
+      <!-- Class operations (purple, like other class affordances) -->
+      <div class="px-2 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-purple-fg/70">Class</div>
+      <button
+        v-for="c in classOps"
+        :key="c.op"
+        class="flex w-full items-center rounded-lg px-2 py-1 text-[10px] text-purple-fg cursor-pointer hover:bg-purple-bg/40 transition-colors duration-100"
+        @click="emit('select', { kind: 'class', op: c.op })"
+      >
+        {{ c.label }}
+      </button>
     </div>
   </Teleport>
 </template>

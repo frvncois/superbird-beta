@@ -103,11 +103,23 @@ export type ActionProperty =
   | 'background-color' | 'color'
   | 'blur' | 'brightness' | 'contrast' | 'saturate'
 
-export interface InteractionAction {
+// Animate a CSS property from → to (the default / legacy action).
+export interface AnimateAction {
+  type?: 'animate'
   property: ActionProperty
   from: string
   to: string
 }
+
+// Add / remove / toggle a class on the target element.
+export type ClassOp = 'add' | 'remove' | 'toggle'
+export interface ClassAction {
+  type: 'class'
+  op: ClassOp
+  className: string
+}
+
+export type InteractionAction = AnimateAction | ClassAction
 
 export interface InteractionTarget {
   type: TargetType

@@ -1,7 +1,7 @@
-import type { ActionProperty, Interaction, InteractionAction, InteractionStep } from '@/types/canvas'
+import type { ActionProperty, AnimateAction, ClassAction, Interaction, InteractionStep } from '@/types/canvas'
 
 // Maps our action properties to CSS
-function buildKeyframes(actions: InteractionAction[]): { from: Record<string, string>; to: Record<string, string> } {
+function buildKeyframes(actions: AnimateAction[]): { from: Record<string, string>; to: Record<string, string> } {
   const from: Record<string, string> = {}
   const to: Record<string, string> = {}
 
@@ -124,25 +124,40 @@ function resolveTargets(triggerEl: HTMLElement, step: InteractionStep): HTMLElem
   }
 }
 
-export function runStep(triggerEl: HTMLElement, step: InteractionStep): Animation[] {
+// Add / remove / toggle a class. On reverse, add ↔ remove (toggle stays toggle).
+function applyClassAction(target: HTMLElement, action: ClassAction, reverse: boolean) {
+  let op = action.op
+  if (reverse) op = op === 'add' ? 'remove' : op === 'remove' ? 'add' : 'toggle'
+  if (!action.className) return
+  if (op === 'add') target.classList.add(action.className)
+  else if (op === 'remove') target.classList.remove(action.className)
+  else target.classList.toggle(action.className)
+}
+
+export function runStep(triggerEl: HTMLElement, step: InteractionStep, reverse = false): Animation[] {
   const targets = resolveTargets(triggerEl, step)
   if (targets.length === 0 || step.actions.length === 0) return []
 
-  const { from, to } = buildKeyframes(step.actions)
+  const animate = step.actions.filter((a): a is AnimateAction => a.type !== 'class')
+  const classes = step.actions.filter((a): a is ClassAction => a.type === 'class')
   const animations: Animation[] = []
 
   targets.forEach((target, i) => {
-    const staggerDelay = (step.stagger ?? 0) * i
-    const anim = target.animate(
-      [from, to],
-      {
-        delay: step.delay + staggerDelay,
-        duration: step.duration,
-        easing: step.easing,
-        fill: 'forwards',
-      },
-    )
-    animations.push(anim)
+    const totalDelay = step.delay + (step.stagger ?? 0) * i
+
+    if (animate.length > 0) {
+      const { from, to } = buildKeyframes(animate)
+      const frames = reverse ? [to, from] : [from, to]
+      animations.push(
+        target.animate(frames, { delay: totalDelay, duration: step.duration, easing: step.easing, fill: 'forwards' }),
+      )
+    }
+
+    if (classes.length > 0) {
+      const apply = () => classes.forEach((a) => applyClassAction(target, a, reverse))
+      if (totalDelay > 0) setTimeout(apply, totalDelay)
+      else apply()
+    }
   })
 
   return animations
@@ -150,32 +165,12 @@ export function runStep(triggerEl: HTMLElement, step: InteractionStep): Animatio
 
 export function runStepsReverse(triggerEl: HTMLElement, steps: InteractionStep[]): Animation[] {
   const allAnims: Animation[] = []
-  for (const step of steps) {
-    const targets = resolveTargets(triggerEl, step)
-    if (targets.length === 0 || step.actions.length === 0) continue
-
-    const { from, to } = buildKeyframes(step.actions)
-    targets.forEach((target, i) => {
-      const staggerDelay = (step.stagger ?? 0) * i
-      const anim = target.animate(
-        [to, from],
-        {
-          delay: step.delay + staggerDelay,
-          duration: step.duration,
-          easing: step.easing,
-          fill: 'forwards',
-        },
-      )
-      allAnims.push(anim)
-    })
-  }
+  for (const step of steps) allAnims.push(...runStep(triggerEl, step, true))
   return allAnims
 }
 
 export function runAllSteps(triggerEl: HTMLElement, ix: Interaction): Animation[] {
   const allAnims: Animation[] = []
-  for (const step of ix.steps) {
-    allAnims.push(...runStep(triggerEl, step))
-  }
+  for (const step of ix.steps) allAnims.push(...runStep(triggerEl, step, false))
   return allAnims
 }

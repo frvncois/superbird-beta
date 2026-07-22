@@ -44,15 +44,31 @@ export function interactionsRuntimeScript(): string {
       default: return [el];
     }
   }
+  function applyClass(target,action,reverse){
+    var op=action.op;
+    if(reverse) op = op==='add'?'remove':op==='remove'?'add':'toggle';
+    if(!action.className) return;
+    if(op==='add') target.classList.add(action.className);
+    else if(op==='remove') target.classList.remove(action.className);
+    else target.classList.toggle(action.className);
+  }
   function runStep(el,step,reverse){
     var targets=resolveTargets(el,step);
     if(!targets.length||!step.actions.length) return [];
-    var kf=buildKeyframes(step.actions);
-    var frames=reverse?[kf.to,kf.from]:[kf.from,kf.to];
+    var animate=step.actions.filter(function(a){return a.type!=='class';});
+    var classes=step.actions.filter(function(a){return a.type==='class';});
     var anims=[];
     targets.forEach(function(target,i){
-      var sd=(step.stagger||0)*i;
-      anims.push(target.animate(frames,{delay:(step.delay||0)+sd,duration:step.duration||0,easing:step.easing||'ease',fill:'forwards'}));
+      var totalDelay=(step.delay||0)+(step.stagger||0)*i;
+      if(animate.length){
+        var kf=buildKeyframes(animate);
+        var frames=reverse?[kf.to,kf.from]:[kf.from,kf.to];
+        anims.push(target.animate(frames,{delay:totalDelay,duration:step.duration||0,easing:step.easing||'ease',fill:'forwards'}));
+      }
+      if(classes.length){
+        var apply=function(){ classes.forEach(function(a){ applyClass(target,a,reverse); }); };
+        if(totalDelay>0) setTimeout(apply,totalDelay); else apply();
+      }
     });
     return anims;
   }

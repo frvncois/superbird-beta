@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { TARGET_TYPES, EASING_OPTIONS, ACTION_PROPERTIES } from '@/constants/canvas'
-import type { InteractionStep, TargetType, ActionProperty } from '@/types/canvas'
+import type { InteractionStep, TargetType, ActionProperty, ClassOp } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -39,14 +39,23 @@ function openActionPicker(e: MouseEvent) {
   pickerPos.value = { x: rect.right, y: rect.bottom + 4 }
   showActionPicker.value = !showActionPicker.value
 }
-function addAction(property: ActionProperty) {
-  const prop = ACTION_PROPERTIES.find((p) => p.key === property)
-  const base = property.includes('scale') ? '1' : '0' + (prop?.unit ?? '')
-  store.addActionToStep(props.nodeId, props.ixId, props.step.id, {
-    property,
-    from: property === 'opacity' ? '0' : base,
-    to: property === 'opacity' ? '1' : base,
-  })
+function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kind: 'class'; op: ClassOp }) {
+  if (choice.kind === 'class') {
+    store.addActionToStep(props.nodeId, props.ixId, props.step.id, {
+      type: 'class',
+      op: choice.op,
+      className: '',
+    })
+  } else {
+    const property = choice.property
+    const prop = ACTION_PROPERTIES.find((p) => p.key === property)
+    const base = property.includes('scale') ? '1' : '0' + (prop?.unit ?? '')
+    store.addActionToStep(props.nodeId, props.ixId, props.step.id, {
+      property,
+      from: property === 'opacity' ? '0' : base,
+      to: property === 'opacity' ? '1' : base,
+    })
+  }
   showActionPicker.value = false
 }
 </script>

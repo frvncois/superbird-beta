@@ -8,7 +8,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { CanvasNode, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
+import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -633,7 +633,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     step.actions.splice(actionIndex, 1)
   }
 
-  function updateActionInStep(nodeId: string, interactionId: string, stepId: string, actionIndex: number, updates: Partial<InteractionAction>) {
+  function updateActionInStep(nodeId: string, interactionId: string, stepId: string, actionIndex: number, updates: Partial<AnimateAction> | Partial<ClassAction>) {
     const body = activePage.value.body
     const node = nodeId === body.id ? body : findNode(body.children, nodeId)
     const ix = node?.interactions?.find((i) => i.id === interactionId)

@@ -7,6 +7,7 @@ import mediaRoutes from './routes/media'
 import fontsRoutes from './routes/fonts'
 import usersRoutes from './routes/users'
 import aiRoutes from './routes/ai'
+import mcpRoutes from './routes/mcp'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -17,6 +18,9 @@ const app = new Hono()
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
+// MCP bridge (no session — a local developer bridge). Registered before the
+// session-guarded routers so their `/api/*` guards don't intercept it.
+app.route('/api', mcpRoutes)
 app.route('/api', projectRoutes)
 app.route('/api', mediaRoutes)
 app.route('/api', fontsRoutes)

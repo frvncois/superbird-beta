@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, provide, ref } from 'vue'
+import { computed, provide, ref, onMounted, onUnmounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { GlobalTokensKey } from '@/constants/injectionKeys'
+import { startMcpBridge, stopMcpBridge } from '@/lib/ai/bridge'
 import EditorLayout from '@/layouts/EditorLayout.vue'
 import AppHeader from '@/components/header/AppHeader.vue'
 import EditorCanvas from '@/components/canvas/EditorCanvas.vue'
@@ -18,6 +19,11 @@ import PreviewOverlay from '@/components/preview/PreviewOverlay.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 useKeyboardShortcuts()
+
+// While the editor is open, connect the live MCP bridge so an external MCP
+// client (Claude Code, …) can drive the canvas.
+onMounted(startMcpBridge)
+onUnmounted(stopMcpBridge)
 
 // Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches)
 const globalStylesStore = useGlobalStylesStore()

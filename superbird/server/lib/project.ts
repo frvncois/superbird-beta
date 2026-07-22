@@ -19,6 +19,17 @@ export function getWorkingDocument(projectId: string): ProjectDocument | null {
   return JSON.parse(row.document) as ProjectDocument
 }
 
+/** Overwrite the working document (used by the headless MCP editor). */
+export function setWorkingDocument(projectId: string, doc: ProjectDocument): void {
+  const now = new Date().toISOString()
+  const row = stateRow(projectId)
+  if (row) {
+    db.update(projectState).set({ document: JSON.stringify(doc), updatedAt: now }).where(eq(projectState.projectId, projectId)).run()
+  } else {
+    db.insert(projectState).values({ projectId, document: JSON.stringify(doc), updatedAt: now }).run()
+  }
+}
+
 /** The published design snapshot, or null if never published. */
 export function getPublishedDesign(projectId: string): ProjectDesign | null {
   const row = stateRow(projectId)

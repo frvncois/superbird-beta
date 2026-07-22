@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSetupStore } from '@/stores/setup'
+import { useAuthStore } from '@/stores/auth'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -10,6 +11,7 @@ import IconUi from '@/components/ui/IconUi.vue'
 
 const router = useRouter()
 const setup = useSetupStore()
+const auth = useAuthStore()
 const siteSettings = useSiteSettingsStore()
 
 // 0 welcome · 1 project · 2 account · 3 done
@@ -55,6 +57,8 @@ async function finish() {
     })
     // Reflect the project name in site settings for the rest of the app.
     siteSettings.updateSiteIdentity({ title: result.project.name })
+    // Open a session for the freshly-created admin (auto sign-in).
+    await auth.login(email.value.trim(), password.value)
     step.value = 3
   } catch {
     // setup.error is shown inline

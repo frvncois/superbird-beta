@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
+import { useAuthStore } from '@/stores/auth'
 import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
 import type { PageType } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
@@ -17,6 +18,7 @@ const props = defineProps<{
 const store = useCanvasStore()
 const collections = useCollectionsStore()
 const media = useMediaStore()
+const auth = useAuthStore()
 const router = useRouter()
 
 const isOpen = ref(false)
@@ -38,8 +40,9 @@ function openMediaLibrary() {
   close()
 }
 function logout() {
-  // TODO: wire to auth
+  auth.logout()
   close()
+  router.push('/login')
 }
 
 // add page

@@ -1,14 +1,14 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { readInstall, install as installService, clearInstall } from '@/lib/installer'
-import type { Project, User, SetupPayload } from '@/types/setup'
+import { saveCredentials, clearAuth } from '@/lib/auth'
+import type { Project, SetupPayload } from '@/types/setup'
 
 // Setup / installation state. `project` is the source of truth for whether the
-// app has been provisioned; `currentUser` is the (future) authenticated admin.
+// app has been provisioned. The authenticated session lives in the auth store.
 export const useSetupStore = defineStore('setup', () => {
   const initial = readInstall()
   const project = ref<Project | null>(initial?.project ?? null)
-  const currentUser = ref<User | null>(initial?.user ?? null)
   const installing = ref(false)
   const error = ref<string | null>(null)
 
@@ -20,7 +20,8 @@ export const useSetupStore = defineStore('setup', () => {
     try {
       const result = await installService(payload)
       project.value = result.project
-      currentUser.value = result.user
+      // PROTOTYPE: persist credentials so the admin can sign in afterwards.
+      saveCredentials(payload.admin.email, payload.admin.password)
       return result
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Setup failed. Please try again.'
@@ -32,9 +33,9 @@ export const useSetupStore = defineStore('setup', () => {
 
   function reset() {
     clearInstall()
+    clearAuth()
     project.value = null
-    currentUser.value = null
   }
 
-  return { project, currentUser, installing, error, isInstalled, install, reset }
+  return { project, installing, error, isInstalled, install, reset }
 })

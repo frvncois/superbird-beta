@@ -3,12 +3,25 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
+import { fetchSessionState } from '@/lib/api'
+import { useSetupStore } from '@/stores/setup'
+import { useAuthStore } from '@/stores/auth'
 
 import './assets/main.css'
 
 const app = createApp(App)
-
 app.use(createPinia())
-app.use(router)
 
+// Load install + session state from the API before routing, so navigation
+// guards see the real state on first paint. If the API is unreachable the app
+// still mounts (uninstalled/signed-out) and surfaces the error at the gate.
+try {
+  const state = await fetchSessionState()
+  useSetupStore().hydrate(state.project)
+  useAuthStore().hydrate(state.user)
+} catch (e) {
+  console.error('[superbird] Could not reach the API on startup.', e)
+}
+
+app.use(router)
 app.mount('#app')

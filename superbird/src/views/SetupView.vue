@@ -57,8 +57,8 @@ async function finish() {
     })
     // Reflect the project name in site settings for the rest of the app.
     siteSettings.updateSiteIdentity({ title: result.project.name })
-    // Open a session for the freshly-created admin (auto sign-in).
-    await auth.login(email.value.trim(), password.value)
+    // Install opened a session server-side — adopt the returned admin user.
+    auth.hydrate(result.user)
     step.value = 3
   } catch {
     // setup.error is shown inline

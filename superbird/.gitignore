@@ -37,3 +37,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Local SQLite database (per-project data)
+/data/
+*.db
+*.db-shm
+*.db-wal

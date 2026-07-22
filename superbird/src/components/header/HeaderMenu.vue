@@ -39,8 +39,8 @@ function openMediaLibrary() {
   media.openLibrary()
   close()
 }
-function logout() {
-  auth.logout()
+async function logout() {
+  await auth.logout()
   close()
   router.push('/login')
 }

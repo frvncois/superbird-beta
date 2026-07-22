@@ -108,8 +108,8 @@ This is roughly Webflow's behavior and keeps everyday content publishing lightwe
 
 ## Rough build order
 
-1. **Collections model in-app** — `collections`/`fields`/`entries` as stores (seeded, pre-persistence); Pages\|Collections dropdown + item submenu; bind templates to collections; preview-entry selection; Option-A inline editing writing to entries. Retire the hardcoded configs.
-2. **Persistence** — SQLite + API; stores become API-backed; media as files+paths.
+1. **Collections model in-app** — ✅ shipped. `collections`/`fields`/`entries` as stores (seeded, pre-persistence); Pages\|Collections dropdown + item submenu; bind templates to collections; preview-entry selection; Option-A inline editing writing to entries. Retire the hardcoded configs.
+2. **Persistence** — 🚧 in progress. SQLite + API; stores become API-backed; media as files+paths. **Auth/install slice shipped** (Hono + SQLite/Drizzle backend, session cookies; setup + login now hit the API — see `server.md`). Remaining: content tables (collections/fields/entries) + CRUD; media as files+paths.
 3. **Render pipeline** — node→HTML + styleClasses→CSS, shared and faithful.
 4. **Public SSR runtime** — route resolver (static pages + dynamic collection singles + collection-list queries incl. current-entry filter).
 5. **Draft/Publish + auth** — entry status + site-level design publish; editor login gate.

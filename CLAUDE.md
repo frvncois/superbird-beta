@@ -16,6 +16,7 @@ Superbird is a Vue 3 web application. All source code lives inside the `superbir
 - `docs/stores.md` — public API of each domain store
 - `docs/lib-and-composables.md` — pure helpers, constants, composables, types index
 - `docs/patterns.md` — recipes for the recurring moves
+- `docs/server.md` — backend tier (Hono + SQLite/Drizzle), API routes, client seams, dev workflow
 
 Start at `docs/README.md`. The design-system spec is `superbird/DESIGN.md`.
 
@@ -24,13 +25,16 @@ Start at `docs/README.md`. The design-system spec is `superbird/DESIGN.md`.
 All commands must be run from the `superbird/` directory.
 
 ```sh
-npm run dev          # Start Vite dev server with HMR
-npm run build        # Type-check (vue-tsc) then production build (vite build)
-npm run build-only   # Production build without type-checking
-npm run type-check   # Run vue-tsc type checking only
+npm run dev               # Run BOTH the Vite client (HMR) and the Hono API (tsx watch)
+npm run dev:web           # Client only
+npm run dev:server        # API only (http://localhost:3001; Vite proxies /api to it)
+npm run build             # Type-check (vue-tsc) then production build (vite build) — client
+npm run build-only        # Production build without type-checking
+npm run type-check        # vue-tsc type checking (client)
+npm run server:type-check # tsc type checking (server)
 ```
 
-No test runner or linter is configured yet.
+No test runner or linter is configured yet. Reset the app to first-run by deleting `data/superbird.db*`.
 
 ## Tech Stack
 
@@ -58,6 +62,12 @@ No test runner or linter is configured yet.
 - `src/composables/` — Cross-feature composables: `useHistory` (singleton), `useKeyboardShortcuts`, `useContextMenu`, `useNodeContextMenu`, `useDragScrub`, `useInteractionRunner`. Feature-specific composables co-locate with their feature (e.g. `canvas/useNodeDnD.ts`).
 
 Path alias: `@/` maps to `src/`.
+
+### Backend tier
+
+- `server/` — Hono API + SQLite (better-sqlite3 + Drizzle). Entry `server/index.ts` (port 3001). `db/` (client + schema), `lib/` (password scrypt, cookie sessions), `routes/auth.ts` (`/api/session|install|login|logout`). One DB file per project at `data/superbird.db` (git-ignored). Full detail in `docs/server.md`.
+- `shared/types.ts` — canonical API contract shared by client (`@shared/*` alias) and server (relative import).
+- Client seams: `src/lib/api.ts` (`fetchSessionState`, `apiGet/apiPost`), `src/lib/installer.ts` (`install`), `src/lib/auth.ts` (`login`/`logout`). `main.ts` awaits `fetchSessionState()` and hydrates the `setup`/`auth` stores **before** routing.
 
 Component and coding conventions (defineModel, store-free UI primitives, primitive reuse rules) are documented in `superbird/DESIGN.md` under "Architecture & Conventions".
 

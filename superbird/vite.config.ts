@@ -15,6 +15,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@shared': fileURLToPath(new URL('./shared', import.meta.url)),
+    },
+  },
+  server: {
+    proxy: {
+      // Admin API — proxied to the Hono server in dev (same-origin → cookies work).
+      '/api': 'http://localhost:3001',
     },
   },
 })

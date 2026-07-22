@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { GlobalTokensKey } from '@/constants/injectionKeys'
 import AppHeader from '@/components/header/AppHeader.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import GeneralPanel from '@/components/settings/GeneralPanel.vue'
 import DesignPanel from '@/components/settings/DesignPanel.vue'
+import TypographyPanel from '@/components/settings/TypographyPanel.vue'
 import MediaPanel from '@/components/settings/MediaPanel.vue'
 import SeoPanel from '@/components/settings/SeoPanel.vue'
 import AdvancedPanel from '@/components/settings/AdvancedPanel.vue'
@@ -20,12 +22,19 @@ provide(GlobalTokensKey, computed(() => ({
 const categories = [
   { key: 'general', label: 'General', icon: 'settings', component: GeneralPanel },
   { key: 'design', label: 'Design', icon: 'background', component: DesignPanel },
+  { key: 'typography', label: 'Typography', icon: 'typography', component: TypographyPanel },
   { key: 'media', label: 'Media', icon: 'image', component: MediaPanel },
   { key: 'seo', label: 'SEO', icon: 'search', component: SeoPanel },
   { key: 'advanced', label: 'Advanced', icon: 'embed', component: AdvancedPanel },
 ] as const
 
-const active = ref<(typeof categories)[number]['key']>('general')
+type CatKey = (typeof categories)[number]['key']
+const route = useRoute()
+// Deep-link support: /settings?tab=typography (e.g. from "Manage font family").
+const initialTab = categories.some((c) => c.key === route.query.tab)
+  ? (route.query.tab as CatKey)
+  : 'general'
+const active = ref<CatKey>(initialTab)
 const activePanel = computed(() => categories.find((c) => c.key === active.value)?.component ?? GeneralPanel)
 const activeLabel = computed(() => categories.find((c) => c.key === active.value)?.label ?? '')
 </script>

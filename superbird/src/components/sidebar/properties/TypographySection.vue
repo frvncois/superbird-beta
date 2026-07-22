@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import InputUi from '@/components/ui/InputUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import SizeTokenInputUi from '@/components/ui/SizeTokenInputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
+import FontFamilyControl from './FontFamilyControl.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import DragLabelUi from '@/components/ui/DragLabelUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -25,7 +25,7 @@ const typographyKeys = ['font-family', 'font-size', 'line-height', 'font-weight'
   <PropertySectionUi title="Typography" icon="typography" :states-with-values="statesWithValues(typographyKeys)">
     <div class="space-y-1.5">
       <FieldRowUi label="Family">
-        <InputUi :model-value="activeStyles['font-family'] ?? ''" placeholder="inherit" @update:model-value="updateStyle('font-family', $event)" />
+        <FontFamilyControl :model-value="activeStyles['font-family'] ?? ''" @update:model-value="updateStyle('font-family', $event)" />
       </FieldRowUi>
       <div class="grid grid-cols-2 gap-1.5">
         <div class="space-y-1">

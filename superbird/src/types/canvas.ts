@@ -197,12 +197,20 @@ export interface DynamicField {
   placeholder?: string
 }
 
+export interface PageSeo {
+  title?: string
+  description?: string
+  socialImage?: string
+  noIndex?: boolean
+}
+
 export interface Page {
   id: string
   name: string
   slug: string
   pageType: PageType
   status?: 'draft' | 'published'
+  seo?: PageSeo
   body: CanvasNode
 }
 

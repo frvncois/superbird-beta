@@ -61,21 +61,27 @@ site.get('*', (c) => {
   const collections = (working?.content.collections ?? []) as Collection[]
   const published = ((working?.content.entries ?? []) as Entry[]).filter((e) => e.status === 'published')
 
-  const render = (body: CanvasNode, ctx: RenderContext, title?: string) =>
-    renderDocument(body, styleClasses, globalStyles, ctx, title)
+  const render = (body: CanvasNode, ctx: RenderContext, head: Parameters<typeof renderDocument>[4]) =>
+    renderDocument(body, styleClasses, globalStyles, ctx, head)
+
+  const pageHead = (p: Page) => ({
+    title: p.seo?.title || p.name,
+    description: p.seo?.description,
+    noIndex: p.seo?.noIndex,
+  })
 
   const segments = path.split('/').filter(Boolean)
 
   // Home
   if (segments.length === 0) {
     const home = pages.find((p) => p.slug === '/') ?? pages.find((p) => p.pageType === 'page')
-    if (home) return c.html(render(home.body, buildContext(published, collections), home.name))
+    if (home) return c.html(render(home.body, buildContext(published, collections), pageHead(home)))
   }
 
   // Static page (single segment)
   if (segments.length === 1) {
     const page = pages.find((p) => p.pageType !== 'collection' && p.slug === segments[0])
-    if (page) return c.html(render(page.body, buildContext(published, collections), page.name))
+    if (page) return c.html(render(page.body, buildContext(published, collections), pageHead(page)))
   }
 
   // Collection single (two segments: <basePath>/<entry-slug>)
@@ -84,14 +90,14 @@ site.get('*', (c) => {
     const template = col ? pages.find((p) => p.id === col.templatePageId) : undefined
     const entry = col ? published.find((e) => e.collectionId === col.id && e.slug === segments[1]) : undefined
     if (col && template && entry) {
-      return c.html(render(template.body, buildContext(published, collections, entry), entry.title))
+      return c.html(render(template.body, buildContext(published, collections, entry), { title: entry.title }))
     }
   }
 
   // 404
   const notFound = pages.find((p) => p.pageType === 'system' && p.slug === '404')
   const html = notFound
-    ? render(notFound.body, buildContext(published, collections), '404')
+    ? render(notFound.body, buildContext(published, collections), { title: '404' })
     : placeholder('Page not found.')
   return c.html(html, 404)
 })

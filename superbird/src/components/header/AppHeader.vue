@@ -22,6 +22,12 @@ const editorModeOptions = [
   { value: 'content', label: 'Content' },
 ]
 
+// Dashboard: open the editor toggled to the chosen mode.
+function openEditor(mode: 'design' | 'content') {
+  canvasStore.setEditorMode(mode)
+  router.push('/editor')
+}
+
 const publishing = ref(false)
 async function publish() {
   if (publishing.value) return
@@ -78,7 +84,8 @@ async function publish() {
       <span class="flex items-center gap-1.5 rounded-lg bg-secondary/5 px-2.5 py-1 text-[11px] text-secondary">
         <span class="size-1.5 rounded-full bg-green-fg" /> Published
       </span>
-      <ButtonUi variant="solid" size="sm" @click="router.push('/editor')">Open editor</ButtonUi>
+      <ButtonUi variant="outline" size="sm" @click="openEditor('content')">Edit content</ButtonUi>
+      <ButtonUi variant="solid" size="sm" @click="openEditor('design')">Edit design</ButtonUi>
     </template>
   </div>
 </template>

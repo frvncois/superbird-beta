@@ -26,17 +26,26 @@ in-app assistant, the headless executor, and the MCP server.
 
 ## Connect Claude Code
 
-1. Start Superbird: `npm run dev` (the API must be on `http://localhost:3001`).
-2. Register the MCP server (from the `superbird/` directory):
+This is a **stdio** MCP server (Claude Code launches it as a subprocess) — **not**
+an HTTP endpoint. Do not `claude mcp add --transport http http://localhost:3001/…`;
+`:3001` is the Superbird web/API server the stdio process talks to internally
+(`/api/mcp/*`), not an MCP endpoint.
+
+1. Start Superbird: `npm run dev` (its API must be on `http://localhost:3001`;
+   override with `SUPERBIRD_URL`).
+2. Register the MCP server. Use **absolute paths** so it launches regardless of
+   the working directory Claude Code spawns it from:
 
    ```sh
-   claude mcp add superbird -- npx tsx server/mcp-stdio.ts
+   claude mcp add superbird -- /ABSOLUTE/PATH/TO/superbird/node_modules/.bin/tsx \
+     /ABSOLUTE/PATH/TO/superbird/server/mcp-stdio.ts
    ```
-
-   Point it elsewhere with `SUPERBIRD_URL` (default `http://localhost:3001`).
-3. For **live** editing, keep the Superbird **editor open** in a browser. Then in
+3. **Restart Claude Code** — newly added MCP servers only load on restart. Then
+   `claude mcp list` should show `superbird`.
+4. For **live** editing, keep the Superbird **editor open** in a browser. Then in
    Claude Code: *“In Superbird, build a landing page with a hero and three
-   feature cards.”* Edits appear on the canvas as it works.
+   feature cards.”* Edits appear on the canvas as it works. With no editor open,
+   edits apply headlessly to the saved project.
 
 ## Security note
 

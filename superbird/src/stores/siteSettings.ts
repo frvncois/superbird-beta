@@ -41,14 +41,6 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     Object.assign(siteSettings.value.integrations, updates)
   }
 
-  function addCustomFont(name: string, url: string) {
-    siteSettings.value.integrations.customFonts.push({ name, url })
-  }
-
-  function removeCustomFont(index: number) {
-    siteSettings.value.integrations.customFonts.splice(index, 1)
-  }
-
   return {
     siteSettings,
     hydrate,
@@ -59,7 +51,5 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     addRedirect,
     removeRedirect,
     updateIntegrations,
-    addCustomFont,
-    removeCustomFont,
   }
 })

@@ -19,9 +19,7 @@ export function createDefaultSiteSettings(): SiteSettings {
       customCss: '',
     },
     redirects: [],
-    integrations: {
-      customFonts: [],
-    },
+    integrations: {},
     imageCompression: {
       enabled: true,
       maxWidth: 2000,

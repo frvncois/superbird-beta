@@ -330,8 +330,6 @@ export interface Redirect {
 }
 
 export interface SiteIntegrations {
-  googleFontsApiKey?: string
-  customFonts: { name: string; url: string }[]
   formHandler?: string
   formEmail?: string
 }

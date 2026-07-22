@@ -5,10 +5,8 @@ import type { RenderContext } from './context'
 
 // Node tree → faithful HTML. Real elements (img/a/form controls), resolved
 // content/media/links, no editor chrome. Framework-free so the SSR runtime can
-// reuse it verbatim.
-//
-// Not yet handled (deferred, flagged in docs): responsive visibility hide and
-// interaction playback.
+// reuse it verbatim. Responsive-visibility (sb-hide-* classes) and interaction
+// hooks (data-sb-ix) are emitted here; the runtime + CSS handle playback.
 
 const VOID_TAGS = new Set(['img', 'input', 'br', 'hr', 'source', 'area', 'base', 'col', 'meta', 'wbr'])
 

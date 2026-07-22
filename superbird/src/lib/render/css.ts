@@ -1,24 +1,15 @@
 import type { Breakpoint, CanvasNode, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
 import { resolveStyles } from '@/lib/styles'
-import { classToDecls } from '@/lib/tailwindToStyles'
+import { classToDecls, MIN_BP, STATE_PSEUDO, ANCESTOR } from '@/lib/tailwindToStyles'
 import { fontFaceCss } from '@/lib/fonts'
 import { defaultFontFamilies } from '@/data/defaultFonts'
 
-// Compile the global tokens + style-class registry into a real stylesheet:
-// breakpoints as @media, states as pseudo-classes. This is the "emit real
-// rules" sibling of lib/styles.resolveStyles — what makes classes work as
-// designed instead of the editor's flattened inline styles.
+// Compile the design into a real stylesheet: global tokens/reset/typography +
+// per-element rules keyed to [data-sb-s="<node.id>"], resolved identically to
+// the editor canvas (see compilePageCss/compileSiteCss below).
 
 // Cascade widths (max-width), matching resolveStyles' desktop→tablet→mobile order.
 const MEDIA: Record<Exclude<Breakpoint, 'desktop'>, number> = { tablet: 768, mobile: 375 }
-
-const STATE_SELECTOR: Record<StyleState, string> = {
-  default: '',
-  hover: ':hover',
-  focus: ':focus',
-  active: ':active',
-  visited: ':visited',
-}
 
 function decls(styles: Record<string, string> | undefined): string {
   if (!styles) return ''
@@ -26,33 +17,6 @@ function decls(styles: Record<string, string> | undefined): string {
     .filter(([, v]) => v !== '' && v != null)
     .map(([k, v]) => `${k}:${v}`)
     .join(';')
-}
-
-// CSS.escape isn't available in Node; escape a class name for a selector.
-function escapeClass(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_-]/g, '\\$&')
-}
-
-function rulesForBreakpoint(name: string, states: Record<StyleState, Record<string, string>>): string {
-  const sel = `.${escapeClass(name)}`
-  const out: string[] = []
-  for (const state of Object.keys(states) as StyleState[]) {
-    const body = decls(states[state])
-    if (!body) continue
-    out.push(`${sel}${STATE_SELECTOR[state]}{${body}}`)
-  }
-  return out.join('')
-}
-
-function compileClass(name: string, cls: StyleClass): string {
-  const out: string[] = []
-  const desktop = rulesForBreakpoint(name, cls.styles.desktop)
-  if (desktop) out.push(desktop)
-  for (const bp of ['tablet', 'mobile'] as const) {
-    const inner = rulesForBreakpoint(name, cls.styles[bp])
-    if (inner) out.push(`@media (max-width:${MEDIA[bp]}px){${inner}}`)
-  }
-  return out.join('')
 }
 
 function globalVars(g: GlobalStyles): string {
@@ -129,23 +93,13 @@ function baseCss(globalStyles: GlobalStyles): string {
   return parts.join('\n')
 }
 
-export function compileCss(styleClasses: Record<string, StyleClass>, globalStyles: GlobalStyles): string {
-  const parts = [baseCss(globalStyles)]
-  for (const [name, cls] of Object.entries(styleClasses)) parts.push(compileClass(name, cls))
-  return parts.join('\n')
-}
-
 // ── Per-element compiler — identical resolution to the editor canvas ──
 // Each element's styles are resolved from its class list IN ORDER (custom
 // classes + base Tailwind utilities), so a class added later overrides an
 // earlier one. Variants (hover:/md:/…) become scoped pseudo/media rules.
+// The MIN_BP / STATE_PSEUDO / ANCESTOR variant maps are shared with
+// tailwindToStyles (the canvas compiler), so both stay in lockstep.
 
-const MIN_BP: Record<string, string> = { sm: '640px', md: '768px', lg: '1024px', xl: '1280px', '2xl': '1536px' }
-const V_STATE: Record<string, string> = {
-  hover: ':hover', focus: ':focus', active: ':active', visited: ':visited',
-  'focus-within': ':focus-within', 'focus-visible': ':focus-visible', disabled: ':disabled', checked: ':checked',
-}
-const V_ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
 const CUSTOM_STATES: StyleState[] = ['hover', 'focus', 'active', 'visited']
 
 function diff(a: Record<string, string>, b: Record<string, string>): Record<string, string> {
@@ -200,8 +154,8 @@ function elementRules(
     let mq: string | null = null
     for (const v of parts) {
       if (v in MIN_BP) mq = MIN_BP[v]!
-      else if (v in V_STATE) pseudo += V_STATE[v]
-      else if (v in V_ANCESTOR) ancestor = V_ANCESTOR[v]! + ancestor
+      else if (v in STATE_PSEUDO) pseudo += STATE_PSEUDO[v]
+      else if (v in ANCESTOR) ancestor = ANCESTOR[v]! + ancestor
     }
     const rule = `${ancestor}${sel}${pseudo}{${declsImportant(d)}}`
     if (mq) (minMedia[mq] ??= []).push(rule)

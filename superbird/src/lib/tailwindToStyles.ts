@@ -1,6 +1,7 @@
 // Resolve Tailwind utility classes to inline CSS declarations so they render in
-// the editor canvas (the published site uses the Tailwind CDN). A curated,
-// extensible subset — unknown utilities are ignored here but still render live.
+// the editor canvas; the published site emits the same via the compiled
+// stylesheet (/style.css). A curated, extensible subset — unknown utilities are
+// ignored here but still render live.
 
 type Decls = Record<string, string>
 
@@ -148,10 +149,7 @@ export function classToDecls(cls: string): Decls | null {
   if (cls in FLEX_DIR) return { 'flex-direction': FLEX_DIR[cls]! }
   if (cls in ALIGN) return { 'align-items': ALIGN[cls]! }
   if (cls in JUSTIFY) return { 'justify-content': JUSTIFY[cls]! }
-  if (cls === 'flex-wrap') return { 'flex-wrap': 'wrap' }
-  if (cls === 'flex-nowrap') return { 'flex-wrap': 'nowrap' }
-  if (cls === 'flex-1') return { flex: '1 1 0%' }
-  if (cls === 'flex-auto') return { flex: '1 1 auto' }
+  // (flex-wrap/nowrap/1/auto handled by the EXACT map above)
   // Position
   if (['static', 'relative', 'absolute', 'fixed', 'sticky'].includes(cls)) return { position: cls }
   // Sizing
@@ -233,14 +231,17 @@ export function tailwindToStyles(classes: string[]): Decls {
 
 // ── Variant-aware compiler (real CSS rules, for the editor canvas) ──
 // Handles responsive (sm/md/lg/xl/2xl), state (hover/focus/…), group-*, dark:.
-// The published site uses the Tailwind CDN, which covers everything.
+// The published site emits the equivalent via render/css.ts (compileSiteCss).
 
-const BREAKPOINTS: Record<string, string> = { sm: '640px', md: '768px', lg: '1024px', xl: '1280px', '2xl': '1536px' }
-const STATE_PSEUDO: Record<string, string> = {
+// Variant → target mappings, shared with the per-element compiler (render/css.ts).
+// MIN_BP: responsive prefixes → min-width. STATE_PSEUDO: state prefixes → pseudo.
+// ANCESTOR: group/dark prefixes → ancestor selector.
+export const MIN_BP: Record<string, string> = { sm: '640px', md: '768px', lg: '1024px', xl: '1280px', '2xl': '1536px' }
+export const STATE_PSEUDO: Record<string, string> = {
   hover: ':hover', focus: ':focus', active: ':active', visited: ':visited',
   'focus-within': ':focus-within', 'focus-visible': ':focus-visible', disabled: ':disabled', checked: ':checked',
 }
-const ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
+export const ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
 
 function escapeClass(cls: string): string {
   return cls.replace(/[:./%[\]!]/g, '\\$&')
@@ -274,7 +275,7 @@ export function compileTailwindCss(classes: string[], scope: string): string {
     let ancestor = ''
     let mq: string | null = null
     for (const v of parts) {
-      if (v in BREAKPOINTS) mq = BREAKPOINTS[v]!
+      if (v in MIN_BP) mq = MIN_BP[v]!
       else if (v in STATE_PSEUDO) pseudo += STATE_PSEUDO[v]
       else if (v in ANCESTOR) ancestor = ANCESTOR[v]! + ancestor
     }

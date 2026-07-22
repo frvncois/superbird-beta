@@ -1,7 +1,7 @@
 // Faithful render pipeline: node tree → HTML, style classes → real CSS.
 // Pure and framework-free — powers the editor preview and the SSR public runtime.
 export { renderNodeToHtml } from './html'
-export { compileCss, compilePageCss, compileSiteCss } from './css'
+export { compilePageCss, compileSiteCss } from './css'
 export { interactionsScript } from './interactionsRuntime'
 export type { RenderContext } from './context'
 

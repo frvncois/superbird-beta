@@ -18,6 +18,8 @@ interface Opt {
   label: string
   // Font stack used to preview the option in its own typeface.
   preview: string
+  // Sans / Serif / Mono badge (default fonts only).
+  category?: string
 }
 
 const variableOpts = computed<Opt[]>(() =>
@@ -34,15 +36,12 @@ const setOpts = computed<Opt[]>(() =>
   }),
 )
 const defaultOpts = computed<Opt[]>(() =>
-  DEFAULT_FONTS.map((b) => ({ value: b.value, label: b.name, preview: b.value })),
+  DEFAULT_FONTS.map((b) => ({ value: b.value, label: b.name, preview: b.value, category: b.category })),
 )
 
 const allOpts = computed(() => [...variableOpts.value, ...setOpts.value, ...defaultOpts.value])
-const selectedLabel = computed(() => {
-  const match = allOpts.value.find((o) => o.value === props.modelValue)
-  if (match) return match.label
-  return props.modelValue || ''
-})
+const selected = computed(() => allOpts.value.find((o) => o.value === props.modelValue))
+const selectedLabel = computed(() => selected.value?.label ?? props.modelValue ?? '')
 
 function select(value: string) {
   emit('update:modelValue', value)
@@ -68,6 +67,7 @@ function manage() {
       <span :class="['min-w-0 flex-1 truncate text-left', selectedLabel ? 'text-foreground' : 'text-foreground/40']">
         {{ selectedLabel || 'inherit' }}
       </span>
+      <span v-if="selected?.category" class="shrink-0 rounded bg-secondary/10 px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary">{{ selected.category }}</span>
       <IconUi name="chevron-down" size="size-3" :class="['shrink-0 text-secondary transition-transform duration-200', open && 'rotate-180']" />
     </button>
 
@@ -129,6 +129,7 @@ function manage() {
           @mousedown.prevent="select(o.value)"
         >
           <span class="min-w-0 flex-1 truncate">{{ o.label }}</span>
+          <span v-if="o.category" class="shrink-0 rounded bg-secondary/10 px-1 py-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary">{{ o.category }}</span>
           <IconUi v-if="o.value === modelValue" name="check" size="size-3" class="shrink-0" />
         </button>
 

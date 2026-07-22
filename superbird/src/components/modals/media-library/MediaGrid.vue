@@ -17,14 +17,13 @@ const store = useMediaStore()
 
 const isDragOver = ref(false)
 
-function handleFilesDrop(e: DragEvent) {
+async function handleFilesDrop(e: DragEvent) {
   e.preventDefault()
   isDragOver.value = false
   const files = e.dataTransfer?.files
   if (!files) return
   for (const file of files) {
-    const item = store.addMediaItem(file)
-    if (props.activeFolder) store.moveMediaToFolder(item.id, props.activeFolder)
+    await store.addMediaItem(file, props.activeFolder)
   }
 }
 

@@ -39,12 +39,11 @@ const typeFilterOptions: { value: string; label: string }[] = [
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
-function handleFileInput(e: Event) {
+async function handleFileInput(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files) return
   for (const file of input.files) {
-    const item = store.addMediaItem(file)
-    if (props.activeFolder) store.moveMediaToFolder(item.id, props.activeFolder)
+    await store.addMediaItem(file, props.activeFolder)
   }
   input.value = ''
 }

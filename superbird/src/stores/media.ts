@@ -1,29 +1,25 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { generateMediaId, generateFolderId } from '@/lib/ids'
-import { getMediaTypeFromMime } from '@/lib/media'
+import { apiGet, apiUpload, apiPatch, apiDelete, apiPost } from '@/lib/api'
 import type { MediaFolder, MediaItem } from '@/types/canvas'
 
+// Media is API-backed: metadata lives in the DB, files on disk, served at
+// /media/:id. Loaded on sign-in; uploads/edits/folders hit the API.
 export const useMediaStore = defineStore('media', () => {
-  const mediaItems = ref<MediaItem[]>([
-    // Demo items
-    { id: 'media-demo-1', name: 'hero-image.jpg', url: '', type: 'image', mimeType: 'image/jpeg', size: 245000, width: 1920, height: 1080, tags: ['hero', 'banner'], createdAt: '2026-07-01' },
-    { id: 'media-demo-2', name: 'team-photo.jpg', url: '', type: 'image', mimeType: 'image/jpeg', size: 180000, width: 1200, height: 800, tags: ['team', 'about'], createdAt: '2026-07-05' },
-    { id: 'media-demo-3', name: 'product-starter.png', url: '', type: 'image', mimeType: 'image/png', size: 95000, width: 800, height: 600, folderId: 'folder-demo-1', tags: ['product'], createdAt: '2026-07-10' },
-    { id: 'media-demo-4', name: 'logo.svg', url: '', type: 'image', mimeType: 'image/svg+xml', size: 4200, tags: ['logo', 'brand'], createdAt: '2026-06-15' },
-    { id: 'media-demo-5', name: 'blog-post-1.jpg', url: '', type: 'image', mimeType: 'image/jpeg', size: 320000, width: 1600, height: 900, folderId: 'folder-demo-2', tags: ['blog'], createdAt: '2026-07-15' },
-    { id: 'media-demo-6', name: 'brand-guide.pdf', url: '', type: 'document', mimeType: 'application/pdf', size: 2400000, tags: ['brand'], createdAt: '2026-06-20' },
-  ])
-  const mediaFolders = ref<MediaFolder[]>([
-    { id: 'folder-demo-1', name: 'Products' },
-    { id: 'folder-demo-2', name: 'Blog' },
-  ])
+  const mediaItems = ref<MediaItem[]>([])
+  const mediaFolders = ref<MediaFolder[]>([])
   const mediaLibraryOpen = ref(false)
 
   // When set, the library is acting as a picker: choosing an item invokes the
   // callback and closes, instead of just browsing.
   const pickCallback = ref<((item: MediaItem) => void) | null>(null)
   const isPicking = computed(() => pickCallback.value !== null)
+
+  async function load() {
+    const { items, folders } = await apiGet<{ items: MediaItem[]; folders: MediaFolder[] }>('/api/media')
+    mediaItems.value = items
+    mediaFolders.value = folders
+  }
 
   function openLibrary() {
     pickCallback.value = null
@@ -46,59 +42,75 @@ export const useMediaStore = defineStore('media', () => {
     mediaLibraryOpen.value = false
   }
 
-  function addMediaItem(file: File): MediaItem {
-    const item: MediaItem = {
-      id: generateMediaId(),
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: getMediaTypeFromMime(file.type),
-      mimeType: file.type,
-      size: file.size,
-      tags: [],
-      createdAt: new Date().toISOString().split('T')[0]!,
-    }
-    if (item.type === 'image') {
+  // Read an image's natural dimensions client-side (the server stores them).
+  function imageDimensions(file: File): Promise<{ width?: number; height?: number }> {
+    if (!file.type.startsWith('image/')) return Promise.resolve({})
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file)
       const img = new Image()
-      img.onload = () => { item.width = img.width; item.height = img.height }
-      img.src = item.url
-    }
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight })
+        URL.revokeObjectURL(url)
+      }
+      img.onerror = () => {
+        resolve({})
+        URL.revokeObjectURL(url)
+      }
+      img.src = url
+    })
+  }
+
+  async function addMediaItem(file: File, folderId?: string): Promise<MediaItem> {
+    const { width, height } = await imageDimensions(file)
+    const form = new FormData()
+    form.append('file', file)
+    if (width) form.append('width', String(width))
+    if (height) form.append('height', String(height))
+    if (folderId) form.append('folderId', folderId)
+    const item = await apiUpload<MediaItem>('/api/media', form)
     mediaItems.value.unshift(item)
     return item
   }
 
-  function removeMediaItem(id: string) {
-    const item = mediaItems.value.find((m) => m.id === id)
-    if (item?.url.startsWith('blob:')) URL.revokeObjectURL(item.url)
+  async function removeMediaItem(id: string) {
     mediaItems.value = mediaItems.value.filter((m) => m.id !== id)
+    await apiDelete(`/api/media/${id}`)
   }
 
-  function updateMediaItem(id: string, updates: Partial<Pick<MediaItem, 'name' | 'alt' | 'tags' | 'folderId'>>) {
+  async function updateMediaItem(
+    id: string,
+    updates: Partial<Pick<MediaItem, 'name' | 'alt' | 'tags' | 'folderId'>>,
+  ) {
     const item = mediaItems.value.find((m) => m.id === id)
     if (item) Object.assign(item, updates)
+    await apiPatch(`/api/media/${id}`, updates)
   }
 
-  function moveMediaToFolder(itemId: string, folderId: string | undefined) {
+  async function moveMediaToFolder(itemId: string, folderId: string | undefined) {
     const item = mediaItems.value.find((m) => m.id === itemId)
     if (item) item.folderId = folderId
+    await apiPatch(`/api/media/${itemId}`, { folderId: folderId ?? null })
   }
 
-  function addMediaFolder(name: string, parentId?: string): MediaFolder {
-    const folder: MediaFolder = { id: generateFolderId(), name, parentId }
+  async function addMediaFolder(name: string, parentId?: string): Promise<MediaFolder> {
+    const folder = await apiPost<MediaFolder>('/api/media/folders', { name, parentId })
     mediaFolders.value.push(folder)
     return folder
   }
 
-  function removeMediaFolder(id: string) {
-    // Move items out of folder
-    mediaItems.value.forEach((m) => { if (m.folderId === id) m.folderId = undefined })
-    // Remove child folders
-    mediaFolders.value.filter((f) => f.parentId === id).forEach((f) => removeMediaFolder(f.id))
-    mediaFolders.value = mediaFolders.value.filter((f) => f.id !== id)
+  async function removeMediaFolder(id: string) {
+    // Mirror the server cascade locally: unassign items, drop the folder + children.
+    mediaItems.value.forEach((m) => {
+      if (m.folderId === id) m.folderId = undefined
+    })
+    mediaFolders.value = mediaFolders.value.filter((f) => f.id !== id && f.parentId !== id)
+    await apiDelete(`/api/media/folders/${id}`)
   }
 
-  function renameMediaFolder(id: string, name: string) {
+  async function renameMediaFolder(id: string, name: string) {
     const folder = mediaFolders.value.find((f) => f.id === id)
     if (folder) folder.name = name
+    await apiPatch(`/api/media/folders/${id}`, { name })
   }
 
   return {
@@ -106,6 +118,7 @@ export const useMediaStore = defineStore('media', () => {
     mediaFolders,
     mediaLibraryOpen,
     isPicking,
+    load,
     openLibrary,
     openPicker,
     pick,

@@ -25,8 +25,9 @@ function buildContext(entries: Entry[], collections: Collection[], activeEntry?:
       if (e && node.dynamicField) return e.values[node.dynamicField] ?? node.content ?? ''
       return node.content ?? ''
     },
-    mediaUrl() {
-      return '' // media files-on-disk pipeline is a later slice
+    mediaUrl(id: string) {
+      // Deterministic served path; the /media/:id route streams the file.
+      return id ? `/media/${id}` : ''
     },
     entriesFor(source: string | undefined, limit: number): Entry[] {
       const col = collections.find((c) => c.id === source)

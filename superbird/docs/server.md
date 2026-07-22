@@ -44,8 +44,21 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 | `GET /api/project` | ✓ | Load the project document (`{ design, content }`); `design:null` on a fresh project |
 | `PUT /api/project` | ✓ | Upsert the project document |
 | `POST /api/publish` | ✓ | Snapshot the working design as the live/published design |
+| `GET /api/media` · `POST` · `PATCH/:id` · `DELETE/:id` | ✓ | Media metadata CRUD + upload (multipart) |
+| `POST/PATCH/DELETE /api/media/folders[/:id]` | ✓ | Media folders |
+| `GET /media/:id` | — | **Public** — stream a media file (bytes on disk, mime from DB) |
 | `GET /api/health` | — | Liveness |
-| `GET /*` (non-`/api`) | — | **Public SSR site** — resolves the URL and returns rendered HTML |
+| `GET /*` (non-`/api`, non-`/media`) | — | **Public SSR site** — resolves the URL and returns rendered HTML |
+
+## Media
+
+Metadata rows in `media` / `media_folders`; the **bytes live on disk** in
+`data/media/` (never in SQLite, per the doc). Upload writes the file and a row;
+delete removes both. Files serve at `/media/:id` (public, long-cache) — that's
+what `mediaUrl(id)` resolves to in both the editor and SSR, so **published-site
+images now render**. Client: `src/stores/media.ts` is API-backed (`load()` on
+sign-in; `addMediaItem` computes image dims client-side then multipart-POSTs).
+Media is not publish-gated — files always serve.
 
 ## Project persistence
 
@@ -108,13 +121,12 @@ editor SPA stays on Vite (`5173`). In production they're different domains.
   unpublished site shows a placeholder. Editor: the header **Publish** button
   (`useProjectPersistence().publish()`); `SessionState.publishedAt` drives the
   dashboard's published badge.
-- **Known gap:** media isn't persisted, so `<img>` src resolves empty on the
-  public site until the media pipeline lands.
+- Media resolves via `/media/:id` (see **Media** below), so published-site
+  images render.
 
 ## Next slices
 
-Media as files-on-disk + a metadata table (unblocks real images on the public
-site); responsive-visibility + interaction emission in the render pipeline;
-normalising content into queryable rows if list filters outgrow in-memory scan.
-Migrations move from `ensureSchema` to drizzle-kit (`npm run db:generate`) once
-the schema stabilises.
+Responsive-visibility + interaction emission in the render pipeline; normalising
+content into queryable rows if list filters outgrow in-memory scan; media
+niceties (responsive variants/transforms). Migrations move from `ensureSchema`
+to drizzle-kit (`npm run db:generate`) once the schema stabilises.

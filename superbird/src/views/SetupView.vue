@@ -5,6 +5,7 @@ import { useSetupStore } from '@/stores/setup'
 import { useAuthStore } from '@/stores/auth'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
+import { useMediaStore } from '@/stores/media'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -62,6 +63,7 @@ async function finish() {
     auth.hydrate(result.user)
     // Fresh project: persist the current demo seed as the starting point.
     await useProjectPersistence().load()
+    await useMediaStore().load()
     step.value = 3
   } catch {
     // setup.error is shown inline

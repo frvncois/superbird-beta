@@ -28,6 +28,34 @@ export const sessions = sqliteTable('sessions', {
   expiresAt: integer('expires_at').notNull(), // epoch ms
 })
 
+// Media metadata. The bytes live on disk (data/media/), never in SQLite.
+export const media = sqliteTable('media', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  name: text('name').notNull(),
+  filename: text('filename').notNull(), // on-disk name in data/media/
+  mime: text('mime').notNull(),
+  type: text('type').notNull(),
+  size: integer('size').notNull(),
+  width: integer('width'),
+  height: integer('height'),
+  folderId: text('folder_id'),
+  alt: text('alt'),
+  tags: text('tags').notNull().default('[]'), // JSON string[]
+  createdAt: text('created_at').notNull(),
+})
+
+export const mediaFolders = sqliteTable('media_folders', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  name: text('name').notNull(),
+  parentId: text('parent_id'),
+})
+
 // The whole editable project as one JSON document (design + content). A later
 // slice normalises content into queryable rows for the SSR runtime.
 export const projectState = sqliteTable('project_state', {

@@ -201,6 +201,7 @@ export interface Page {
   name: string
   slug: string
   pageType: PageType
+  status?: 'draft' | 'published'
   body: CanvasNode
 }
 
@@ -223,6 +224,7 @@ export interface Collection {
   singular: string
   plural: string
   basePath: string        // URL segment, e.g. "blog"
+  status?: 'draft' | 'published'
   templatePageId: string  // the Page (pageType 'collection') this collection edits
 }
 

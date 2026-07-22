@@ -77,6 +77,14 @@ export const useCollectionsStore = defineStore('collections', () => {
     if (c) { c.name = name; c.plural = name; c.singular = name.replace(/s$/, ''); c.basePath = slugify(name) }
   }
 
+  function updateCollection(id: string, patch: Partial<Pick<Collection, 'name' | 'basePath' | 'status'>>) {
+    const c = collectionById(id)
+    if (!c) return
+    if (patch.name !== undefined) { c.name = patch.name; c.plural = patch.name; c.singular = patch.name.replace(/s$/, '') }
+    if (patch.basePath !== undefined) c.basePath = patch.basePath
+    if (patch.status !== undefined) c.status = patch.status
+  }
+
   function removeCollection(id: string) {
     collections.value = collections.value.filter((c) => c.id !== id)
     entries.value = entries.value.filter((e) => e.collectionId !== id)
@@ -126,6 +134,7 @@ export const useCollectionsStore = defineStore('collections', () => {
     schemaFor,
     addCollection,
     renameCollection,
+    updateCollection,
     removeCollection,
     addEntry,
     updateEntry,

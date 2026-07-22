@@ -104,6 +104,11 @@ export const useCanvasStore = defineStore('canvas', () => {
     if (slug !== undefined) page.slug = slug
   }
 
+  function updatePage(pageId: string, patch: Partial<Pick<Page, 'name' | 'slug' | 'status'>>) {
+    const page = pages.value.find((p) => p.id === pageId)
+    if (page) Object.assign(page, patch)
+  }
+
   // --- Selection & Drag ---
 
   const selectedNodeId = ref<string | null>(null)
@@ -652,6 +657,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     addPage,
     removePage,
     renamePage,
+    updatePage,
     // Selection & drag
     bodyNode,
     nodes,

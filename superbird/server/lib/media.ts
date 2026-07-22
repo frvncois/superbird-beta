@@ -2,9 +2,11 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
+import sharp from 'sharp'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { media, mediaFolders } from '../db/schema'
+import { getWorkingDocument } from './project'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const MEDIA_DIR = process.env.SUPERBIRD_MEDIA ?? resolve(here, '../../data/media')
@@ -33,6 +35,51 @@ export interface MediaFolderDTO {
 
 export function randomId(prefix: string): string {
   return `${prefix}_${randomBytes(6).toString('hex')}`
+}
+
+// ── Image compression ──
+export interface CompressionSettings {
+  enabled: boolean
+  maxWidth: number
+  maxHeight: number
+  quality: number
+}
+export const DEFAULT_COMPRESSION: CompressionSettings = {
+  enabled: true,
+  maxWidth: 2000,
+  maxHeight: 2000,
+  quality: 90,
+}
+
+// Raster images only — never SVG (vector) or GIF (would lose animation).
+function shouldCompress(mime: string): boolean {
+  return mime.startsWith('image/') && mime !== 'image/svg+xml' && mime !== 'image/gif'
+}
+
+/** Read the project's compression settings from its working document. */
+export function getCompressionSettings(projectId: string): CompressionSettings {
+  const doc = getWorkingDocument(projectId)
+  const design = doc?.design as { siteSettings?: { imageCompression?: Partial<CompressionSettings> } } | null
+  const s = design?.siteSettings?.imageCompression
+  if (!s || typeof s.enabled !== 'boolean') return DEFAULT_COMPRESSION
+  return {
+    enabled: s.enabled,
+    maxWidth: Number(s.maxWidth) || DEFAULT_COMPRESSION.maxWidth,
+    maxHeight: Number(s.maxHeight) || DEFAULT_COMPRESSION.maxHeight,
+    quality: Math.min(100, Math.max(1, Number(s.quality) || DEFAULT_COMPRESSION.quality)),
+  }
+}
+
+async function compressToWebp(
+  bytes: Buffer,
+  opts: CompressionSettings,
+): Promise<{ bytes: Buffer; width?: number; height?: number }> {
+  const out = await sharp(bytes)
+    .rotate() // honor EXIF orientation before stripping metadata
+    .resize(opts.maxWidth, opts.maxHeight, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: opts.quality })
+    .toBuffer({ resolveWithObject: true })
+  return { bytes: out.data, width: out.info.width, height: out.info.height }
 }
 
 function typeFromMime(mime: string): string {
@@ -78,25 +125,43 @@ export function listMedia(projectId: string): { items: MediaItemDTO[]; folders: 
   return { items, folders }
 }
 
-export function createMedia(
+export async function createMedia(
   projectId: string,
   input: { name: string; mime: string; size: number; width?: number; height?: number; folderId?: string; bytes: Buffer },
-): MediaItemDTO {
+  compression: CompressionSettings = DEFAULT_COMPRESSION,
+): Promise<MediaItemDTO> {
+  let { name, mime, size, width, height, bytes } = input
+
+  // Convert raster images to compressed WebP (falls back to the original on error).
+  if (compression.enabled && shouldCompress(mime)) {
+    try {
+      const c = await compressToWebp(bytes, compression)
+      bytes = c.bytes
+      mime = 'image/webp'
+      name = name.replace(/\.[^.]+$/, '') + '.webp'
+      width = c.width
+      height = c.height
+      size = bytes.length
+    } catch {
+      // keep the original bytes/metadata
+    }
+  }
+
   const id = randomId('media')
-  const filename = `${id}${extFromName(input.name)}`
-  writeFileSync(resolve(MEDIA_DIR, filename), input.bytes)
+  const filename = `${id}${extFromName(name)}`
+  writeFileSync(resolve(MEDIA_DIR, filename), bytes)
   const now = new Date().toISOString()
   db.insert(media)
     .values({
       id,
       projectId,
-      name: input.name,
+      name,
       filename,
-      mime: input.mime,
-      type: typeFromMime(input.mime),
-      size: input.size,
-      width: input.width ?? null,
-      height: input.height ?? null,
+      mime,
+      type: typeFromMime(mime),
+      size,
+      width: width ?? null,
+      height: height ?? null,
       folderId: input.folderId ?? null,
       alt: null,
       tags: '[]',

@@ -60,6 +60,15 @@ images now render**. Client: `src/stores/media.ts` is API-backed (`load()` on
 sign-in; `addMediaItem` computes image dims client-side then multipart-POSTs).
 Media is not publish-gated — files always serve.
 
+**Image compression** (`server/lib/media.ts`, via `sharp`): on upload, raster
+images are converted to **WebP**, resized to fit within max dimensions
+(aspect preserved, never enlarged), at a set quality — **SVG and GIF pass
+through untouched**. Settings live in `siteSettings.imageCompression`
+(`enabled` default true, `maxWidth`/`maxHeight` 2000, `quality` 90), edited in
+**Settings → Media**, persisted in the project document; the upload route reads
+them via `getCompressionSettings(projectId)`. Compression failures fall back to
+the original bytes.
+
 ## Project persistence
 
 The whole editable project is **one JSON document** per project (`project_state`

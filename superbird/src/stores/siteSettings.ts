@@ -7,9 +7,14 @@ import type { SiteSettings } from '@/types/canvas'
 export const useSiteSettingsStore = defineStore('siteSettings', () => {
   const siteSettings = ref<SiteSettings>(createDefaultSiteSettings())
 
-  // Replace site settings from a loaded project document.
+  // Replace site settings from a loaded project document. Merge defaults at the
+  // top level so docs saved before a section existed still get it.
   function hydrate(loaded: SiteSettings) {
-    siteSettings.value = loaded
+    siteSettings.value = { ...createDefaultSiteSettings(), ...loaded }
+  }
+
+  function updateImageCompression(updates: Partial<SiteSettings['imageCompression']>) {
+    Object.assign(siteSettings.value.imageCompression, updates)
   }
 
   function updateSiteIdentity(updates: Partial<SiteSettings['identity']>) {
@@ -47,6 +52,7 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
   return {
     siteSettings,
     hydrate,
+    updateImageCompression,
     updateSiteIdentity,
     updateSeo,
     updateCustomCode,

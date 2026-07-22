@@ -9,6 +9,7 @@ import {
   createFolder,
   renameFolder,
   deleteFolder,
+  getCompressionSettings,
 } from '../lib/media'
 
 const mediaApi = new Hono()
@@ -34,14 +35,18 @@ mediaApi.post('/media', async (c) => {
   const width = body['width'] ? Number(body['width']) : undefined
   const height = body['height'] ? Number(body['height']) : undefined
   const bytes = Buffer.from(await file.arrayBuffer())
-  const item = createMedia(proj.id, {
-    name: file.name,
-    mime: file.type || 'application/octet-stream',
-    size: file.size,
-    width: Number.isFinite(width) ? width : undefined,
-    height: Number.isFinite(height) ? height : undefined,
-    bytes,
-  })
+  const item = await createMedia(
+    proj.id,
+    {
+      name: file.name,
+      mime: file.type || 'application/octet-stream',
+      size: file.size,
+      width: Number.isFinite(width) ? width : undefined,
+      height: Number.isFinite(height) ? height : undefined,
+      bytes,
+    },
+    getCompressionSettings(proj.id),
+  )
   return c.json(item, 201)
 })
 

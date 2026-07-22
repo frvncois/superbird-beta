@@ -22,5 +22,11 @@ export function createDefaultSiteSettings(): SiteSettings {
     integrations: {
       customFonts: [],
     },
+    imageCompression: {
+      enabled: true,
+      maxWidth: 2000,
+      maxHeight: 2000,
+      quality: 90,
+    },
   }
 }

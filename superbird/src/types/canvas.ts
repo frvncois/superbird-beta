@@ -313,12 +313,20 @@ export interface SiteIntegrations {
   formEmail?: string
 }
 
+export interface ImageCompression {
+  enabled: boolean
+  maxWidth: number
+  maxHeight: number
+  quality: number // 1–100
+}
+
 export interface SiteSettings {
   identity: SiteIdentity
   seo: SeoDefaults
   customCode: CustomCode
   redirects: Redirect[]
   integrations: SiteIntegrations
+  imageCompression: ImageCompression
 }
 
 // --- Global styles ---

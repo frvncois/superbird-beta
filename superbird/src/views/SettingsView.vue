@@ -6,6 +6,7 @@ import AppHeader from '@/components/header/AppHeader.vue'
 import TabsUi from '@/components/ui/TabsUi.vue'
 import GeneralTab from '@/components/modals/global-styles/GeneralTab.vue'
 import SiteTab from '@/components/modals/global-styles/SiteTab.vue'
+import MediaTab from '@/components/modals/global-styles/MediaTab.vue'
 import StylesTab from '@/components/modals/global-styles/StylesTab.vue'
 import SeoTab from '@/components/modals/global-styles/SeoTab.vue'
 import CodeTab from '@/components/modals/global-styles/CodeTab.vue'
@@ -23,6 +24,7 @@ const activeTab = ref('general')
 const tabs = [
   { key: 'general', label: 'General' },
   { key: 'site', label: 'Site' },
+  { key: 'media', label: 'Media' },
   { key: 'styles', label: 'Styles' },
   { key: 'seo', label: 'SEO' },
   { key: 'code', label: 'Code' },
@@ -42,6 +44,7 @@ const tabs = [
         <TabsUi v-model="activeTab" :tabs="tabs" class="settings-tabs h-full">
           <template #general><GeneralTab /></template>
           <template #site><SiteTab /></template>
+          <template #media><MediaTab /></template>
           <template #styles><StylesTab /></template>
           <template #seo><SeoTab /></template>
           <template #code><CodeTab /></template>

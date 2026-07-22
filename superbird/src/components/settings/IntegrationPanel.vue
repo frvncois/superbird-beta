@@ -16,12 +16,21 @@ const assistant = useAssistantStore()
 const provider = ref<AiProvider>('anthropic')
 const apiKey = ref('')
 const model = ref('claude-sonnet-5')
+const baseUrl = ref('')
 const configured = ref(false)
 const saving = ref(false)
 const message = ref('')
 const error = ref('')
 
-const MODELS: Record<AiProvider, { value: string; label: string }[]> = {
+const providerOptions = [
+  { value: 'anthropic', label: 'Anthropic' },
+  { value: 'openai', label: 'OpenAI' },
+  { value: 'groq', label: 'Groq' },
+  { value: 'custom', label: 'Custom' },
+]
+
+// Preset models per provider (must support tool / function calling).
+const MODELS: Partial<Record<AiProvider, { value: string; label: string }[]>> = {
   anthropic: [
     { value: 'claude-sonnet-5', label: 'Claude Sonnet 5 (recommended)' },
     { value: 'claude-opus-4-8', label: 'Claude Opus 4.8 (most capable)' },
@@ -32,16 +41,30 @@ const MODELS: Record<AiProvider, { value: string; label: string }[]> = {
     { value: 'gpt-4o', label: 'GPT-4o' },
     { value: 'gpt-4o-mini', label: 'GPT-4o mini' },
   ],
+  groq: [
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (recommended)' },
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (fastest)' },
+    { value: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
+  ],
 }
-const modelOptions = computed(() => MODELS[provider.value])
+const DEFAULT_MODEL: Record<AiProvider, string> = {
+  anthropic: 'claude-sonnet-5',
+  openai: 'gpt-4.1',
+  groq: 'llama-3.3-70b-versatile',
+  custom: '',
+}
+
+const isCustom = computed(() => provider.value === 'custom')
+const modelOptions = computed(() => MODELS[provider.value] ?? [])
 const keyPlaceholder = computed(() =>
-  provider.value === 'anthropic' ? 'sk-ant-…' : 'sk-…',
+  provider.value === 'anthropic' ? 'sk-ant-…' : provider.value === 'groq' ? 'gsk_…' : 'sk-…',
 )
+const keyOptional = computed(() => isCustom.value)
 
 function onProviderChange(p: string) {
   provider.value = p as AiProvider
-  // Default to the first model of the new provider.
-  model.value = MODELS[provider.value][0]!.value
+  model.value = DEFAULT_MODEL[provider.value]
+  if (provider.value !== 'custom') baseUrl.value = ''
 }
 
 onMounted(async () => {
@@ -50,6 +73,7 @@ onMounted(async () => {
     configured.value = cfg.configured
     provider.value = cfg.provider
     model.value = cfg.model
+    baseUrl.value = cfg.baseUrl
   } catch {
     /* not installed / offline */
   }
@@ -62,8 +86,8 @@ async function save() {
   try {
     const cfg = await saveAiConfig({
       provider: provider.value,
-      model: model.value,
-      // Only send the key if the user typed one (blank keeps the stored key).
+      model: model.value.trim(),
+      baseUrl: isCustom.value ? baseUrl.value.trim() : undefined,
       apiKey: apiKey.value.trim() || undefined,
     })
     configured.value = cfg.configured
@@ -82,7 +106,7 @@ async function save() {
   <div class="space-y-10">
     <SettingsSection
       title="AI Assistant"
-      description="Connect your own AI provider. Your key is stored on your server and never sent to the browser — the app proxies each request."
+      description="Connect an AI provider. Your key is stored on your server and never sent to the browser — the app proxies each request."
     >
       <SettingsRow label="Status">
         <BadgeUi :variant="configured ? 'success' : 'neutral'" size="xs" mono>
@@ -91,18 +115,22 @@ async function save() {
       </SettingsRow>
 
       <SettingsRow label="Provider">
-        <SegmentedControlUi
-          :model-value="provider"
-          :options="[{ value: 'anthropic', label: 'Anthropic' }, { value: 'openai', label: 'OpenAI' }]"
-          @update:model-value="onProviderChange"
-        />
+        <SegmentedControlUi :model-value="provider" :options="providerOptions" @update:model-value="onProviderChange" />
       </SettingsRow>
 
-      <SettingsRow label="Model">
-        <SelectUi v-model="model" :options="modelOptions" />
+      <SettingsRow v-if="isCustom" label="Base URL" description="Any OpenAI-compatible endpoint (OpenRouter, Ollama, LM Studio, …).">
+        <InputUi v-model="baseUrl" placeholder="https://openrouter.ai/api/v1" />
       </SettingsRow>
 
-      <SettingsRow label="API key" :description="configured ? 'A key is saved. Enter a new one to replace it.' : 'Required to use the assistant.'">
+      <SettingsRow label="Model" :description="isCustom ? 'The model id at your endpoint (must support tool calling).' : undefined">
+        <InputUi v-if="isCustom" v-model="model" placeholder="e.g. meta-llama/llama-3.3-70b-instruct" />
+        <SelectUi v-else v-model="model" :options="modelOptions" />
+      </SettingsRow>
+
+      <SettingsRow
+        label="API key"
+        :description="keyOptional ? 'Optional for local endpoints (e.g. Ollama).' : configured ? 'A key is saved. Enter a new one to replace it.' : 'Required.'"
+      >
         <InputUi v-model="apiKey" type="password" :placeholder="configured ? '•••••••• (unchanged)' : keyPlaceholder" />
       </SettingsRow>
 
@@ -111,6 +139,11 @@ async function save() {
         <span v-if="message" class="text-xs text-green-fg">{{ message }}</span>
         <span v-if="error" class="text-xs text-red-fg">{{ error }}</span>
       </div>
+
+      <p v-if="provider === 'groq'" class="px-4 pb-3 text-xs leading-relaxed text-secondary">
+        Groq has a free tier — get a key at <span class="font-mono text-foreground">console.groq.com/keys</span>. Pick a
+        model that supports tool calling (the recommended one does).
+      </p>
     </SettingsSection>
 
     <SettingsSection title="How it works" description="What the assistant can do once connected.">

@@ -14,28 +14,48 @@ interface AiConfigRow {
   provider: AiProvider
   apiKey: string
   model: string
+  baseUrl: string
 }
 
-const DEFAULTS: AiConfigRow = { provider: 'anthropic', apiKey: '', model: 'claude-sonnet-5' }
+const DEFAULTS: AiConfigRow = { provider: 'anthropic', apiKey: '', model: 'claude-sonnet-5', baseUrl: '' }
+
+// Built-in OpenAI-compatible endpoints. 'custom' uses the stored baseUrl.
+const OPENAI_COMPAT_BASE: Partial<Record<AiProvider, string>> = {
+  openai: 'https://api.openai.com/v1',
+  groq: 'https://api.groq.com/openai/v1',
+}
 
 export function getAiConfig(projectId: string): AiConfigRow {
   const row = db.select().from(aiConfig).where(eq(aiConfig.projectId, projectId)).get()
   if (!row) return DEFAULTS
-  return { provider: row.provider as AiProvider, apiKey: row.apiKey, model: row.model }
+  return { provider: row.provider as AiProvider, apiKey: row.apiKey, model: row.model, baseUrl: row.baseUrl }
+}
+
+function resolveBaseUrl(c: AiConfigRow): string {
+  if (c.provider === 'custom') return c.baseUrl.replace(/\/+$/, '')
+  return OPENAI_COMPAT_BASE[c.provider] ?? ''
+}
+
+// A config is usable if it has what its provider needs to make a call. A local
+// 'custom' endpoint (e.g. Ollama) just needs a base URL, no key.
+export function isUsable(c: AiConfigRow): boolean {
+  if (c.provider === 'custom') return c.baseUrl.trim().length > 0
+  return c.apiKey.length > 0
 }
 
 export function publicConfig(projectId: string): AiConfigPublic {
   const c = getAiConfig(projectId)
-  return { configured: c.apiKey.length > 0, provider: c.provider, model: c.model }
+  return { configured: isUsable(c), provider: c.provider, model: c.model, baseUrl: c.baseUrl }
 }
 
 export function setAiConfig(projectId: string, update: AiConfigUpdate): AiConfigPublic {
   const existing = getAiConfig(projectId)
   const apiKey = update.apiKey && update.apiKey.length > 0 ? update.apiKey : existing.apiKey
-  const row = { projectId, provider: update.provider, apiKey, model: update.model }
+  const baseUrl = update.baseUrl !== undefined ? update.baseUrl.trim() : existing.baseUrl
+  const row = { projectId, provider: update.provider, apiKey, model: update.model, baseUrl }
   db.insert(aiConfig)
     .values(row)
-    .onConflictDoUpdate({ target: aiConfig.projectId, set: { provider: row.provider, apiKey, model: row.model } })
+    .onConflictDoUpdate({ target: aiConfig.projectId, set: { provider: row.provider, apiKey, model: row.model, baseUrl } })
     .run()
   return publicConfig(projectId)
 }
@@ -65,9 +85,10 @@ async function callAnthropic(cfg: AiConfigRow, req: AiChatRequest): Promise<AiCh
   return { content: data.content ?? [], stopReason: normalizeStop(data.stop_reason) }
 }
 
-// ── OpenAI ──
+// ── OpenAI-compatible (OpenAI, Groq, OpenRouter, Ollama, …) ──
 // Translate the normalized (Anthropic-shaped) format ↔ OpenAI chat completions.
-async function callOpenAI(cfg: AiConfigRow, req: AiChatRequest): Promise<AiChatResponse> {
+async function callOpenAICompatible(cfg: AiConfigRow, req: AiChatRequest, baseUrl: string): Promise<AiChatResponse> {
+  if (!baseUrl) throw new Error('No base URL configured for this provider.')
   const messages: unknown[] = [{ role: 'system', content: req.system }]
   for (const m of req.messages) {
     if (m.role === 'user') {
@@ -96,12 +117,14 @@ async function callOpenAI(cfg: AiConfigRow, req: AiChatRequest): Promise<AiChatR
     type: 'function',
     function: { name: t.name, description: t.description, parameters: t.input_schema },
   }))
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const body: Record<string, unknown> = { model: cfg.model, max_tokens: MAX_TOKENS, messages }
+  if (tools.length) body.tools = tools
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.apiKey}` },
-    body: JSON.stringify({ model: cfg.model, max_tokens: MAX_TOKENS, messages, tools }),
+    body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error(await providerError(res, 'OpenAI'))
+  if (!res.ok) throw new Error(await providerError(res, providerLabel(cfg.provider)))
   const data = (await res.json()) as {
     choices: Array<{ message: { content: string | null; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> }; finish_reason: string }>
   }
@@ -139,6 +162,11 @@ async function providerError(res: Response, name: string): Promise<string> {
   return `${name} error (${res.status}): ${detail?.slice(0, 300) || 'request failed'}`
 }
 
+function providerLabel(p: AiProvider): string {
+  return p === 'groq' ? 'Groq' : p === 'openai' ? 'OpenAI' : p === 'custom' ? 'Provider' : 'Anthropic'
+}
+
 export function callProvider(cfg: AiConfigRow, req: AiChatRequest): Promise<AiChatResponse> {
-  return cfg.provider === 'openai' ? callOpenAI(cfg, req) : callAnthropic(cfg, req)
+  if (cfg.provider === 'anthropic') return callAnthropic(cfg, req)
+  return callOpenAICompatible(cfg, req, resolveBaseUrl(cfg))
 }

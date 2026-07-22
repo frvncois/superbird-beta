@@ -55,6 +55,7 @@ export const aiConfig = sqliteTable('ai_config', {
   provider: text('provider').notNull().default('anthropic'),
   apiKey: text('api_key').notNull().default(''),
   model: text('model').notNull().default('claude-sonnet-5'),
+  baseUrl: text('base_url').notNull().default(''), // for 'custom' OpenAI-compatible endpoints
 })
 
 export const mediaFolders = sqliteTable('media_folders', {

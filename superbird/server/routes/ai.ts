@@ -1,8 +1,10 @@
 import { Hono } from 'hono'
 import { requireAuth } from '../lib/session'
 import { getInstalledProject } from '../lib/project'
-import { getAiConfig, setAiConfig, publicConfig, callProvider } from '../lib/ai'
-import type { AiChatRequest, AiConfigUpdate } from '../../shared/types'
+import { getAiConfig, setAiConfig, publicConfig, callProvider, isUsable } from '../lib/ai'
+import type { AiChatRequest, AiConfigUpdate, AiProvider } from '../../shared/types'
+
+const PROVIDERS: AiProvider[] = ['anthropic', 'openai', 'groq', 'custom']
 
 const ai = new Hono()
 
@@ -19,10 +21,17 @@ ai.put('/ai/config', async (c) => {
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const body = (await c.req.json()) as AiConfigUpdate
-  if (body.provider !== 'anthropic' && body.provider !== 'openai') {
+  if (!PROVIDERS.includes(body.provider)) {
     return c.json({ error: 'Invalid provider.' }, 400)
   }
-  return c.json(setAiConfig(proj.id, { provider: body.provider, apiKey: body.apiKey, model: body.model?.trim() || 'claude-sonnet-5' }))
+  return c.json(
+    setAiConfig(proj.id, {
+      provider: body.provider,
+      apiKey: body.apiKey,
+      model: body.model?.trim() || 'claude-sonnet-5',
+      baseUrl: body.baseUrl,
+    }),
+  )
 })
 
 // Proxy one turn to the configured provider. The client runs the agent loop and
@@ -31,7 +40,7 @@ ai.post('/ai/chat', async (c) => {
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const cfg = getAiConfig(proj.id)
-  if (!cfg.apiKey) return c.json({ error: 'AI is not configured. Add an API key in Settings → Integration.' }, 400)
+  if (!isUsable(cfg)) return c.json({ error: 'AI is not configured. Set it up in Settings → Integration.' }, 400)
   const req = (await c.req.json()) as AiChatRequest
   try {
     return c.json(await callProvider(cfg, req))

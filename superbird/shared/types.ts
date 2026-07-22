@@ -103,19 +103,23 @@ export interface ProjectDocument {
 // Provider-agnostic wire protocol (Anthropic-shaped blocks; the server adapts
 // them to each provider). The API key never reaches the client.
 
-export type AiProvider = 'anthropic' | 'openai'
+// 'openai'/'groq' use the OpenAI chat-completions format (built-in base URLs);
+// 'custom' is any other OpenAI-compatible endpoint (OpenRouter, Ollama, …).
+export type AiProvider = 'anthropic' | 'openai' | 'groq' | 'custom'
 
 // What the client is allowed to know about the config (never the key itself).
 export interface AiConfigPublic {
   configured: boolean
   provider: AiProvider
   model: string
+  baseUrl: string // only meaningful for 'custom'
 }
 
 export interface AiConfigUpdate {
   provider: AiProvider
   apiKey?: string // omitted → keep the stored key
   model: string
+  baseUrl?: string // for 'custom' (OpenAI-compatible endpoint)
 }
 
 export interface AiTextBlock {

@@ -17,6 +17,13 @@ sqlite.pragma('foreign_keys = ON')
 
 export const db = drizzle(sqlite, { schema })
 
+// Add a column to an existing table if it's missing (idempotent migration).
+function addColumn(table: string, column: string, def: string): void {
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+  if (cols.some((c) => c.name === column)) return
+  sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${def}`)
+}
+
 // Idempotent bootstrap. A migration toolchain (drizzle-kit) can replace this
 // once the schema stabilises; for now CREATE TABLE IF NOT EXISTS is enough and
 // stays in lockstep with schema.ts.
@@ -53,8 +60,15 @@ export function ensureSchema(): void {
       project_id TEXT PRIMARY KEY REFERENCES projects(id),
       provider TEXT NOT NULL DEFAULT 'anthropic',
       api_key TEXT NOT NULL DEFAULT '',
-      model TEXT NOT NULL DEFAULT 'claude-sonnet-5'
-    );
+      model TEXT NOT NULL DEFAULT 'claude-sonnet-5',
+      base_url TEXT NOT NULL DEFAULT ''
+    );`)
+
+  // Additive column migrations (CREATE TABLE IF NOT EXISTS won't add columns to
+  // an existing table). Each is guarded so re-runs are no-ops.
+  addColumn('ai_config', 'base_url', "TEXT NOT NULL DEFAULT ''")
+
+  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS media (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),

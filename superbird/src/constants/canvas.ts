@@ -198,6 +198,7 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
   // Typography
   heading: { tag: 'h2', label: 'Heading', content: 'Heading' },
   text: { tag: 'p', label: 'Text', content: 'Start writing here...' },
+  markdown: { tag: 'div', label: 'Markdown', content: '## Markdown\n\nWrite **rich** text using _markdown_ — no toolbar needed.\n\n- Type `##` for headings\n- Wrap text in `**` for bold\n- Add [links](https://example.com)' },
   link: { tag: 'a', label: 'Link', content: 'Link text' },
   span: { tag: 'span', label: 'Span', content: 'Inline text' },
   list: { tag: 'ul', label: 'List' },

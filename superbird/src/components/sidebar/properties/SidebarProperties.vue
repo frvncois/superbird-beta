@@ -31,12 +31,12 @@ watch(() => node.value?.id, () => {
   <EmptyStateUi v-if="!node" message="Select an element to edit" />
 
   <!-- Properties panel -->
-  <div v-else class="space-y-4 p-3">
+  <div v-else>
     <SelectorSection />
 
     <!-- Style sections (always shown when node selected) -->
     <template v-if="activeStyles">
-      <div class="border-t pt-1">
+      <div class="border-y">
         <LayoutSection v-if="isContainer" />
         <PositionSection />
         <SizeSection />

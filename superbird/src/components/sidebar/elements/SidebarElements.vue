@@ -42,6 +42,7 @@ const categories: ElementCategory[] = [
     elements: [
       { type: 'heading', label: 'Heading', icon: 'heading' },
       { type: 'text', label: 'Text', icon: 'text' },
+      { type: 'markdown', label: 'Markdown', icon: 'markdown' },
       { type: 'link', label: 'Link', icon: 'link' },
       { type: 'span', label: 'Span', icon: 'span' },
       { type: 'list', label: 'List', icon: 'list' },
@@ -100,7 +101,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
 </script>
 
 <template>
-  <div class="p-2 space-y-2">
+  <div class="p-4 space-y-6">
     <!-- Dynamic fields (collection templates only) -->
     <div v-if="store.isCollectionTemplate">
       <div class="px-1 pb-1 pt-0.5 text-[9px] font-mono uppercase tracking-wider text-purple-fg/70">Dynamic Fields</div>
@@ -118,13 +119,13 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
       </div>
     </div>
 
-    <div v-for="cat in categories" :key="cat.label">
-      <div class="px-1 pb-1 pt-0.5 text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ cat.label }}</div>
+    <div v-for="cat in categories" :key="cat.label" class="space-y-2">
+      <div class="text-xs font-medium">{{ cat.label }}</div>
       <div class="grid grid-cols-4 gap-0.5">
         <div
           v-for="el in cat.elements"
           :key="el.type"
-          class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground transition-colors duration-150 hover:bg-secondary/10 active:cursor-grabbing"
+          class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground active:cursor-grabbing"
           draggable="true"
           @dragstart="handleDragStart($event, el.type)"
           @dragend="handleDragEnd"
@@ -133,7 +134,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           <span class="flex size-12 items-center justify-center rounded-md bg-foreground/5 text-secondary">
             <IconUi :name="el.icon" size="size-5" />
           </span>
-          <span class="text-[10px]">{{ el.label }}</span>
+          <span class="text-[9px] font-mono uppercase tracking-wider">{{ el.label }}</span>
         </div>
       </div>
     </div>

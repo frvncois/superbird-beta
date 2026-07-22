@@ -127,6 +127,7 @@ export const ICONS: Record<string, Component> = {
   heading: Bars3BottomLeftIcon,
   text: DocumentTextIcon,
   richtext: DocumentTextIcon,
+  markdown: DocumentTextIcon,
   link: LinkIcon,
   'link-block': LinkIcon,
   span: VariableIcon,

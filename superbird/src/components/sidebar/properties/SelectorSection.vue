@@ -21,8 +21,7 @@ function removeClass(name: string) {
 </script>
 
 <template>
-  <section v-if="node" class="space-y-2">
-    <LabelUi>Selector</LabelUi>
+  <section v-if="node" class="p-4">
     <ClassInputUi
       :classes="node.classes"
       :active-class="globalStylesStore.activeClassName"

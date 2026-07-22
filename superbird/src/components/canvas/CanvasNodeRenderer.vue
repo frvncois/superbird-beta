@@ -5,6 +5,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
 import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import { renderMarkdown } from '@/lib/markdown'
 import type { CanvasNode, Entry } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -31,7 +32,10 @@ const mediaStore = useMediaStore()
 const isEditing = ref(false)
 const isHovered = ref(false)
 const editableRef = ref<HTMLElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const nodeRef = ref<HTMLElement | null>(null)
+// In-progress markdown source while editing (drives the live preview).
+const draft = ref('')
 
 // Run interactions (never in a preview copy — they'd double up).
 const nodeInteractions = computed(() => (props.preview ? undefined : props.node.interactions))
@@ -46,6 +50,7 @@ const isBody = computed(() => props.node.type === 'body')
 const isComponentInstance = computed(() => props.node.type === 'component')
 const isContainer = computed(() => CONTAINER_TYPES.includes(props.node.type))
 const isTextEditable = computed(() => TEXT_EDITABLE_TYPES.includes(props.node.type))
+const isMarkdown = computed(() => props.node.type === 'markdown')
 const isPlaceholder = computed(() =>
   ['image', 'video', 'embed', 'input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type),
 )
@@ -60,6 +65,11 @@ function nodeContent(node: CanvasNode): string {
   }
   return store.getNodeContent(node)
 }
+
+// Markdown: committed content rendered for display; draft rendered for the
+// live preview while editing.
+const markdownHtml = computed(() => renderMarkdown(nodeContent(props.node)))
+const draftHtml = computed(() => renderMarkdown(draft.value))
 
 const imageMedia = computed(() => {
   if (props.node.type !== 'image') return null
@@ -110,6 +120,14 @@ function handleDoubleClick(e: MouseEvent) {
     mediaStore.openPicker((item) => store.setNodeContent(props.node.id, item.id))
     return
   }
+  // Markdown nodes: edit the raw source in a mono field with a live preview.
+  if (isMarkdown.value) {
+    e.stopPropagation()
+    draft.value = nodeContent(props.node)
+    isEditing.value = true
+    requestAnimationFrame(() => textareaRef.value?.focus())
+    return
+  }
   if (!isTextEditable.value) return
   e.stopPropagation()
   isEditing.value = true
@@ -119,6 +137,10 @@ function handleDoubleClick(e: MouseEvent) {
 function handleBlur() {
   if (!isEditing.value) return
   isEditing.value = false
+  if (isMarkdown.value) {
+    store.setNodeContent(props.node.id, draft.value)
+    return
+  }
   const text = editableRef.value?.textContent ?? ''
   store.setNodeContent(props.node.id, text)
 }
@@ -127,6 +149,14 @@ function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) {
     e.preventDefault()
     editableRef.value?.blur()
+  }
+}
+
+// Markdown source is multi-line — Enter inserts a newline; only Escape commits.
+function handleMarkdownKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    textareaRef.value?.blur()
   }
 }
 
@@ -193,9 +223,28 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       class="absolute -top-px left-0 right-0 h-0.5 bg-primary z-10"
     />
 
+    <!-- Markdown: rendered result, or source + live preview while editing -->
+    <div v-if="isMarkdown" class="w-full">
+      <template v-if="isEditing">
+        <textarea
+          ref="textareaRef"
+          v-model="draft"
+          spellcheck="false"
+          class="w-full min-h-24 resize-y rounded px-2 py-1.5 bg-transparent font-mono text-xs leading-relaxed text-foreground outline-none ring-1 ring-primary/30"
+          @blur="handleBlur"
+          @keydown="handleMarkdownKeydown"
+        />
+        <div class="mt-2 border-t border-border/60 pt-2">
+          <div class="mb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/60">Preview</div>
+          <div class="markdown-body" v-html="draftHtml" />
+        </div>
+      </template>
+      <div v-else class="markdown-body" v-html="markdownHtml" />
+    </div>
+
     <!-- Node content -->
     <div
-      v-if="isTextEditable"
+      v-else-if="isTextEditable"
       ref="editableRef"
       :contenteditable="isEditing"
       :class="[
@@ -286,4 +335,49 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
   cursor: default;
   transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
+
+/* Rendered markdown (v-html output — styled via :deep) */
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4),
+.markdown-body :deep(h5),
+.markdown-body :deep(h6) {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0.6em 0 0.3em;
+}
+.markdown-body :deep(h1) { font-size: 1.6rem; }
+.markdown-body :deep(h2) { font-size: 1.3rem; }
+.markdown-body :deep(h3) { font-size: 1.1rem; }
+.markdown-body :deep(h4) { font-size: 1rem; }
+.markdown-body :deep(p) { margin: 0.4em 0; line-height: 1.6; }
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) { margin: 0.4em 0; padding-left: 1.4em; }
+.markdown-body :deep(ul) { list-style: disc; }
+.markdown-body :deep(ol) { list-style: decimal; }
+.markdown-body :deep(li) { margin: 0.15em 0; line-height: 1.6; }
+.markdown-body :deep(a) { color: var(--color-primary); text-decoration: underline; }
+.markdown-body :deep(strong) { font-weight: 600; }
+.markdown-body :deep(em) { font-style: italic; }
+.markdown-body :deep(code) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.markdown-body :deep(blockquote) {
+  margin: 0.5em 0;
+  padding-left: 0.75em;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-secondary);
+}
+.markdown-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0.8em 0;
+}
+.markdown-body :deep(:first-child) { margin-top: 0; }
+.markdown-body :deep(:last-child) { margin-bottom: 0; }
 </style>

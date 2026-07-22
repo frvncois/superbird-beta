@@ -12,6 +12,7 @@ export type NodeType =
   // Typography
   | 'heading'
   | 'text'
+  | 'markdown'
   | 'link'
   | 'span'
   | 'list'

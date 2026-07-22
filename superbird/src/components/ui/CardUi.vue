@@ -1,50 +1,44 @@
 <script setup lang="ts">
-import { computed, useSlots } from 'vue'
+import { useSlots } from 'vue'
 import IconUi from './IconUi.vue'
 
-// A dashboard card: [icon + title] header, content (default slot), and an
-// optional actions footer. All three regions are optional.
+// Dashboard card: subtle tinted surface, inverted icon chip, [icon + title +
+// header-action] header, content (default slot), and an optional actions
+// footer.
 withDefaults(
   defineProps<{
     icon?: string
     title?: string
-    // Tailwind classes for the header icon chip (bg + text color pair).
-    iconClass?: string
   }>(),
-  {
-    iconClass: 'bg-foreground/5 text-secondary',
-  },
+  {},
 )
 
 const slots = useSlots()
-const hasHeader = computed(() => !!(slots.title || slots.icon || slots['header-actions']))
 </script>
 
 <template>
-  <section class="flex flex-col rounded-2xl border bg-background shadow-sm">
-    <!-- Header: icon + title (+ optional trailing actions) -->
-    <header v-if="title || icon || hasHeader" class="flex items-center gap-2.5 px-4 pt-4 pb-3">
+  <section class="flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-muted-bg">
+    <!-- Header -->
+    <header v-if="title || icon || slots['header-action']" class="flex items-center gap-2.5 p-3">
       <span
-        v-if="icon || slots.icon"
-        :class="['flex size-8 shrink-0 items-center justify-center rounded-lg', iconClass]"
+        v-if="icon"
+        class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-foreground text-background"
       >
-        <slot name="icon"><IconUi v-if="icon" :name="icon" size="size-4" /></slot>
+        <IconUi :name="icon" size="size-3.5" />
       </span>
-      <h3 class="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-        <slot name="title">{{ title }}</slot>
-      </h3>
-      <div v-if="slots['header-actions']" class="flex shrink-0 items-center gap-1">
-        <slot name="header-actions" />
+      <p class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{{ title }}</p>
+      <div v-if="slots['header-action']" class="flex shrink-0 items-center">
+        <slot name="header-action" />
       </div>
     </header>
 
     <!-- Content -->
-    <div :class="['flex-1 px-4', title || icon || hasHeader ? 'pb-4' : 'py-4']">
+    <div class="px-3 pb-3 text-xs text-secondary">
       <slot />
     </div>
 
     <!-- Actions -->
-    <footer v-if="slots.actions" class="flex items-center gap-2 border-t px-4 py-2.5">
+    <footer v-if="slots.actions" class="flex items-center gap-2 px-3 pb-3">
       <slot name="actions" />
     </footer>
   </section>

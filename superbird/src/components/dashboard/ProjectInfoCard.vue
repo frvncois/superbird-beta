@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import CardUi from '@/components/ui/CardUi.vue'
+import BadgeUi from '@/components/ui/BadgeUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
@@ -12,42 +13,60 @@ const name = computed(() => siteSettings.siteSettings.identity.title)
 const url = computed(
   () => name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.superbird.site',
 )
-const status = { label: 'Published', dot: 'bg-green-fg' }
+const isPublished = ref(true)
+
+const copied = ref(false)
+async function copyUrl() {
+  try {
+    await navigator.clipboard.writeText(`https://${url.value}`)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {}
+}
 </script>
 
 <template>
-  <CardUi icon="globe" title="Project" icon-class="bg-primary/10 text-primary">
-    <dl class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 text-sm">
-      <dt class="text-xs font-mono uppercase tracking-wider text-secondary/60">Name</dt>
-      <dd class="truncate font-medium text-foreground">{{ name }}</dd>
+  <CardUi icon="globe" title="Project">
+    <template #header-action>
+      <BadgeUi v-if="isPublished" variant="success" size="xs" dot pulse>Published</BadgeUi>
+      <BadgeUi v-else variant="default" size="xs" dot>Draft</BadgeUi>
+    </template>
 
-      <dt class="text-xs font-mono uppercase tracking-wider text-secondary/60">URL</dt>
-      <dd>
-        <a
-          :href="`https://${url}`"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 truncate text-primary hover:underline"
+    <div class="flex flex-col gap-2">
+      <p class="truncate text-sm font-medium text-foreground">{{ name }}</p>
+
+      <!-- Copyable URL with slide swap -->
+      <div class="flex items-center gap-1">
+        <div class="relative h-5 min-w-0 flex-1 overflow-hidden">
+          <button
+            type="button"
+            class="absolute inset-0 flex cursor-pointer items-center transition-transform duration-300 ease-in-out"
+            :style="{ transform: copied ? 'translateY(-100%)' : 'translateY(0)' }"
+            @click="copyUrl"
+          >
+            <span class="truncate text-xs text-foreground">{{ url }}</span>
+          </button>
+          <span
+            class="absolute inset-0 flex items-center text-[10px] font-medium text-green-fg transition-transform duration-300 ease-in-out"
+            :style="{ transform: copied ? 'translateY(0)' : 'translateY(100%)' }"
+          >
+            Link copied!
+          </span>
+        </div>
+        <button
+          class="flex size-6 shrink-0 items-center justify-center rounded-md text-secondary transition-colors duration-100 hover:bg-background hover:text-foreground"
+          title="Copy URL"
+          @click="copyUrl"
         >
-          {{ url }}
-          <IconUi name="external-link" size="size-3" class="shrink-0" />
-        </a>
-      </dd>
-
-      <dt class="text-xs font-mono uppercase tracking-wider text-secondary/60">Status</dt>
-      <dd>
-        <span class="inline-flex items-center gap-1.5 rounded-lg bg-green-bg px-2 py-0.5 text-xs font-medium text-green-fg">
-          <span :class="['size-1.5 rounded-full', status.dot]" />
-          {{ status.label }}
-        </span>
-      </dd>
-    </dl>
+          <IconUi name="copy" size="size-3.5" />
+        </button>
+      </div>
+    </div>
 
     <template #actions>
-      <ButtonUi variant="outline" size="sm" :to="'/editor'">Open editor</ButtonUi>
-      <a :href="`https://${url}`" target="_blank" rel="noopener noreferrer" class="ml-auto">
-        <ButtonUi variant="ghost" size="sm">
-          Visit site
+      <ButtonUi variant="outline" size="sm" class="flex-1" :to="'/editor'">Open editor</ButtonUi>
+      <a :href="`https://${url}`" target="_blank" rel="noopener noreferrer">
+        <ButtonUi variant="ghost" size="sm" title="Visit site">
           <IconUi name="external-link" size="size-3.5" />
         </ButtonUi>
       </a>

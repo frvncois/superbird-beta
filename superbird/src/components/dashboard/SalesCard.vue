@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { sales, formatCurrency } from '@/data/dashboardDemo'
 import CardUi from '@/components/ui/CardUi.vue'
+import BadgeUi from '@/components/ui/BadgeUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
@@ -9,42 +10,38 @@ const up = computed(() => sales.changePct >= 0)
 </script>
 
 <template>
-  <CardUi icon="sales" title="Recent sales" icon-class="bg-green-bg text-green-fg">
-    <div class="mb-3 flex items-end gap-2">
-      <span class="text-2xl font-semibold text-foreground">{{ formatCurrency(sales.total) }}</span>
-      <span class="text-xs text-secondary">this week</span>
-      <span
-        :class="[
-          'ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium',
-          up ? 'bg-green-bg text-green-fg' : 'bg-red-bg text-red-fg',
-        ]"
-      >
-        <IconUi :name="up ? 'trend-up' : 'trend-down'" size="size-3.5" />
+  <CardUi icon="sales" title="Recent sales">
+    <template #header-action>
+      <BadgeUi :variant="up ? 'success' : 'error'" size="xs">
         {{ up ? '+' : '' }}{{ sales.changePct }}%
-      </span>
+      </BadgeUi>
+    </template>
+
+    <div class="flex flex-col gap-3">
+      <div class="flex items-baseline gap-2">
+        <span class="text-xl font-semibold text-foreground">{{ formatCurrency(sales.total) }}</span>
+        <span class="text-[10px] text-secondary">this week</span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div
+          v-for="sale in sales.recent"
+          :key="sale.id"
+          class="flex items-center gap-2 rounded-xl bg-background px-3 py-2.5"
+        >
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-xs font-medium text-foreground">{{ sale.customer }}</p>
+            <p class="truncate text-[10px] text-secondary">{{ sale.product }}</p>
+          </div>
+          <span class="shrink-0 text-xs font-medium text-green-fg">{{ formatCurrency(sale.amount) }}</span>
+        </div>
+      </div>
     </div>
 
-    <ul class="space-y-1">
-      <li
-        v-for="sale in sales.recent"
-        :key="sale.id"
-        class="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-100 hover:bg-secondary/8"
-      >
-        <div class="min-w-0 flex-1">
-          <div class="truncate text-sm font-medium text-foreground">{{ sale.customer }}</div>
-          <div class="truncate text-xs text-secondary">{{ sale.product }}</div>
-        </div>
-        <div class="flex shrink-0 flex-col items-end gap-0.5">
-          <span class="text-sm font-medium text-green-fg">{{ formatCurrency(sale.amount) }}</span>
-          <span class="text-[10px] text-secondary/60">{{ sale.time }}</span>
-        </div>
-      </li>
-    </ul>
-
     <template #actions>
-      <ButtonUi variant="ghost" size="sm" class="ml-auto">
-        View more
-        <IconUi name="arrow-right" size="size-3.5" />
+      <ButtonUi variant="outline" size="sm" class="flex-1">
+        Manage sales
+        <IconUi name="arrow-right" size="size-3" />
       </ButtonUi>
     </template>
   </CardUi>

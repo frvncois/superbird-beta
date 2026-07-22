@@ -15,11 +15,11 @@ import SalesCard from '@/components/dashboard/SalesCard.vue'
     </template>
 
     <template #sidebar>
-      <div class="flex flex-col gap-4 p-4">
-        <ProjectInfoCard />
-        <AnalyticsCard />
-        <FormSubmissionsCard />
-        <SalesCard />
+      <div class="flex flex-col gap-3 p-3">
+        <ProjectInfoCard class="animate-fade-in-up" />
+        <AnalyticsCard class="animate-fade-in-up" style="animation-delay: 60ms" />
+        <FormSubmissionsCard class="animate-fade-in-up" style="animation-delay: 120ms" />
+        <SalesCard class="animate-fade-in-up" style="animation-delay: 180ms" />
       </div>
     </template>
 

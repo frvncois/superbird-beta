@@ -29,6 +29,11 @@ function openSettings() {
   router.push('/settings')
   close()
 }
+function openEditor(editorMode: 'design' | 'content') {
+  store.setEditorMode(editorMode)
+  router.push('/editor')
+  close()
+}
 function openMediaLibrary() {
   media.openLibrary()
   close()
@@ -39,11 +44,11 @@ async function logout() {
   router.push('/login')
 }
 
-// The trigger shows where you are.
+// The trigger shows which app section you're in (not the site page).
 const triggerLabel = computed(() => {
   if (props.mode === 'dashboard') return 'Dashboard'
   if (props.mode === 'settings') return 'Settings'
-  return store.activePage.name
+  return 'Editor'
 })
 </script>
 
@@ -65,6 +70,23 @@ const triggerLabel = computed(() => {
       >
         <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
       </button>
+
+      <!-- Jump into the editor in a given mode (not shown while already editing) -->
+      <template v-if="mode !== 'editor'">
+        <button
+          class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+          @click="openEditor('design')"
+        >
+          <IconUi name="background" size="size-3.5" class="text-secondary" /> Edit design
+        </button>
+        <button
+          class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+          @click="openEditor('content')"
+        >
+          <IconUi name="document" size="size-3.5" class="text-secondary" /> Edit content
+        </button>
+      </template>
+
       <button
         class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openMediaLibrary"

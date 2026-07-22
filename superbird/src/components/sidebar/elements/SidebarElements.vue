@@ -2,6 +2,7 @@
 import { useCanvasStore } from '@/stores/canvas'
 import type { FieldType, NodeType } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { buildElementActions } from '@/composables/useNodeContextMenu'
 
@@ -111,7 +112,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           draggable="true"
           @dragstart="handleFieldDragStart($event, f.type)"
         >
-          <span class="flex size-7 items-center justify-center rounded-md bg-purple-bg text-[10px] font-mono font-bold text-purple-fg">{{ f.glyph }}</span>
+          <span class="flex size-7 items-center justify-center rounded-md bg-purple-bg text-purple-fg"><IconUi :name="f.type" size="size-4" /></span>
           <span class="text-[9px]">{{ f.label }}</span>
         </div>
       </div>
@@ -129,34 +130,10 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           @dragend="handleDragEnd"
           @contextmenu.prevent="handleContextMenu($event, el.type)"
         >
-          <span class="flex size-7 items-center justify-center rounded-md bg-foreground/5 text-[10px] font-mono font-bold text-secondary">
-            <template v-if="el.icon === 'section'">&#9776;</template>
-            <template v-else-if="el.icon === 'container'">&#9633;</template>
-            <template v-else-if="el.icon === 'columns'">&#9636;</template>
-            <template v-else-if="el.icon === 'column'">&#9647;</template>
-            <template v-else-if="el.icon === 'heading'">H</template>
-            <template v-else-if="el.icon === 'text'">T</template>
-            <template v-else-if="el.icon === 'link'">&#128279;</template>
-            <template v-else-if="el.icon === 'span'">&lt;&gt;</template>
-            <template v-else-if="el.icon === 'list'">&#8801;</template>
-            <template v-else-if="el.icon === 'blockquote'">&ldquo;</template>
-            <template v-else-if="el.icon === 'image'">&#128247;</template>
-            <template v-else-if="el.icon === 'video'">&#9654;</template>
-            <template v-else-if="el.icon === 'embed'">&lt;/&gt;</template>
-            <template v-else-if="el.icon === 'form'">&#9776;</template>
-            <template v-else-if="el.icon === 'input'">&#9776;</template>
-            <template v-else-if="el.icon === 'textarea'">&#9776;</template>
-            <template v-else-if="el.icon === 'select'">&#9662;</template>
-            <template v-else-if="el.icon === 'checkbox'">&#9745;</template>
-            <template v-else-if="el.icon === 'radio'">&#9673;</template>
-            <template v-else-if="el.icon === 'label'">Lbl</template>
-            <template v-else-if="el.icon === 'upload'">&#8679;</template>
-            <template v-else-if="el.icon === 'button'">Btn</template>
-            <template v-else-if="el.icon === 'link-block'">&#9741;</template>
-            <template v-else-if="el.icon === 'collection'">&#8634;</template>
-            <template v-else>&#9633;</template>
+          <span class="flex size-12 items-center justify-center rounded-md bg-foreground/5 text-secondary">
+            <IconUi :name="el.icon" size="size-5" />
           </span>
-          <span class="text-[9px]">{{ el.label }}</span>
+          <span class="text-[10px]">{{ el.label }}</span>
         </div>
       </div>
     </div>

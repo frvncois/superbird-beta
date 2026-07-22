@@ -42,7 +42,7 @@ watch(isOpen, (open) => {
   <div class="relative">
     <!-- Trigger -->
     <button
-      class="flex items-center gap-1 rounded-xl px-2 h-7 text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
+      class="flex items-center gap-1 rounded-lg px-2 h-7 text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
       @click="isOpen = !isOpen"
     >
       <svg class="size-3.5 text-secondary" viewBox="0 0 20 20" fill="currentColor">
@@ -59,7 +59,7 @@ watch(isOpen, (open) => {
             v-for="locale in store.locales"
             :key="locale.code"
             :class="[
-              'flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
+              'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs cursor-pointer transition-colors duration-100',
               locale.code === store.activeLocale
                 ? 'bg-primary/10 text-foreground font-medium'
                 : 'text-foreground hover:bg-secondary/10',
@@ -89,7 +89,7 @@ watch(isOpen, (open) => {
             <button
               v-for="locale in availableToAdd"
               :key="locale.code"
-              class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+              class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
               @click="addLocale(locale)"
             >
               <span class="w-6 text-[10px] font-mono font-semibold text-secondary">{{ locale.flag }}</span>
@@ -97,7 +97,7 @@ watch(isOpen, (open) => {
             </button>
           </div>
           <button
-            class="mt-1 w-full rounded-xl px-3 py-1.5 text-[10px] text-secondary text-center cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            class="mt-1 w-full rounded-lg px-3 py-1.5 text-[10px] text-secondary text-center cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
             @click="showAdd = false"
           >
             Cancel
@@ -105,7 +105,7 @@ watch(isOpen, (open) => {
         </template>
         <button
           v-else
-          class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
+          class="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-secondary cursor-pointer hover:bg-secondary/10 hover:text-foreground transition-colors duration-100"
           @click="showAdd = true"
         >
           <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">

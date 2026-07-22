@@ -68,7 +68,9 @@ async function copyUrl() {
 
     <template #actions>
       <ButtonUi variant="outline" size="sm" class="flex-1" :to="'/editor'">Open editor</ButtonUi>
-      <a :href="`https://${url}`" target="_blank" rel="noopener noreferrer">
+      <!-- Public site lives at the origin root (same host as the admin, which
+           is under /admin). Works in dev (proxied) and prod. -->
+      <a href="/" target="_blank" rel="noopener noreferrer">
         <ButtonUi variant="ghost" size="sm" title="Visit site">
           <IconUi name="external-link" size="size-3.5" />
         </ButtonUi>

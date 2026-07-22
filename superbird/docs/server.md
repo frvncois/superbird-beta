@@ -69,8 +69,8 @@ Media is **not** persisted yet (files-on-disk pipeline is a later slice).
 ## Dev workflow
 
 - `npm run dev` runs **both** the Vite client (`dev:web`) and the API (`dev:server`, `tsx watch`) via `run-p`.
-- **Admin app:** `http://localhost:5173/admin/` (Vite `base: '/admin/'`; the router prefixes every route via `import.meta.env.BASE_URL`). **Public site:** `http://localhost:3001/`. In production `/admin` serves the built SPA and `/` the public SSR site from one origin.
-- Vite proxies `/api` → `http://localhost:3001`, so requests are same-origin and the session cookie flows without CORS.
+- **One origin in dev:** open `http://localhost:5173`. `/admin/` is the admin app (Vite `base: '/admin/'`; the router prefixes every route via `import.meta.env.BASE_URL`), and **`/` (plus every non-`/admin` path) is the published public site** — Vite proxies those, and `/api`, to Hono (`:3001`). So `:5173/` shows the live site right next to the editor at `:5173/admin/editor`, mirroring production (one origin: `/admin` = app, `/` = public). All Vite dev internals live under `/admin` (thanks to `base`), so the catch-all proxy leaves HMR alone.
+- Same-origin → the session cookie flows without CORS. (Hono still listens directly on `:3001` too.)
 - `npm run server:type-check` type-checks the server independently of `vue-tsc`.
 - Reset the app to first-run: delete `data/superbird.db*`.
 

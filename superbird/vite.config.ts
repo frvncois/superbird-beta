@@ -24,8 +24,16 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Admin API — proxied to the Hono server in dev (same-origin → cookies work).
+      // Admin API → Hono (same-origin → cookies work).
       '/api': 'http://localhost:3001',
+      // Public SSR site → Hono. Everything that isn't the admin app (/admin,
+      // where all Vite dev internals live thanks to base) or the API. This
+      // makes localhost:5173/ serve the published site, mirroring production
+      // (one origin: /admin = app, / = public site).
+      '^/(?!admin(?:/|$)|api(?:/|$)).*': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
 })

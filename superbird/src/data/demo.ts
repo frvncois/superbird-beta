@@ -38,9 +38,10 @@ export const demoGlobalStyles: GlobalStyles = {
     error: '#ef4444',
   },
   fonts: {
-    primary: 'Inter',
-    secondary: 'Playfair Display',
+    primary: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    secondary: 'Georgia, "Times New Roman", serif',
   },
+  fontSet: [],
   sizes: {
     xs: '4px',
     sm: '8px',

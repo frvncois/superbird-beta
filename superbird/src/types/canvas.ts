@@ -368,9 +368,31 @@ export interface TypographySettings {
   link: { color: string; hoverColor: string; decoration: string }
 }
 
+// A single weight/style of a font, self-hosted at `url` (served /fonts/:file).
+export interface FontFace {
+  weight: string // '400', '700', …
+  style: 'normal' | 'italic'
+  url: string
+  format?: string // 'woff2' | 'woff' | 'truetype' | 'opentype'
+}
+
+// A font the user added to their project (Google, Fontshare, or uploaded). The
+// bytes live on disk; this metadata (incl. self-hosted urls) is part of the
+// design document.
+export interface FontFamily {
+  id: string
+  name: string
+  source: 'google' | 'fontshare' | 'custom'
+  faces: FontFace[]
+}
+
 export interface GlobalStyles {
   colors: Record<string, string>
-  fonts: { primary: string; secondary: string }
+  // Named font variables (design tokens) — mirrors `colors`/`sizes`. Value is a
+  // CSS font-family stack. `primary` is the conventional body font.
+  fonts: Record<string, string>
   sizes: Record<string, string>
+  // Fonts added to the project (self-hosted), surfaced in the font-family picker.
+  fontSet: FontFamily[]
   typography: Record<Breakpoint, TypographySettings>
 }

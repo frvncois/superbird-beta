@@ -1,6 +1,7 @@
 import type { Breakpoint, CanvasNode, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
 import { resolveStyles } from '@/lib/styles'
 import { classToDecls } from '@/lib/tailwindToStyles'
+import { fontFaceCss } from '@/lib/fonts'
 
 // Compile the global tokens + style-class registry into a real stylesheet:
 // breakpoints as @media, states as pseudo-classes. This is the "emit real
@@ -56,8 +57,7 @@ function compileClass(name: string, cls: StyleClass): string {
 function globalVars(g: GlobalStyles): string {
   const vars: string[] = []
   for (const [name, value] of Object.entries(g.colors)) vars.push(`--global-${name}:${value}`)
-  vars.push(`--global-font-primary:${g.fonts.primary}`)
-  vars.push(`--global-font-secondary:${g.fonts.secondary}`)
+  for (const [name, value] of Object.entries(g.fonts)) vars.push(`--global-font-${name}:${value}`)
   for (const [name, value] of Object.entries(g.sizes)) vars.push(`--global-size-${name}:${value}`)
   return vars.join(';')
 }
@@ -116,6 +116,8 @@ const VISIBILITY = [
 // page; author styles layer on top.
 function baseCss(globalStyles: GlobalStyles): string {
   const parts: string[] = []
+  const faces = fontFaceCss(globalStyles.fontSet ?? [])
+  if (faces) parts.push(faces)
   parts.push(`:root{${globalVars(globalStyles)}}`)
   parts.push(RESET)
   parts.push(VISIBILITY)

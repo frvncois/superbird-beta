@@ -88,14 +88,14 @@ const weightOptions = ['400', '500', '600', '700', '800', '900'].map((w) => ({ v
     <SettingsSection title="Fonts" description="Font families and any custom web fonts.">
       <SettingsRow label="Primary">
         <InputUi
-          :model-value="store.globalStyles.fonts.primary"
+          :model-value="store.globalStyles.fonts.primary ?? ''"
           placeholder="Inter"
           @update:model-value="store.setGlobalFont('primary', $event)"
         />
       </SettingsRow>
       <SettingsRow label="Secondary">
         <InputUi
-          :model-value="store.globalStyles.fonts.secondary"
+          :model-value="store.globalStyles.fonts.secondary ?? ''"
           placeholder="Playfair Display"
           @update:model-value="store.setGlobalFont('secondary', $event)"
         />

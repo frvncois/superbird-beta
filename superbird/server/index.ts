@@ -4,8 +4,10 @@ import { ensureSchema } from './db/client'
 import authRoutes from './routes/auth'
 import projectRoutes from './routes/project'
 import mediaRoutes from './routes/media'
+import fontsRoutes from './routes/fonts'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
+import { readFontFile } from './lib/fonts'
 
 ensureSchema()
 
@@ -15,10 +17,23 @@ app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
 app.route('/api', projectRoutes)
 app.route('/api', mediaRoutes)
+app.route('/api', fontsRoutes)
 
 // Public media files (no auth — referenced by published pages).
 app.get('/media/:id', (c) => {
   const file = readMediaFile(c.req.param('id'))
+  if (!file) return c.notFound()
+  return new Response(file.bytes, {
+    headers: {
+      'Content-Type': file.mime,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  })
+})
+
+// Public font files (no auth — referenced by @font-face in published pages).
+app.get('/fonts/:file', (c) => {
+  const file = readFontFile(c.req.param('file'))
   if (!file) return c.notFound()
   return new Response(file.bytes, {
     headers: {

@@ -4,7 +4,7 @@ import { createStyleClassStyles } from '@/lib/nodeFactory'
 import { resolveStyles as resolveNodeStyles } from '@/lib/styles'
 import { BREAKPOINTS } from '@/constants/canvas'
 import { demoGlobalStyles, demoStyleClasses } from '@/data/demo'
-import type { Breakpoint, CanvasNode, GlobalStyles, HeadingStyle, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
+import type { Breakpoint, CanvasNode, FontFamily, GlobalStyles, HeadingStyle, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
 
 /**
  * Design tokens (colors/fonts/sizes/typography) and the global style-class
@@ -43,8 +43,39 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     globalStyles.value.colors[name] = value
   }
 
-  function setGlobalFont(key: 'primary' | 'secondary', value: string) {
-    globalStyles.value.fonts[key] = value
+  function setGlobalFont(name: string, value: string) {
+    globalStyles.value.fonts[name] = value
+  }
+
+  function addGlobalFont(name: string, value: string) {
+    globalStyles.value.fonts[name] = value
+  }
+
+  function removeGlobalFont(name: string) {
+    delete globalStyles.value.fonts[name]
+  }
+
+  // --- Font set (self-hosted Google/Fontshare/custom fonts) ---
+
+  function addFontFamily(family: FontFamily) {
+    if (!globalStyles.value.fontSet) globalStyles.value.fontSet = []
+    const set = globalStyles.value.fontSet
+    // Merge faces into an existing family of the same name+source, else append.
+    const existing = set.find((f) => f.name === family.name && f.source === family.source)
+    if (existing) {
+      for (const face of family.faces) {
+        const dup = existing.faces.find((x) => x.weight === face.weight && x.style === face.style)
+        if (!dup) existing.faces.push(face)
+      }
+    } else {
+      set.push(family)
+    }
+  }
+
+  function removeFontFamily(id: string) {
+    const set = globalStyles.value.fontSet
+    if (!set) return
+    globalStyles.value.fontSet = set.filter((f) => f.id !== id)
   }
 
   function setGlobalSize(name: string, value: string) {
@@ -75,8 +106,9 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     for (const [name, value] of Object.entries(globalStyles.value.colors)) {
       vars[`--global-${name}`] = value
     }
-    vars['--global-font-primary'] = globalStyles.value.fonts.primary
-    vars['--global-font-secondary'] = globalStyles.value.fonts.secondary
+    for (const [name, value] of Object.entries(globalStyles.value.fonts)) {
+      vars[`--global-font-${name}`] = value
+    }
     for (const [name, value] of Object.entries(globalStyles.value.sizes)) {
       vars[`--global-size-${name}`] = value
     }
@@ -150,6 +182,10 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     removeGlobalColor,
     addGlobalColor,
     setGlobalFont,
+    addGlobalFont,
+    removeGlobalFont,
+    addFontFamily,
+    removeFontFamily,
     setGlobalSize,
     removeGlobalSize,
     addGlobalSize,

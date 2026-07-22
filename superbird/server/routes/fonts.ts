@@ -1,14 +1,11 @@
 import { Hono } from 'hono'
-import { currentUser } from '../lib/session'
+import { requireAuth } from '../lib/session'
 import { saveCustomFace, deleteFontFiles } from '../lib/fonts'
 
 const fontsApi = new Hono()
 
 // All font admin routes require an authenticated admin.
-fontsApi.use('/fonts/*', async (c, next) => {
-  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
-  await next()
-})
+fontsApi.use('*', requireAuth)
 
 // Upload a custom font file (one weight/style face). The bytes are self-hosted
 // and served publicly at /fonts/:file.

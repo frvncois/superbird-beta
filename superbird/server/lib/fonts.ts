@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, basename } from 'node:path'
 import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs'
-import { randomBytes } from 'node:crypto'
 import type { FontFaceDTO } from '../../shared/types'
+import { randomHex } from './ids'
 
 const here = dirname(fileURLToPath(import.meta.url))
 // Uploaded fonts (git-ignored, per project).
@@ -24,14 +24,10 @@ const FORMAT_BY_EXT: Record<string, string> = {
   otf: 'opentype',
 }
 
-function randomId(): string {
-  return randomBytes(8).toString('hex')
-}
-
 /** Persist uploaded font bytes and return the filename + public url. */
 export function saveFontFile(bytes: Buffer, ext: string): { file: string; url: string } {
   const clean = ext.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'woff2'
-  const file = `${randomId()}.${clean}`
+  const file = `${randomHex()}.${clean}`
   writeFileSync(resolve(FONTS_DIR, file), bytes)
   return { file, url: `/fonts/${file}` }
 }

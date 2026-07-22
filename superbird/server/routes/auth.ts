@@ -1,11 +1,11 @@
-import { randomBytes } from 'node:crypto'
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projects, users } from '../db/schema'
 import { hashPassword, verifyPassword } from '../lib/password'
-import { startSession, endSession, currentUser } from '../lib/session'
+import { startSession, endSession, currentUser, toUser } from '../lib/session'
 import { getPublishedAt } from '../lib/project'
+import { randomId } from '../lib/ids'
 import type {
   SetupPayload,
   LoginPayload,
@@ -15,10 +15,6 @@ import type {
 } from '../../shared/types'
 
 const auth = new Hono()
-
-function randomId(prefix: string): string {
-  return `${prefix}_${randomBytes(6).toString('hex')}`
-}
 
 function getProject(): Project | null {
   const row = db.select().from(projects).limit(1).get()
@@ -87,9 +83,7 @@ auth.post('/login', async (c) => {
   }
 
   startSession(c, row.id)
-  return c.json({
-    user: { id: row.id, name: row.name, email: row.email, role: 'admin', createdAt: row.createdAt },
-  })
+  return c.json({ user: toUser(row) })
 })
 
 // Sign out.

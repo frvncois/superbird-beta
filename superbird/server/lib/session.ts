@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
-import type { Context } from 'hono'
+import type { Context, Next } from 'hono'
 import { db } from '../db/client'
 import { sessions, users } from '../db/schema'
 import type { User } from '../../shared/types'
@@ -9,7 +9,9 @@ import type { User } from '../../shared/types'
 export const SESSION_COOKIE = 'sb_session'
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
 
-function toUser(row: typeof users.$inferSelect): User {
+// Row → public User (never exposes passwordHash). Single-admin model: every
+// user is a full admin (see docs — roles were intentionally dropped).
+export function toUser(row: typeof users.$inferSelect): User {
   return {
     id: row.id,
     name: row.name,
@@ -17,6 +19,14 @@ function toUser(row: typeof users.$inferSelect): User {
     role: 'admin',
     createdAt: row.createdAt,
   }
+}
+
+// Hono middleware: 401 unless a valid session cookie resolves to a user.
+// Apply as `router.use('*', requireAuth)` — covers every path incl. the bare
+// mount point.
+export async function requireAuth(c: Context, next: Next): Promise<Response | void> {
+  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
+  await next()
 }
 
 /** Create a session for a user and set the cookie. */

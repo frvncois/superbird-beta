@@ -1,31 +1,15 @@
-import { randomBytes } from 'node:crypto'
 import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { users, sessions } from '../db/schema'
 import { hashPassword } from '../lib/password'
-import { currentUser } from '../lib/session'
-import type { User } from '../../shared/types'
+import { currentUser, requireAuth, toUser } from '../lib/session'
+import { randomId } from '../lib/ids'
 
 const usersApi = new Hono()
 
-function randomId(prefix: string): string {
-  return `${prefix}_${randomBytes(6).toString('hex')}`
-}
-
-function toUser(row: typeof users.$inferSelect): User {
-  return { id: row.id, name: row.name, email: row.email, role: 'admin', createdAt: row.createdAt }
-}
-
 // All user-management routes require an authenticated user.
-usersApi.use('/users/*', async (c, next) => {
-  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
-  await next()
-})
-usersApi.use('/users', async (c, next) => {
-  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
-  await next()
-})
+usersApi.use('*', requireAuth)
 
 // List everyone who can sign in (never exposes password hashes).
 usersApi.get('/users', (c) => {
@@ -54,7 +38,12 @@ usersApi.post('/users', async (c) => {
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString(),
   }
-  db.insert(users).values(row).run()
+  try {
+    db.insert(users).values(row).run()
+  } catch {
+    // UNIQUE(email) — a racing create beat us between the check and the insert.
+    return c.json({ error: 'A user with that email already exists.' }, 409)
+  }
   return c.json(toUser(row), 201)
 })
 
@@ -65,8 +54,8 @@ usersApi.delete('/users/:id', (c) => {
   if (me && me.id === id) return c.json({ error: 'You can’t remove yourself.' }, 400)
 
   const all = db.select().from(users).all()
-  if (all.length <= 1) return c.json({ error: 'Can’t remove the last user.' }, 400)
   if (!all.some((u) => u.id === id)) return c.json({ error: 'User not found.' }, 404)
+  if (all.length <= 1) return c.json({ error: 'Can’t remove the last user.' }, 400)
 
   // Drop their sessions first (FK), then the user.
   db.delete(sessions).where(eq(sessions.userId, id)).run()

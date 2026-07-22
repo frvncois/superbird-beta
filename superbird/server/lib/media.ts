@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
-import { randomBytes } from 'node:crypto'
 import sharp from 'sharp'
+import { randomId } from './ids'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { media, mediaFolders } from '../db/schema'
@@ -31,10 +31,6 @@ export interface MediaFolderDTO {
   id: string
   name: string
   parentId?: string
-}
-
-export function randomId(prefix: string): string {
-  return `${prefix}_${randomBytes(6).toString('hex')}`
 }
 
 // ── Image compression ──

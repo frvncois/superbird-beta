@@ -9,6 +9,7 @@ import type { CanvasNode, GlobalStyles, StyleClass } from '@/types/canvas'
 import { renderNodeToHtml } from './html'
 import { compilePageCss } from './css'
 import { interactionsRuntimeScript } from './interactionsRuntime'
+import { escapeAttr } from './escape'
 import type { RenderContext } from './context'
 
 // Convenience: assemble a full standalone HTML document for a page body.
@@ -41,10 +42,6 @@ export function collectInteractions(node: CanvasNode): IxMap {
   return map
 }
 
-function escAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
-}
-
 export function renderDocument(
   body: CanvasNode,
   styleClasses: Record<string, StyleClass>,
@@ -59,14 +56,14 @@ export function renderDocument(
 
   let headTags = ''
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
-  if (head.description) headTags += `<meta name="description" content="${escAttr(head.description)}">`
+  if (head.description) headTags += `<meta name="description" content="${escapeAttr(head.description)}">`
   if (head.noIndex) headTags += '<meta name="robots" content="noindex, nofollow">'
 
   // Styles: external <link> when a href is given, otherwise inline <style>
   // resolved exactly like the editor canvas (class order honored, custom +
   // Tailwind unified).
   const styleTag = assets.styleHref
-    ? `<link rel="stylesheet" href="${escAttr(assets.styleHref)}">`
+    ? `<link rel="stylesheet" href="${escapeAttr(assets.styleHref)}">`
     : `<style>${compilePageCss(body, styleClasses, globalStyles)}</style>`
 
   // Script: only when the page actually uses interactions. External <script src>
@@ -75,7 +72,7 @@ export function renderDocument(
   let scriptTag = ''
   if (hasIx) {
     if (assets.scriptSrc) {
-      scriptTag = `<script src="${escAttr(assets.scriptSrc)}" defer></script>`
+      scriptTag = `<script src="${escapeAttr(assets.scriptSrc)}" defer></script>`
     } else {
       const json = JSON.stringify(ixMap).replace(/</g, '\\u003c')
       scriptTag = `<script>window.__SB_IX__=${json};${interactionsRuntimeScript()}</script>`

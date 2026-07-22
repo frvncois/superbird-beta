@@ -1,6 +1,7 @@
 import type { CanvasNode, Entry } from '@/types/canvas'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import { renderMarkdown } from '@/lib/markdown'
+import { escapeHtml, escapeAttr, isValidAttrName } from './escape'
 import type { RenderContext } from './context'
 
 // Node tree → faithful HTML. Real elements (img/a/form controls), resolved
@@ -9,14 +10,6 @@ import type { RenderContext } from './context'
 // hooks (data-sb-ix) are emitted here; the runtime + CSS handle playback.
 
 const VOID_TAGS = new Set(['img', 'input', 'br', 'hr', 'source', 'area', 'base', 'col', 'meta', 'wbr'])
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
-function escapeAttr(s: string): string {
-  return escapeHtml(s).replace(/"/g, '&quot;')
-}
 
 function attr(name: string, value: string | undefined | null): string {
   if (value === undefined || value === null || value === '') return ''
@@ -86,9 +79,12 @@ function buildAttributes(
     out += attr('data-sb-ix', node.id)
   }
 
-  // Custom attributes last (author override).
+  // Custom attributes last (author override). Skip invalid keys so a malformed
+  // key can't inject extra attributes/handlers into the tag.
   if (node.customAttributes) {
-    for (const [k, v] of Object.entries(node.customAttributes)) out += attr(k, v)
+    for (const [k, v] of Object.entries(node.customAttributes)) {
+      if (isValidAttrName(k)) out += attr(k, v)
+    }
   }
   return out
 }

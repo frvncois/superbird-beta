@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { currentUser } from '../lib/session'
+import { requireAuth } from '../lib/session'
 import { getInstalledProject } from '../lib/project'
 import {
   listMedia,
@@ -14,11 +14,9 @@ import {
 
 const mediaApi = new Hono()
 
-// All media API routes require an authenticated admin.
-mediaApi.use('/media/*', async (c, next) => {
-  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
-  await next()
-})
+// All media API routes require an authenticated admin. `'*'` covers the bare
+// `/media` path too (a `/media/*` matcher would leave list/upload unguarded).
+mediaApi.use('*', requireAuth)
 
 mediaApi.get('/media', (c) => {
   const proj = getInstalledProject()

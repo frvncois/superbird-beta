@@ -2,17 +2,14 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projectState } from '../db/schema'
-import { currentUser } from '../lib/session'
+import { requireAuth } from '../lib/session'
 import { getInstalledProject, publishDesign } from '../lib/project'
 import type { ProjectDocument, PublishResult } from '../../shared/types'
 
 const project = new Hono()
 
 // All project routes require an authenticated admin.
-project.use('*', async (c, next) => {
-  if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
-  await next()
-})
+project.use('*', requireAuth)
 
 const EMPTY: ProjectDocument = {
   design: null,

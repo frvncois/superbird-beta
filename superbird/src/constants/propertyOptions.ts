@@ -68,6 +68,9 @@ export const textAlignOptions = [
   { value: 'justify', label: 'Justify' },
 ]
 
+// Numeric font weights (shared by the settings font-weight pickers).
+export const FONT_WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '900'] as const
+
 export const fontWeightOptions = [
   { value: '', label: 'Default' },
   { value: '100', label: 'Thin' },

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { BREAKPOINTS } from '@/constants/canvas'
+import { FONT_WEIGHTS } from '@/constants/propertyOptions'
 import type { Breakpoint } from '@/types/canvas'
 import { fontSetStack } from '@/lib/fonts'
 import { DEFAULT_FONTS } from '@/data/defaultFonts'
@@ -25,7 +26,7 @@ const uploadStyle = ref<'normal' | 'italic'>('normal')
 const uploadInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 const uploadError = ref('')
-const weightOptions = ['100', '200', '300', '400', '500', '600', '700', '800', '900'].map((w) => ({ value: w, label: w }))
+const weightOptions = FONT_WEIGHTS.map((w) => ({ value: w, label: w }))
 const styleOptions = [
   { value: 'normal', label: 'Normal' },
   { value: 'italic', label: 'Italic' },
@@ -91,7 +92,7 @@ function addVar() {
 const typoBp = ref<Breakpoint>('desktop')
 const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
 const breakpointOptions = BREAKPOINTS.map((bp) => ({ value: bp.key, label: bp.label }))
-const headingWeightOptions = ['400', '500', '600', '700', '800', '900'].map((w) => ({ value: w, label: w }))
+const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w) => ({ value: w, label: w }))
 </script>
 
 <template>

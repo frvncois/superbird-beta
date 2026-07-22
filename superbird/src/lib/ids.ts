@@ -1,6 +1,12 @@
+// A per-load random token keeps ids created this session from ever colliding
+// with ids loaded from a persisted project (whose counters started from 0 in a
+// previous session). Within a session, the incrementing counter guarantees
+// uniqueness; the token guarantees it across sessions.
+const SESSION_TOKEN = Math.random().toString(36).slice(2, 8)
+
 export function createIdGenerator(prefix: string): () => string {
   let counter = 0
-  return () => `${prefix}-${++counter}`
+  return () => `${prefix}-${SESSION_TOKEN}${++counter}`
 }
 
 export const generateNodeId = createIdGenerator('node')

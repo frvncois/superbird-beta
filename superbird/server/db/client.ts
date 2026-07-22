@@ -42,5 +42,10 @@ export function ensureSchema(): void {
       created_at TEXT NOT NULL,
       expires_at INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS project_state (
+      project_id TEXT PRIMARY KEY REFERENCES projects(id),
+      document TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `)
 }

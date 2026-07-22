@@ -27,3 +27,13 @@ export const sessions = sqliteTable('sessions', {
   createdAt: text('created_at').notNull(),
   expiresAt: integer('expires_at').notNull(), // epoch ms
 })
+
+// The whole editable project as one JSON document (design + content). A later
+// slice normalises content into queryable rows for the SSR runtime.
+export const projectState = sqliteTable('project_state', {
+  projectId: text('project_id')
+    .primaryKey()
+    .references(() => projects.id),
+  document: text('document').notNull(), // JSON string
+  updatedAt: text('updated_at').notNull(),
+})

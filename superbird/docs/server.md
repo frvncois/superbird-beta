@@ -35,13 +35,34 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 
 ## API (current)
 
-| Method + path | Purpose |
-|---|---|
-| `GET /api/session` | Boot state: `{ installed, project, user }` in one call |
-| `POST /api/install` | First-run: create project + admin user, open session (409 if already installed) |
-| `POST /api/login` | Verify credentials, open session |
-| `POST /api/logout` | Destroy session |
-| `GET /api/health` | Liveness |
+| Method + path | Auth | Purpose |
+|---|---|---|
+| `GET /api/session` | — | Boot state: `{ installed, project, user }` in one call |
+| `POST /api/install` | — | First-run: create project + admin user, open session (409 if already installed) |
+| `POST /api/login` | — | Verify credentials, open session |
+| `POST /api/logout` | — | Destroy session |
+| `GET /api/project` | ✓ | Load the project document (`{ design, content }`); `design:null` on a fresh project |
+| `PUT /api/project` | ✓ | Upsert the project document |
+| `GET /api/health` | — | Liveness |
+
+## Project persistence
+
+The whole editable project is **one JSON document** per project (`project_state`
+table, one row). It holds `design` (pages, styleClasses, globalStyles,
+userComponents, siteSettings, locales) + `content` (collections, entries).
+Media is **not** persisted yet (files-on-disk pipeline is a later slice).
+
+- Client: `src/composables/useProjectPersistence.ts` — `load()` fetches the
+  document and hydrates every store; a debounced (800 ms) watcher autosaves any
+  change via `PUT /api/project`.
+- `load()` runs after sign-in (boot if already authed, and after login/install).
+  A fresh project (`design:null`) persists the current demo seed as its starting
+  point, so a new install shows a real site.
+- Each persisted store exposes a `hydrate()` action; `src/lib/ids.ts` mixes a
+  per-load random token into generated ids so loaded ids never collide with
+  ids created in the new session.
+- Normalising `content` into queryable rows (for SSR filters) is deferred to
+  the SSR slice.
 
 ## Dev workflow
 

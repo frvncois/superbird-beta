@@ -51,3 +51,28 @@ export interface SessionState {
   project: Project | null
   user: User | null
 }
+
+// ── Project document ──
+// The whole editable project, stored as one JSON blob per project. The server
+// treats design/content as opaque JSON; the client owns the precise shapes
+// (Page[], StyleClass records, Collection[], Entry[], …), so these are `unknown`
+// here. Normalising content into queryable rows is a later (SSR) concern.
+
+export interface ProjectDesign {
+  pages: unknown[]
+  styleClasses: Record<string, unknown>
+  globalStyles: unknown
+  userComponents: Record<string, unknown>
+  siteSettings: unknown
+  locales: { locales: unknown[]; activeLocale: string; defaultLocale: string }
+}
+
+export interface ProjectContent {
+  collections: unknown[]
+  entries: unknown[]
+}
+
+export interface ProjectDocument {
+  design: ProjectDesign | null
+  content: ProjectContent
+}

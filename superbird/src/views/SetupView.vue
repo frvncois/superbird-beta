@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSetupStore } from '@/stores/setup'
 import { useAuthStore } from '@/stores/auth'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
+import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -59,6 +60,8 @@ async function finish() {
     siteSettings.updateSiteIdentity({ title: result.project.name })
     // Install opened a session server-side — adopt the returned admin user.
     auth.hydrate(result.user)
+    // Fresh project: persist the current demo seed as the starting point.
+    await useProjectPersistence().load()
     step.value = 3
   } catch {
     // setup.error is shown inline

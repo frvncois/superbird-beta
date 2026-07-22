@@ -19,6 +19,12 @@ export const useCollectionsStore = defineStore('collections', () => {
   const collections = ref<Collection[]>(demoCollections)
   const entries = ref<Entry[]>(demoEntries)
 
+  // Replace all collections + entries from a loaded project document.
+  function hydrate(loaded: { collections: Collection[]; entries: Entry[] }) {
+    collections.value = loaded.collections
+    entries.value = loaded.entries
+  }
+
   // --- Reads ---
 
   function collectionById(id: string | null | undefined): Collection | undefined {
@@ -127,6 +133,7 @@ export const useCollectionsStore = defineStore('collections', () => {
   return {
     collections,
     entries,
+    hydrate,
     collectionById,
     collectionByTemplatePage,
     entryById,

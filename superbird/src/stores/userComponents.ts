@@ -12,6 +12,11 @@ export const useUserComponentsStore = defineStore('userComponents', () => {
 
   const userComponents = ref<Record<string, UserComponent>>(demoUserComponents)
 
+  // Replace all user components from a loaded project document.
+  function hydrate(loaded: Record<string, UserComponent>) {
+    userComponents.value = loaded
+  }
+
   function createComponentFromNode(nodeId: string, name: string): UserComponent | null {
     const body = canvas.bodyNode
     if (nodeId === body.id) return null
@@ -97,6 +102,7 @@ export const useUserComponentsStore = defineStore('userComponents', () => {
 
   return {
     userComponents,
+    hydrate,
     createComponentFromNode,
     instantiateComponent,
     addComponentToPage,

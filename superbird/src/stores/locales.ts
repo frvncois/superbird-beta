@@ -11,6 +11,13 @@ export const useLocalesStore = defineStore('locales', () => {
 
   const isDefaultLocale = computed(() => activeLocale.value === defaultLocale.value)
 
+  // Replace locale config from a loaded project document.
+  function hydrate(loaded: { locales: Locale[]; activeLocale: string; defaultLocale: string }) {
+    locales.value = loaded.locales
+    activeLocale.value = loaded.activeLocale
+    defaultLocale.value = loaded.defaultLocale
+  }
+
   function addLocale(locale: Locale) {
     if (locales.value.some((l) => l.code === locale.code)) return
     locales.value.push(locale)
@@ -33,6 +40,7 @@ export const useLocalesStore = defineStore('locales', () => {
     activeLocale,
     defaultLocale,
     isDefaultLocale,
+    hydrate,
     addLocale,
     removeLocale,
     setActiveLocale,

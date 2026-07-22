@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSetupStore } from '@/stores/setup'
+import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -20,6 +21,7 @@ async function submit() {
   if (!canSubmit.value || auth.authenticating) return
   try {
     await auth.login(email.value, password.value)
+    await useProjectPersistence().load()
     router.push('/')
   } catch {
     // auth.error is shown inline

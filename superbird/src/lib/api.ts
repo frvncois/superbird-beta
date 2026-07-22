@@ -27,6 +27,13 @@ export function apiPost<T>(path: string, body?: unknown): Promise<T> {
   })
 }
 
+export function apiPut<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(path, {
+    method: 'PUT',
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+}
+
 /** Boot call: install state + current session in one request. */
 export function fetchSessionState(): Promise<SessionState> {
   return apiGet<SessionState>('/api/session')

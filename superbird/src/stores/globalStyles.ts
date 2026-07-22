@@ -17,6 +17,12 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
   const globalStyles = ref<GlobalStyles>(demoGlobalStyles)
   const globalStylesPanelOpen = ref(false)
 
+  // Replace tokens + style-class registry from a loaded project document.
+  function hydrate(loaded: { globalStyles: GlobalStyles; styleClasses: Record<string, StyleClass> }) {
+    globalStyles.value = loaded.globalStyles
+    styleClasses.value = loaded.styleClasses
+  }
+
   function openPanel() {
     globalStylesPanelOpen.value = true
   }
@@ -129,6 +135,7 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
   return {
     // Design tokens
     globalStyles,
+    hydrate,
     globalStylesPanelOpen,
     globalCssVars,
     openPanel,

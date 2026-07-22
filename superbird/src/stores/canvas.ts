@@ -50,6 +50,14 @@ export const useCanvasStore = defineStore('canvas', () => {
     activeEntryId.value = null
   }
 
+  // Replace all pages from a loaded project document.
+  function hydratePages(loaded: Page[]) {
+    pages.value = loaded
+    activePageId.value = pages.value[0]?.id ?? ''
+    selectedNodeId.value = null
+    activeEntryId.value = null
+  }
+
   // --- Collection / entry context ---
   // When a collection template is open, the canvas edits that template (Page
   // with pageType 'collection'). An active entry supplies field content as
@@ -656,6 +664,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     activePage,
     pagesByType,
     setActivePage,
+    hydratePages,
     // Collection / entry context
     activeEntryId,
     activeEntry,

@@ -7,6 +7,11 @@ import type { SiteSettings } from '@/types/canvas'
 export const useSiteSettingsStore = defineStore('siteSettings', () => {
   const siteSettings = ref<SiteSettings>(createDefaultSiteSettings())
 
+  // Replace site settings from a loaded project document.
+  function hydrate(loaded: SiteSettings) {
+    siteSettings.value = loaded
+  }
+
   function updateSiteIdentity(updates: Partial<SiteSettings['identity']>) {
     Object.assign(siteSettings.value.identity, updates)
   }
@@ -41,6 +46,7 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
 
   return {
     siteSettings,
+    hydrate,
     updateSiteIdentity,
     updateSeo,
     updateCustomCode,

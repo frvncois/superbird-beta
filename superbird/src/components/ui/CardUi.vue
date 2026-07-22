@@ -17,7 +17,7 @@ const slots = useSlots()
 </script>
 
 <template>
-  <section class="flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-muted-bg">
+  <section class="flex flex-col overflow-hidden rounded-lg bg-muted-bg">
     <!-- Header -->
     <header v-if="title || icon || slots['header-action']" class="flex items-center gap-2.5 p-3">
       <span

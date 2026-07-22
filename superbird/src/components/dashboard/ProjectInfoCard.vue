@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useSetupStore } from '@/stores/setup'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import CardUi from '@/components/ui/CardUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
+const setup = useSetupStore()
 const siteSettings = useSiteSettingsStore()
 
-const name = computed(() => siteSettings.siteSettings.identity.title)
-// No domain field yet — derive a placeholder from the project name.
-const url = computed(
-  () => name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.superbird.site',
+// Project provisioned at setup is the source of truth; fall back to site settings.
+const name = computed(() => setup.project?.name ?? siteSettings.siteSettings.identity.title)
+const handle = computed(
+  () => setup.project?.handle ?? name.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
 )
+const url = computed(() => `${handle.value}.superbird.site`)
 const isPublished = ref(true)
 
 const copied = ref(false)

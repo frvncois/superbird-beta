@@ -38,7 +38,7 @@ function toggleTheme() {
       <SuperbirdIcon />
     </div>
     <div class="h-4 w-px bg-border" />
-    <HeaderMenu />
+    <HeaderMenu :mode="mode" />
   </div>
 
   <!-- Center: context bar (editor only) -->

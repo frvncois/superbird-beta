@@ -9,6 +9,10 @@ import PopoverUi from '@/components/ui/PopoverUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
+const props = defineProps<{
+  mode: 'dashboard' | 'editor'
+}>()
+
 const store = useCanvasStore()
 const collections = useCollectionsStore()
 const router = useRouter()
@@ -17,6 +21,10 @@ const isOpen = ref(false)
 
 function goDashboard() {
   router.push('/')
+  close()
+}
+function openEditor() {
+  router.push('/editor')
   close()
 }
 function openSettings() {
@@ -61,6 +69,10 @@ const context = computed(() => {
   const cfg = PAGE_TYPE_CONFIGS.find((c) => c.key === store.activePage.pageType)
   return { badge: cfg?.label ?? 'Page', color: badgeColorForType(store.activePage.pageType), name: store.activePage.name }
 })
+
+// On the dashboard the trigger just reads "Dashboard"; in the editor it
+// reflects the active page / collection / item.
+const triggerLabel = computed(() => (props.mode === 'dashboard' ? 'Dashboard' : context.value.name))
 
 // Pages tab: regular pages grouped by type (collection templates excluded — no config).
 const sections = computed(() =>
@@ -141,8 +153,8 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
       class="flex items-center gap-1.5 rounded-xl px-3 h-7 w-48 justify-between text-xs cursor-pointer transition-colors duration-150 hover:bg-secondary/10"
       @click="isOpen = !isOpen"
     >
-      <span class="font-medium">{{ context.name }}</span>
-      <IconUi name="chevron-down" size="size-3" :class="['text-secondary transition-transform duration-150', isOpen && 'rotate-180']" />
+      <span class="font-medium truncate">{{ triggerLabel }}</span>
+      <IconUi name="chevron-down" size="size-3" :class="['shrink-0 text-secondary transition-transform duration-150', isOpen && 'rotate-180']" />
     </button>
 
     <PopoverUi v-model:open="isOpen" align="left" panel-class="w-64 rounded-2xl p-1.5">
@@ -162,6 +174,8 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
 
       <div class="my-1 border-t border-foreground/8" />
 
+      <!-- Editing surfaces live in the editor only -->
+      <template v-if="mode === 'editor'">
       <!-- Pages (grouped by type) -->
       <template v-for="section in sections" :key="section.config.key">
         <div class="px-2.5 pt-1.5 pb-1">
@@ -272,6 +286,16 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
         @click="startAddingCollection"
       >
         <IconUi name="plus" size="size-3" /> New collection
+      </button>
+      </template>
+
+      <!-- Dashboard: no editing surfaces, just a way into the editor -->
+      <button
+        v-else
+        class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        @click="openEditor"
+      >
+        <IconUi name="rename" size="size-3.5" class="text-secondary" /> Open editor
       </button>
 
       <div class="my-1 border-t border-foreground/8" />

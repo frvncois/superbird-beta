@@ -176,7 +176,6 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
         <IconUi name="home" size="size-3.5" class="text-secondary" /> Dashboard
       </button>
       <button
-        v-if="mode === 'editor'"
         class="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
         @click="openMediaLibrary"
       >

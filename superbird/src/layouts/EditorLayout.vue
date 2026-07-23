@@ -48,8 +48,12 @@ const gridTemplateColumns = computed(() =>
   transition: grid-template-columns 0.2s ease;
 }
 
-.editor-header { grid-area: header; }
-.editor-sidebar-left { grid-area: left; }
-.editor-canvas { grid-area: canvas; }
-.editor-sidebar-right { grid-area: right; }
+/* App chrome must always stack above canvas content. The canvas is `isolate`d
+   into its own stacking context pinned at z-index:0, so a user element's z-index
+   (even a sticky site header) can never escape above the header/sidebars and
+   their dropdowns. */
+.editor-header { grid-area: header; position: relative; z-index: 40; }
+.editor-sidebar-left { grid-area: left; position: relative; z-index: 30; }
+.editor-sidebar-right { grid-area: right; position: relative; z-index: 30; }
+.editor-canvas { grid-area: canvas; position: relative; z-index: 0; isolation: isolate; }
 </style>

@@ -147,6 +147,19 @@ export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: E
 
   const attrs = buildAttributes(node, ctx, entry, repeated)
 
+  // Lang switcher: generate a link per available locale (?lang=<code>). Works
+  // without JS — the server reads ?lang and persists it in a cookie.
+  if (node.element === 'lang-switcher') {
+    const locales = ctx.locales ?? []
+    const inner = locales
+      .map((l) => {
+        const current = l.code === ctx.locale ? ' aria-current="true"' : ''
+        return `<a href="?lang=${encodeURIComponent(l.code)}"${current}>${escapeHtml(l.label)}</a>`
+      })
+      .join('')
+    return `<${tag}${attrs}>${inner}</${tag}>`
+  }
+
   // Void elements — no children/content.
   if (VOID_TAGS.has(tag)) return `<${tag}${attrs} />`
 

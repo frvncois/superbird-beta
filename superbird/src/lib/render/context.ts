@@ -22,4 +22,8 @@ export interface RenderContext {
   // Set on a single product page (products-collection entry) so the storefront
   // runtime knows which product an add-to-cart control refers to.
   productEntryId?: string
+  // The active locale + available locales, for the lang-switcher element and
+  // locale-aware content resolution on the published site.
+  locale?: string
+  locales?: { code: string; label: string }[]
 }

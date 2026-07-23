@@ -10,6 +10,7 @@ import {
   type RenderContext,
 } from '@/lib/render'
 import { currentCustomer } from '../lib/customerSession'
+import { getCookie, setCookie } from 'hono/cookie'
 import type { CanvasNode, Collection, Entry, GlobalStyles, Page, StyleClass } from '@/types/canvas'
 
 // Shared external asset paths (linked from every page).
@@ -31,11 +32,19 @@ function placeholder(message: string): string {
   )
 }
 
-function buildContext(entries: Entry[], collections: Collection[], activeEntry?: Entry): RenderContext {
+interface LocaleCtx {
+  locale: string
+  defaultLocale: string
+  locales: { code: string; label: string }[]
+}
+
+function buildContext(entries: Entry[], collections: Collection[], activeEntry?: Entry, loc?: LocaleCtx): RenderContext {
   return {
     content(node: CanvasNode, listEntry?: Entry) {
       const e = listEntry ?? activeEntry
       if (e && node.dynamicField) return e.values[node.dynamicField] ?? node.content ?? ''
+      // Non-default locale → prefer the node's translation for that locale.
+      if (loc && loc.locale !== loc.defaultLocale) return node.translations?.[loc.locale] ?? node.content ?? ''
       return node.content ?? ''
     },
     mediaUrl(id: string) {
@@ -53,6 +62,8 @@ function buildContext(entries: Entry[], collections: Collection[], activeEntry?:
       return col ? `/${col.basePath}/${entry.slug}` : '#'
     },
     currentEntry: activeEntry,
+    locale: loc?.locale,
+    locales: loc?.locales,
   }
 }
 
@@ -119,6 +130,22 @@ site.get('*', (c) => {
   const collections = (working?.content.collections ?? []) as Collection[]
   const published = ((working?.content.entries ?? []) as Entry[]).filter((e) => e.status === 'published')
 
+  // Locale: ?lang wins (and is remembered in a cookie), else the cookie, else
+  // the site default. Only codes the site actually has are accepted.
+  const localesConfig = (design as { locales?: { locales?: { code: string; label: string }[]; defaultLocale?: string } }).locales
+  const availableLocales = (localesConfig?.locales ?? []).map((l) => ({ code: l.code, label: l.label }))
+  const defaultLocale = localesConfig?.defaultLocale ?? availableLocales[0]?.code ?? 'en'
+  const isValidLocale = (code?: string) => !!code && availableLocales.some((l) => l.code === code)
+  let locale = defaultLocale
+  const langParam = c.req.query('lang')
+  if (isValidLocale(langParam)) {
+    locale = langParam!
+    setCookie(c, 'sb_lang', locale, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'Lax' })
+  } else if (isValidLocale(getCookie(c, 'sb_lang'))) {
+    locale = getCookie(c, 'sb_lang')!
+  }
+  const localeCtx = { locale, defaultLocale, locales: availableLocales }
+
   const render = (body: CanvasNode, ctx: RenderContext, head: Parameters<typeof renderDocument>[4]) =>
     renderDocument(body, styleClasses, globalStyles, ctx, head, {
       styleHref: STYLE_HREF,
@@ -136,7 +163,7 @@ site.get('*', (c) => {
   // Home
   if (segments.length === 0) {
     const home = pages.find((p) => p.slug === '/') ?? pages.find((p) => p.pageType === 'page')
-    if (home) return c.html(render(home.body, buildContext(published, collections), pageHead(home)))
+    if (home) return c.html(render(home.body, buildContext(published, collections, undefined, localeCtx), pageHead(home)))
   }
 
   // Static page (single segment) — incl. store system pages by slug.
@@ -146,7 +173,7 @@ site.get('*', (c) => {
       // Customer-auth gating for the store's system pages.
       if (page.systemKey === 'account' && !currentCustomer(c)) return c.redirect('/login')
       if (page.systemKey === 'login' && currentCustomer(c)) return c.redirect('/account')
-      const ctx = buildContext(published, collections)
+      const ctx = buildContext(published, collections, undefined, localeCtx)
       ctx.systemKey = page.systemKey
       return c.html(render(page.body, ctx, pageHead(page)))
     }
@@ -158,7 +185,7 @@ site.get('*', (c) => {
     const template = col ? pages.find((p) => p.id === col.templatePageId) : undefined
     const entry = col ? published.find((e) => e.collectionId === col.id && e.slug === segments[1]) : undefined
     if (col && template && entry) {
-      const ctx = buildContext(published, collections, entry)
+      const ctx = buildContext(published, collections, entry, localeCtx)
       // Products-collection single → expose the entry id for add-to-cart.
       if ((col as Collection & { isProducts?: boolean }).isProducts) ctx.productEntryId = entry.id
       return c.html(render(template.body, ctx, { title: entry.title }))
@@ -168,7 +195,7 @@ site.get('*', (c) => {
   // 404
   const notFound = pages.find((p) => p.pageType === 'system' && p.slug === '404')
   const html = notFound
-    ? render(notFound.body, buildContext(published, collections), { title: '404' })
+    ? render(notFound.body, buildContext(published, collections, undefined, localeCtx), { title: '404' })
     : placeholder('Page not found.')
   return c.html(html, 404)
 })

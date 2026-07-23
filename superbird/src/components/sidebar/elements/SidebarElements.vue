@@ -83,6 +83,7 @@ const categories: ElementCategory[] = [
     label: 'Dynamic',
     elements: [
       { type: 'collection-list', label: 'Collection', icon: 'collection' },
+      { type: 'div', label: 'Lang', icon: 'globe', prebuilt: 'lang-switcher' },
       { type: 'form', label: 'Login', icon: 'users', prebuilt: 'login' },
       { type: 'div', label: 'Cart', icon: 'cart', prebuilt: 'cart' },
     ],

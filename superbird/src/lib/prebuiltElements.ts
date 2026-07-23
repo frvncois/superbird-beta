@@ -35,7 +35,22 @@ function cartTree(): CanvasNode {
   })
 }
 
+function langSwitcherTree(): CanvasNode {
+  // Placeholder links for the editor; the published site regenerates them from
+  // the site's actual locales.
+  return createNode('div', {
+    tag: 'nav',
+    label: 'Language switcher',
+    element: 'lang-switcher',
+    children: [
+      createNode('link', { content: 'EN', link: { url: '?lang=en' } }),
+      createNode('link', { content: 'FR', link: { url: '?lang=fr' } }),
+    ],
+  })
+}
+
 export const PREBUILT_ELEMENTS: PrebuiltDef[] = [
+  { key: 'lang-switcher', label: 'Lang', icon: 'globe', build: langSwitcherTree },
   { key: 'login', label: 'Login', icon: 'users', build: loginTree },
   { key: 'cart', label: 'Cart', icon: 'cart', build: cartTree },
 ]

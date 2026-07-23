@@ -28,7 +28,7 @@ const sizeClasses: Record<InputSize, string> = {
     :type="type"
     :placeholder="placeholder"
     :class="[
-      'w-full min-w-0 bg-input text-foreground placeholder:text-foreground/40 border border-foreground focus:border-foreground outline-2 outline-transparent focus:outline-secondary/10',
+      'w-full min-w-0 bg-input text-foreground placeholder:text-foreground/40 border border-input-border focus:border-input-border-focus outline-2 outline-transparent focus:outline-secondary/10',
       sizeClasses[props.size],
     ]"
   />

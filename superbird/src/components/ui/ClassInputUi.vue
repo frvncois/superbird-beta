@@ -158,7 +158,7 @@ function selectState(state: StyleState) {
     <div
       :class="[
         'flex flex-wrap items-center gap-1 min-h-8 px-1 py-0.5 rounded-xl border cursor-text transition-colors duration-150',
-        isFocused ? 'border-foreground/40 outline-3 outline-secondary/10' : 'border-foreground/15 hover:border-foreground/25',
+        isFocused ? 'border-input-border-focus outline-3 outline-secondary/10' : 'border-input-border hover:border-input-border-focus',
       ]"
       @click="focusInput"
     >

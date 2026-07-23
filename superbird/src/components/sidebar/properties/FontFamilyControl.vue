@@ -63,7 +63,7 @@ function manage() {
       type="button"
       :class="[
         'flex h-8 w-full min-w-0 items-center gap-1.5 rounded-lg bg-input border px-2.5 text-xs outline-3 outline-transparent transition-colors duration-150',
-        open ? 'border-foreground/40 outline-secondary/10' : 'border-foreground/15 hover:border-foreground/25 cursor-pointer',
+        open ? 'border-input-border-focus outline-secondary/10' : 'border-input-border hover:border-input-border-focus cursor-pointer',
       ]"
       @click="open = !open"
     >

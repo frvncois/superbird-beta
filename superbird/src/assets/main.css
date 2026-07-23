@@ -19,6 +19,9 @@
   --color-primary: #6366f1;
   --color-primary-hover: #818cf8;
   --color-input: #ffffff;
+  /* Input borders — tuned per mode (not derived from foreground opacity). */
+  --color-input-border: #d4d4d8;
+  --color-input-border-focus: #9ca3af;
 
   /* Semantic color pairs */
   --color-green-bg: #dcfce7;
@@ -157,6 +160,8 @@
   --color-secondary: #6a6a6e;
   --color-icon-bg: #1a1a1a;
   --color-input: #131313;
+  --color-input-border: #3a3a3a;
+  --color-input-border-focus: #5c5c5c;
 
   /* Semantic color pairs */
   --color-green-bg: #14271a;

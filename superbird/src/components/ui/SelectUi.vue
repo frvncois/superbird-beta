@@ -111,8 +111,8 @@ watch(highlighted, scrollToHighlighted)
       aria-haspopup="listbox"
       :class="[
         'flex h-8 w-full min-w-0 items-center gap-1.5 rounded-lg bg-input border px-2.5 text-xs outline-3 outline-transparent transition-colors duration-150',
-        open ? 'border-foreground/40 outline-secondary/10' : 'border-foreground/15',
-        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-foreground/25',
+        open ? 'border-input-border-focus outline-secondary/10' : 'border-input-border',
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-input-border-focus',
       ]"
       @click="toggle"
       @keydown="onKeydown"

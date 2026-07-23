@@ -29,14 +29,14 @@ function pickCustom(e: Event) {
 </script>
 
 <template>
-  <div class="relative flex h-8 min-w-0 items-center rounded-xl border border-foreground/15 focus-within:border-foreground/40 outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
+  <div class="relative flex h-8 min-w-0 items-center rounded-xl border border-input-border focus-within:border-input-border-focus outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
     <!-- Color swatch button -->
     <button
       class="flex size-7 shrink-0 items-center justify-center cursor-pointer"
       @click.stop="swatchOpen = !swatchOpen"
     >
       <span
-        class="size-4 rounded border border-foreground/15"
+        class="size-4 rounded border border-input-border"
         :style="{ backgroundColor: model || 'transparent' }"
       />
     </button>
@@ -71,7 +71,7 @@ function pickCustom(e: Event) {
         <input
           type="color"
           :value="model.startsWith('var(') ? '#000000' : (model || '#000000')"
-          class="size-7 shrink-0 cursor-pointer rounded-lg border border-foreground/15 bg-transparent p-0.5"
+          class="size-7 shrink-0 cursor-pointer rounded-lg border border-input-border bg-transparent p-0.5"
           @input="pickCustom"
         />
         <span class="text-[10px] text-secondary">Custom color</span>

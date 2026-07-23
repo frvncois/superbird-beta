@@ -16,6 +16,9 @@ const busy = ref(false)
 const label = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
 
+// { phase, loaded, total } while an export/import is running.
+const transfer = ref<{ phase: string; loaded: number; total: number } | null>(null)
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -77,11 +80,15 @@ async function onDelete(b: BackupMeta) {
 async function onExport() {
   busy.value = true
   error.value = ''
+  transfer.value = { phase: 'Exporting', loaded: 0, total: 0 }
   try {
-    await downloadExport()
+    await downloadExport((loaded, total) => {
+      transfer.value = { phase: 'Exporting', loaded, total }
+    })
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Export failed.'
   } finally {
+    transfer.value = null
     busy.value = false
   }
 }
@@ -93,11 +100,16 @@ async function onImportFile(e: Event) {
   if (!confirm(`Import "${file.name}"?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first. The editor will reload.`)) return
   busy.value = true
   error.value = ''
+  transfer.value = { phase: 'Uploading', loaded: 0, total: file.size }
   try {
-    await importBackup(file)
+    await importBackup(file, (loaded, total) => {
+      // Once the upload finishes the server is applying — show that phase.
+      transfer.value = loaded >= total ? { phase: 'Applying', loaded, total } : { phase: 'Uploading', loaded, total }
+    })
     location.reload()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Import failed.'
+    transfer.value = null
     busy.value = false
   }
 }
@@ -142,6 +154,25 @@ async function onImportFile(e: Event) {
           <IconUi name="upload" size="size-3.5" class="mr-1.5" /> Import site
         </ButtonUi>
       </div>
+
+      <!-- Transfer progress -->
+      <div v-if="transfer" class="px-4 pb-3">
+        <div class="mb-1 flex items-center justify-between text-xs text-secondary">
+          <span>{{ transfer.phase }}…</span>
+          <span class="font-mono">
+            {{ fmtSize(transfer.loaded) }}<template v-if="transfer.total"> / {{ fmtSize(transfer.total) }}</template>
+            <template v-if="transfer.total && transfer.phase !== 'Applying'"> · {{ Math.round((transfer.loaded / transfer.total) * 100) }}%</template>
+          </span>
+        </div>
+        <div class="h-1.5 overflow-hidden rounded-full bg-secondary/15">
+          <div
+            class="h-full rounded-full bg-primary transition-all duration-150"
+            :class="(!transfer.total || transfer.phase === 'Applying') && 'animate-pulse'"
+            :style="{ width: transfer.total && transfer.phase !== 'Applying' ? `${Math.round((transfer.loaded / transfer.total) * 100)}%` : '100%' }"
+          />
+        </div>
+      </div>
+
       <p class="px-4 pb-3 text-xs leading-relaxed text-secondary">
         The export is a single <span class="font-mono text-foreground">.sbbackup</span> file, downloadable only by you.
         Importing <span class="font-medium text-foreground">replaces</span> the current project — a safety backup is taken first.

@@ -1,7 +1,7 @@
 import type { CanvasNode, Entry } from '@/types/canvas'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import { renderMarkdown } from '@/lib/markdown'
-import { escapeHtml, escapeAttr, isValidAttrName } from './escape'
+import { escapeHtml, escapeAttr, isSafeAttrName, safeUrl } from './escape'
 import type { RenderContext } from './context'
 
 // Node tree → faithful HTML. Real elements (img/a/form controls), resolved
@@ -56,11 +56,11 @@ function buildAttributes(
     out += attr('alt', node.accessibility?.altText ?? '')
   }
   if (node.type === 'video') {
-    out += attr('src', node.props.src)
+    out += attr('src', safeUrl(node.props.src))
     if (node.props.controls !== 'false') out += ' controls'
   }
   if (node.type === 'embed') {
-    out += attr('src', node.props.src)
+    out += attr('src', safeUrl(node.props.src))
   }
 
   // Form controls
@@ -83,7 +83,7 @@ function buildAttributes(
   // key can't inject extra attributes/handlers into the tag.
   if (node.customAttributes) {
     for (const [k, v] of Object.entries(node.customAttributes)) {
-      if (isValidAttrName(k)) out += attr(k, v)
+      if (isSafeAttrName(k)) out += attr(k, v)
     }
   }
   return out
@@ -115,7 +115,8 @@ function linkHref(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined
     const e = entry ?? ctx.currentEntry
     return e ? ctx.entryUrl(e) : undefined
   }
-  return node.link?.url
+  // Author-set URL — allow only safe schemes (no javascript:/data:/…).
+  return safeUrl(node.link?.url)
 }
 
 export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry, repeated = false): string {

@@ -64,7 +64,8 @@ export function renderDocument(
   // Tailwind unified).
   const styleTag = assets.styleHref
     ? `<link rel="stylesheet" href="${escapeAttr(assets.styleHref)}">`
-    : `<style>${compilePageCss(body, styleClasses, globalStyles)}</style>`
+    : // Escape `<` so a style value can't break out of the inline <style> (Preview).
+      `<style>${compilePageCss(body, styleClasses, globalStyles).replace(/</g, '\\3c ')}</style>`
 
   // Script: only when the page actually uses interactions. External <script src>
   // when given; otherwise inline the data + runtime. `<` in the embedded JSON is

@@ -5,6 +5,7 @@ import {
   compileSiteCss,
   collectInteractions,
   interactionsScript,
+  formsRuntimeScript,
   type RenderContext,
 } from '@/lib/render'
 import type { CanvasNode, Collection, Entry, GlobalStyles, Page, StyleClass } from '@/types/canvas'
@@ -88,7 +89,7 @@ site.get('/script.js', (c) => {
   if (!design) return c.body('', 404)
   const map: Record<string, unknown> = {}
   for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
-  return new Response(interactionsScript(map), {
+  return new Response(interactionsScript(map) + formsRuntimeScript(), {
     headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
   })
 })

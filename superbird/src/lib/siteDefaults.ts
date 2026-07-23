@@ -19,12 +19,12 @@ export function createDefaultSiteSettings(): SiteSettings {
       customCss: '',
     },
     redirects: [],
-    integrations: {},
     imageCompression: {
       enabled: true,
       maxWidth: 2000,
       maxHeight: 2000,
       quality: 90,
     },
+    forms: {},
   }
 }

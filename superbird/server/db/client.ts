@@ -81,6 +81,30 @@ export function ensureSchema(): void {
       parent_id TEXT,
       private INTEGER NOT NULL DEFAULT 0
     );
+    CREATE TABLE IF NOT EXISTS submissions (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id),
+      form_id TEXT NOT NULL,
+      form_name TEXT NOT NULL,
+      data TEXT NOT NULL,
+      page_url TEXT,
+      ip TEXT,
+      seen INTEGER NOT NULL DEFAULT 0,
+      email_status TEXT NOT NULL DEFAULT 'skipped',
+      emailed_to TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS smtp_config (
+      project_id TEXT PRIMARY KEY REFERENCES projects(id),
+      host TEXT NOT NULL DEFAULT '',
+      port INTEGER NOT NULL DEFAULT 587,
+      secure INTEGER NOT NULL DEFAULT 0,
+      username TEXT NOT NULL DEFAULT '',
+      password TEXT NOT NULL DEFAULT '',
+      from_email TEXT NOT NULL DEFAULT '',
+      from_name TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
   `)
 
   // Migrate older DBs that predate later columns.

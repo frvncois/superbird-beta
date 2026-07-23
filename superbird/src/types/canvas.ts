@@ -333,9 +333,14 @@ export interface Redirect {
   type: '301' | '302'
 }
 
-export interface SiteIntegrations {
-  formHandler?: string
-  formEmail?: string
+// Per-form delivery config, keyed by the form node's id in SiteSettings.forms.
+// The server reads this at submit time (the browser can't override it).
+export interface FormConfig {
+  name?: string
+  saveToDb: boolean
+  notificationEmail?: string
+  webhookUrl?: string
+  successMessage?: string
 }
 
 export interface ImageCompression {
@@ -350,8 +355,8 @@ export interface SiteSettings {
   seo: SeoDefaults
   customCode: CustomCode
   redirects: Redirect[]
-  integrations: SiteIntegrations
   imageCompression: ImageCompression
+  forms: Record<string, FormConfig>
 }
 
 // --- Global styles ---

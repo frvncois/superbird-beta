@@ -64,6 +64,7 @@ function buildAttributes(
   }
 
   // Form controls
+  if (node.type === 'form') out += attr('data-sb-form', node.id)
   if (node.type === 'input') out += attr('type', node.props.type ?? 'text')
   if (node.type === 'checkbox') out += ' type="checkbox"'
   if (node.type === 'radio') out += ' type="radio"'
@@ -154,5 +155,12 @@ export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: E
     inner = escapeHtml(ctx.content(node, entry))
   }
 
+  // Honeypot: an off-screen field the forms runtime + server use to drop bots.
+  if (node.type === 'form') inner += FORM_HONEYPOT
+
   return `<${tag}${attrs}>${inner}</${tag}>`
 }
+
+const FORM_HONEYPOT =
+  '<input type="text" name="_sb_hp" tabindex="-1" autocomplete="off" aria-hidden="true"' +
+  ' style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />'

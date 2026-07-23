@@ -64,6 +64,39 @@ export const backups = sqliteTable('backups', {
   createdAt: text('created_at').notNull(),
 })
 
+// SMTP credentials for outgoing mail. One row per project. Kept out of the
+// exportable document/backup — a secret that never leaves the server.
+export const smtpConfig = sqliteTable('smtp_config', {
+  projectId: text('project_id')
+    .primaryKey()
+    .references(() => projects.id),
+  host: text('host').notNull().default(''),
+  port: integer('port').notNull().default(587),
+  secure: integer('secure').notNull().default(0), // 1 = TLS on connect (port 465)
+  username: text('username').notNull().default(''),
+  password: text('password').notNull().default(''),
+  fromEmail: text('from_email').notNull().default(''),
+  fromName: text('from_name').notNull().default(''),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// Form submissions from the published site. Admin-only (never served publicly).
+export const submissions = sqliteTable('submissions', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  formId: text('form_id').notNull(), // the form node's id
+  formName: text('form_name').notNull(), // snapshot of the form name at submit time
+  data: text('data').notNull(), // JSON: field name -> value
+  pageUrl: text('page_url'), // where it was submitted from
+  ip: text('ip'),
+  seen: integer('seen').notNull().default(0), // 1 once an admin opened it
+  emailStatus: text('email_status').notNull().default('skipped'), // skipped | sent | failed
+  emailedTo: text('emailed_to'),
+  createdAt: text('created_at').notNull(),
+})
+
 export const mediaFolders = sqliteTable('media_folders', {
   id: text('id').primaryKey(),
   projectId: text('project_id')

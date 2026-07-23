@@ -23,6 +23,17 @@ Posture and hardening for a self-hosted, internet-facing Superbird instance.
   nosniff` + `Content-Security-Policy: sandbox`, and HTML/XML types are forced to
   `application/octet-stream; attachment` -- a malicious SVG/HTML upload can't run
   script on the admin origin.
+- **Form submissions**: `POST /api/public/forms` is the only public write endpoint.
+  It's rate-limited (20/min/IP) + honeypot-guarded, validates the form exists in
+  the document, and caps field count/size. What happens to a submission (save to
+  DB / email / webhook) is decided **server-side** from the stored form config --
+  the browser payload can't force it. Stored submissions are **admin-only**
+  (`/api/forms/*` is `requireAuth`); they're never served publicly or in the SSR
+  site. Export (`/api/forms/submissions/export`) is auth-guarded + rate-limited.
+- **SMTP credentials** live in a dedicated server table (`smtp_config`), never in
+  the exportable document/backup and never returned to the client (the API exposes
+  only `hasPassword`; the password is write-only). Backups include submissions but
+  **not** SMTP config.
 - **Private media**: a media item flagged `private` (or living in a `private`
   folder -- the flag cascades down the folder tree) is served by `/media/:id`
   only to an authenticated admin; anonymous callers get `404` (existence hidden,

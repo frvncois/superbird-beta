@@ -10,6 +10,8 @@ import fontsRoutes from './routes/fonts'
 import usersRoutes from './routes/users'
 import mcpRoutes from './routes/mcp'
 import backupRoutes from './routes/backup'
+import publicFormsRoutes from './routes/publicForms'
+import formsRoutes from './routes/forms'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -50,6 +52,9 @@ app.use('*', (c, next) => (c.req.path === '/api/import' ? next() : globalBodyLim
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
+// Public form submissions (no session — visitors post here). Registered before
+// the session-guarded routers so their `/api/*` guards don't intercept it.
+app.route('/api', publicFormsRoutes)
 // MCP bridge (no session — a local developer bridge). Registered before the
 // session-guarded routers so their `/api/*` guards don't intercept it.
 app.route('/api', mcpRoutes)
@@ -58,6 +63,7 @@ app.route('/api', mediaRoutes)
 app.route('/api', fontsRoutes)
 app.route('/api', usersRoutes)
 app.route('/api', backupRoutes)
+app.route('/api', formsRoutes)
 
 // Document types that would execute as HTML if navigated to — force download.
 const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])

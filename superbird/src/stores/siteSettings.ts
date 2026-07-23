@@ -2,7 +2,12 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { createDefaultSiteSettings } from '@/lib/siteDefaults'
 import { generateRedirectId } from '@/lib/ids'
-import type { SiteSettings } from '@/types/canvas'
+import type { FormConfig, SiteSettings } from '@/types/canvas'
+
+// A form's config the first time it's touched — save to DB on by default.
+function defaultFormConfig(): FormConfig {
+  return { saveToDb: true }
+}
 
 export const useSiteSettingsStore = defineStore('siteSettings', () => {
   const siteSettings = ref<SiteSettings>(createDefaultSiteSettings())
@@ -37,8 +42,9 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     siteSettings.value.redirects = siteSettings.value.redirects.filter((r) => r.id !== id)
   }
 
-  function updateIntegrations(updates: Partial<SiteSettings['integrations']>) {
-    Object.assign(siteSettings.value.integrations, updates)
+  function updateFormConfig(formId: string, updates: Partial<FormConfig>) {
+    const existing = siteSettings.value.forms[formId] ?? defaultFormConfig()
+    siteSettings.value.forms[formId] = { ...existing, ...updates }
   }
 
   return {
@@ -50,6 +56,6 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     updateCustomCode,
     addRedirect,
     removeRedirect,
-    updateIntegrations,
+    updateFormConfig,
   }
 })

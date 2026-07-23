@@ -2,7 +2,6 @@
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
-import InputUi from '@/components/ui/InputUi.vue'
 import TextareaUi from '@/components/ui/TextareaUi.vue'
 
 const site = useSiteSettingsStore()
@@ -49,21 +48,5 @@ const site = useSiteSettingsStore()
       </SettingsRow>
     </SettingsSection>
 
-    <SettingsSection title="Forms" description="Where form submissions are sent.">
-      <SettingsRow label="Handler" description="Webhook URL that receives submissions.">
-        <InputUi
-          :model-value="site.siteSettings.integrations.formHandler ?? ''"
-          placeholder="https://…"
-          @update:model-value="site.updateIntegrations({ formHandler: $event || undefined })"
-        />
-      </SettingsRow>
-      <SettingsRow label="Notification email">
-        <InputUi
-          :model-value="site.siteSettings.integrations.formEmail ?? ''"
-          placeholder="admin@site.com"
-          @update:model-value="site.updateIntegrations({ formEmail: $event || undefined })"
-        />
-      </SettingsRow>
-    </SettingsSection>
   </div>
 </template>

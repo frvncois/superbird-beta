@@ -2,7 +2,7 @@ import { resolve, basename } from 'node:path'
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { eq, desc } from 'drizzle-orm'
 import { db } from '../db/client'
-import { backups, media, mediaFolders } from '../db/schema'
+import { backups, media, mediaFolders, submissions } from '../db/schema'
 import { getWorkingDocument, setWorkingDocument } from './project'
 import { MEDIA_DIR } from './media'
 import { FONTS_DIR } from './fonts'
@@ -116,6 +116,7 @@ export function buildExport(projectId: string): string {
     mediaEntries.push({ row, data: readFileSync(path).toString('base64') })
   }
   const folders = db.select().from(mediaFolders).where(eq(mediaFolders.projectId, projectId)).all()
+  const submissionRows = db.select().from(submissions).where(eq(submissions.projectId, projectId)).all()
   const fonts: FontEntry[] = []
   for (const file of referencedFontFiles(doc)) {
     const path = resolve(FONTS_DIR, basename(file))
@@ -128,6 +129,7 @@ export function buildExport(projectId: string): string {
     document: doc,
     media: mediaEntries,
     mediaFolders: folders,
+    submissions: submissionRows,
     fonts,
   })
 }
@@ -142,6 +144,7 @@ export function applyImport(projectId: string, json: string): void {
     document?: ProjectDocument
     media?: MediaEntry[]
     mediaFolders?: Array<typeof mediaFolders.$inferSelect>
+    submissions?: Array<typeof submissions.$inferSelect>
     fonts?: FontEntry[]
   }
   try {
@@ -165,6 +168,7 @@ export function applyImport(projectId: string, json: string): void {
   }
   db.delete(media).where(eq(media.projectId, projectId)).run()
   db.delete(mediaFolders).where(eq(mediaFolders.projectId, projectId)).run()
+  db.delete(submissions).where(eq(submissions.projectId, projectId)).run()
 
   for (const m of bundle.media ?? []) {
     const filename = basename(m.row.filename) // block path traversal from a crafted bundle
@@ -174,6 +178,9 @@ export function applyImport(projectId: string, json: string): void {
   }
   for (const f of bundle.mediaFolders ?? []) {
     db.insert(mediaFolders).values({ ...f, projectId }).run()
+  }
+  for (const s of bundle.submissions ?? []) {
+    db.insert(submissions).values({ ...s, projectId }).run()
   }
   for (const ft of bundle.fonts ?? []) {
     const file = basename(ft.file)

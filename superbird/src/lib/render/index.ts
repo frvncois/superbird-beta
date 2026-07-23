@@ -3,6 +3,7 @@
 export { renderNodeToHtml } from './html'
 export { compilePageCss, compileSiteCss } from './css'
 export { interactionsScript } from './interactionsRuntime'
+export { formsRuntimeScript } from './formsRuntime'
 export type { RenderContext } from './context'
 
 import type { CanvasNode, GlobalStyles, StyleClass } from '@/types/canvas'

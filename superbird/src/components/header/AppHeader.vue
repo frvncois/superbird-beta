@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
+import { useDialog } from '@/composables/useDialog'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -16,6 +17,7 @@ defineProps<{
 
 const router = useRouter()
 const canvasStore = useCanvasStore()
+const dialog = useDialog()
 
 const editorModeOptions = [
   { value: 'design', label: 'Design' },
@@ -32,8 +34,12 @@ const publishing = ref(false)
 async function publish() {
   if (publishing.value) return
   publishing.value = true
+  const p = dialog.process({ title: 'Publishing site', message: 'Saving and building your live site…' })
   try {
     await useProjectPersistence().publish()
+    p.succeed({ title: 'Site published', message: 'Your changes are now live.', link: `${window.location.origin}/`, closeLabel: 'Done' })
+  } catch (e) {
+    p.fail(e instanceof Error ? e.message : 'Publish failed. Please try again.')
   } finally {
     publishing.value = false
   }

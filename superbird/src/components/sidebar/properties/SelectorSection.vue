@@ -2,11 +2,13 @@
 import { ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useDialog } from '@/composables/useDialog'
 import ClassInputUi from '@/components/ui/ClassInputUi.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
+const dialog = useDialog()
 const { node } = useNodeStyles()
 
 // After Duplicate, ask the input to open the new class in inline-rename mode.
@@ -29,8 +31,14 @@ function selectClass(name: string) {
 }
 
 // Delete entirely — from the registry and every element that uses it.
-function deleteClass(name: string) {
-  store.deleteStyleClass(name)
+async function deleteClass(name: string) {
+  const ok = await dialog.confirm({
+    title: 'Delete class',
+    message: `Delete “.${name}” from every element that uses it? This can’t be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (ok) store.deleteStyleClass(name)
 }
 
 // Duplicate into a new class (styles copied), swapped in on this element, then

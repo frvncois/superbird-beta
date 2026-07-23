@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useLocalesStore } from '@/stores/locales'
+import { useDialog } from '@/composables/useDialog'
 import { DEFAULT_LOCALES } from '@/constants/canvas'
 import type { Locale } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
 const store = useLocalesStore()
+const dialog = useDialog()
 const isOpen = ref(false)
 const showAdd = ref(false)
 
@@ -30,8 +32,15 @@ function addLocale(locale: Locale) {
   isOpen.value = false
 }
 
-function removeLocale(code: string) {
-  store.removeLocale(code)
+async function removeLocale(code: string) {
+  const locale = store.locales.find((l) => l.code === code)
+  const ok = await dialog.confirm({
+    title: 'Remove language',
+    message: `Remove ${locale?.label ?? code}? Translated content for this language will be lost. This can’t be undone.`,
+    confirmLabel: 'Remove',
+    danger: true,
+  })
+  if (ok) store.removeLocale(code)
 }
 
 watch(isOpen, (open) => {

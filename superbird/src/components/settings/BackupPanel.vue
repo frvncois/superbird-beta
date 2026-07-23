@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { listBackups, createBackup, restoreBackup, deleteBackup, downloadExport, importBackup } from '@/lib/backupApi'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import type { BackupMeta } from '@shared/types'
 import SettingsSection from './SettingsSection.vue'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -9,15 +11,15 @@ import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 
+const dialog = useDialog()
+const toast = useToast()
+
 const backups = ref<BackupMeta[]>([])
 const loading = ref(true)
 const error = ref('')
 const busy = ref(false)
 const label = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
-
-// { phase, loaded, total } while an export/import is running.
-const transfer = ref<{ phase: string; loaded: number; total: number } | null>(null)
 
 async function load() {
   loading.value = true
@@ -48,47 +50,59 @@ async function onCreate() {
     await createBackup(label.value || 'Manual backup')
     label.value = ''
     await load()
+    toast.success('Backup created')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Could not create backup.'
+    toast.error(e instanceof Error ? e.message : 'Could not create backup.')
   } finally {
     busy.value = false
   }
 }
 
 async function onRestore(b: BackupMeta) {
-  if (!confirm(`Restore "${b.label}" from ${fmtDate(b.createdAt)}?\n\nThis replaces the current project. A safety backup is taken first. The editor will reload.`)) return
-  busy.value = true
+  const ok = await dialog.confirm({
+    title: 'Restore backup',
+    message: `Restore "${b.label}" from ${fmtDate(b.createdAt)}?\n\nThis replaces the current project. A safety backup is taken first, then the editor reloads.`,
+    confirmLabel: 'Restore',
+    danger: true,
+  })
+  if (!ok) return
+  const p = dialog.process({ title: 'Restoring backup', message: 'Replacing the current project…' })
   try {
     await restoreBackup(b.id)
+    p.succeed({ title: 'Backup restored', message: 'Reloading the editor…' })
     location.reload()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Restore failed.'
-    busy.value = false
+    p.fail(e instanceof Error ? e.message : 'Restore failed.')
   }
 }
 
 async function onDelete(b: BackupMeta) {
-  if (!confirm(`Delete backup "${b.label}"?`)) return
+  const ok = await dialog.confirm({
+    title: 'Delete backup',
+    message: `Delete backup "${b.label}"? This can't be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (!ok) return
   try {
     await deleteBackup(b.id)
     await load()
+    toast.success('Backup deleted')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Delete failed.'
+    toast.error(e instanceof Error ? e.message : 'Delete failed.')
   }
 }
 
 async function onExport() {
   busy.value = true
   error.value = ''
-  transfer.value = { phase: 'Exporting', loaded: 0, total: 0 }
+  const p = dialog.process({ title: 'Exporting site', message: 'Preparing your download…', progress: { loaded: 0, total: 0 } })
   try {
-    await downloadExport((loaded, total) => {
-      transfer.value = { phase: 'Exporting', loaded, total }
-    })
+    await downloadExport((loaded, total) => p.progress(loaded, total))
+    p.succeed({ title: 'Export ready', message: 'Your .sbbackup download has started.' })
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Export failed.'
+    p.fail(e instanceof Error ? e.message : 'Export failed.')
   } finally {
-    transfer.value = null
     busy.value = false
   }
 }
@@ -97,19 +111,26 @@ async function onImportFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (importInput.value) importInput.value.value = ''
   if (!file) return
-  if (!confirm(`Import "${file.name}"?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first. The editor will reload.`)) return
+  const ok = await dialog.confirm({
+    title: 'Import site',
+    message: `Import "${file.name}"?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first, then the editor reloads.`,
+    confirmLabel: 'Import',
+    danger: true,
+  })
+  if (!ok) return
   busy.value = true
   error.value = ''
-  transfer.value = { phase: 'Uploading', loaded: 0, total: file.size }
+  const p = dialog.process({ title: 'Importing site', message: 'Uploading…', progress: { loaded: 0, total: file.size } })
   try {
     await importBackup(file, (loaded, total) => {
-      // Once the upload finishes the server is applying — show that phase.
-      transfer.value = loaded >= total ? { phase: 'Applying', loaded, total } : { phase: 'Uploading', loaded, total }
+      // Once the upload finishes the server is applying — switch the message.
+      p.progress(loaded, total)
+      if (loaded >= total) p.update('Applying import on the server…')
     })
+    p.succeed({ title: 'Import complete', message: 'Reloading the editor…' })
     location.reload()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Import failed.'
-    transfer.value = null
+    p.fail(e instanceof Error ? e.message : 'Import failed.')
     busy.value = false
   }
 }
@@ -153,24 +174,6 @@ async function onImportFile(e: Event) {
         <ButtonUi variant="outline" :disabled="busy" @click="importInput?.click()">
           <IconUi name="upload" size="size-3.5" class="mr-1.5" /> Import site
         </ButtonUi>
-      </div>
-
-      <!-- Transfer progress -->
-      <div v-if="transfer" class="px-4 pb-3">
-        <div class="mb-1 flex items-center justify-between text-xs text-secondary">
-          <span>{{ transfer.phase }}…</span>
-          <span class="font-mono">
-            {{ fmtSize(transfer.loaded) }}<template v-if="transfer.total"> / {{ fmtSize(transfer.total) }}</template>
-            <template v-if="transfer.total && transfer.phase !== 'Applying'"> · {{ Math.round((transfer.loaded / transfer.total) * 100) }}%</template>
-          </span>
-        </div>
-        <div class="h-1.5 overflow-hidden rounded-full bg-secondary/15">
-          <div
-            class="h-full rounded-full bg-primary transition-all duration-150"
-            :class="(!transfer.total || transfer.phase === 'Applying') && 'animate-pulse'"
-            :style="{ width: transfer.total && transfer.phase !== 'Applying' ? `${Math.round((transfer.loaded / transfer.total) * 100)}%` : '100%' }"
-          />
-        </div>
       </div>
 
       <p class="px-4 pb-3 text-xs leading-relaxed text-secondary">

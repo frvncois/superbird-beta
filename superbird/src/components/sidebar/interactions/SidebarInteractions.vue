@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { useToast } from '@/composables/useToast'
 import { TRIGGER_TYPES } from '@/constants/canvas'
 import type { TriggerType } from '@/types/canvas'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
@@ -10,6 +11,7 @@ import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import InteractionDetail from './InteractionDetail.vue'
 
 const store = useCanvasStore()
+const toast = useToast()
 const node = computed(() => store.selectedNode)
 const interactions = computed(() => node.value?.interactions ?? [])
 
@@ -26,7 +28,13 @@ function openIx(id: string) {
   store.setOpenInteraction(id)
 }
 function removeInteraction(id: string) {
-  if (node.value) store.removeInteraction(node.value.id, id)
+  if (!node.value) return
+  const nodeId = node.value.id
+  const removed = store.removeInteraction(nodeId, id)
+  if (!removed) return
+  toast.success('Interaction removed', {
+    action: { label: 'Undo', handler: () => store.restoreInteraction(nodeId, removed.interaction, removed.index) },
+  })
 }
 
 // Add interaction → drill straight into it.

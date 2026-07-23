@@ -33,6 +33,8 @@ Everything in `components/ui/`. All v-model via `defineModel()`. None import sto
 | `PopoverUi` | `open` (`v-model:open`) | `align` `left`\|`right`\|`full`, `panelClass`='p-1' | anchored — put in a `relative` parent; owns backdrop + slide-fade transition. Replaces all hand-rolled dropdowns |
 | `ModalUi` | `open` (`v-model:open`) | `position` `center`\|`right`, `panelClass` | teleports to body; blur backdrop; `right`=full-height drawer. Content via default slot |
 | `ContextMenuUi` | — | `items: ContextMenuItem[]`, `x`, `y`; emits `close` | teleported right-click menu; build items via `useNodeContextMenu` |
+| `ConfirmDialogUi` | — (state-driven) | none | mounted **once** in `App.vue`. Renders the single active dialog from `useDialog()` — confirm / prompt / process (spinner + progress + result). Never used directly; drive it via `useDialog()` |
+| `ToastHost` | — (queue-driven) | none | mounted **once** in `App.vue`. Bottom-right transient notifications from `useToast()`; supports an action button (e.g. Undo). Never used directly |
 
 ## Layout & feedback
 

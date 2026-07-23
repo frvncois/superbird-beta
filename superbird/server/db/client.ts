@@ -71,20 +71,28 @@ export function ensureSchema(): void {
       folder_id TEXT,
       alt TEXT,
       tags TEXT NOT NULL DEFAULT '[]',
+      private INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS media_folders (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),
       name TEXT NOT NULL,
-      parent_id TEXT
+      parent_id TEXT,
+      private INTEGER NOT NULL DEFAULT 0
     );
   `)
 
-  // Migrate older DBs that predate the publish columns.
-  for (const col of ['published_design TEXT', 'published_at TEXT']) {
+  // Migrate older DBs that predate later columns.
+  const migrations: Array<[string, string]> = [
+    ['project_state', 'published_design TEXT'],
+    ['project_state', 'published_at TEXT'],
+    ['media', 'private INTEGER NOT NULL DEFAULT 0'],
+    ['media_folders', 'private INTEGER NOT NULL DEFAULT 0'],
+  ]
+  for (const [table, col] of migrations) {
     try {
-      sqlite.exec(`ALTER TABLE project_state ADD COLUMN ${col}`)
+      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${col}`)
     } catch {
       // column already exists — ignore
     }

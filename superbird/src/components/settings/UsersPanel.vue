@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import { listUsers, createUser, deleteUser } from '@/lib/users'
 import type { User } from '@shared/types'
 import SettingsSection from './SettingsSection.vue'
@@ -11,6 +13,8 @@ import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 
 const auth = useAuthStore()
+const dialog = useDialog()
+const toast = useToast()
 
 const users = ref<User[]>([])
 const loading = ref(true)
@@ -44,11 +48,13 @@ async function add() {
   }
   adding.value = true
   try {
-    await createUser({ name: name.value.trim(), email: email.value.trim(), password: password.value })
+    const added = name.value.trim()
+    await createUser({ name: added, email: email.value.trim(), password: password.value })
     name.value = ''
     email.value = ''
     password.value = ''
     await load()
+    toast.success(`${added} added`)
   } catch (e) {
     addError.value = e instanceof Error ? e.message : 'Could not add user.'
   } finally {
@@ -59,13 +65,20 @@ async function add() {
 // Remove
 const removingId = ref<string | null>(null)
 async function remove(user: User) {
-  if (!confirm(`Remove ${user.name} (${user.email})? They will lose access.`)) return
+  const ok = await dialog.confirm({
+    title: 'Remove user',
+    message: `Remove ${user.name} (${user.email})? They will lose access to this site.`,
+    confirmLabel: 'Remove',
+    danger: true,
+  })
+  if (!ok) return
   removingId.value = user.id
   try {
     await deleteUser(user.id)
     await load()
+    toast.success(`${user.name} removed`)
   } catch (e) {
-    listError.value = e instanceof Error ? e.message : 'Could not remove user.'
+    toast.error(e instanceof Error ? e.message : 'Could not remove user.')
   } finally {
     removingId.value = null
   }

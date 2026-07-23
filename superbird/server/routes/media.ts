@@ -7,7 +7,7 @@ import {
   updateMedia,
   deleteMedia,
   createFolder,
-  renameFolder,
+  updateFolder,
   deleteFolder,
   getCompressionSettings,
 } from '../lib/media'
@@ -54,6 +54,7 @@ mediaApi.patch('/media/:id', async (c) => {
     alt?: string
     tags?: string[]
     folderId?: string | null
+    private?: boolean
   }
   const item = updateMedia(c.req.param('id'), body)
   if (!item) return c.json({ error: 'Not found.' }, 404)
@@ -74,8 +75,8 @@ mediaApi.post('/media/folders', async (c) => {
 })
 
 mediaApi.patch('/media/folders/:id', async (c) => {
-  const { name } = (await c.req.json()) as { name: string }
-  renameFolder(c.req.param('id'), name)
+  const body = (await c.req.json()) as { name?: string; private?: boolean }
+  updateFolder(c.req.param('id'), body)
   return c.json({ ok: true })
 })
 

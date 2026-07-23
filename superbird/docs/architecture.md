@@ -34,7 +34,7 @@ components/
   canvas/             EditorCanvas, CanvasNodeRenderer, NodePlaceholder, useNodeDnD.ts
   modals/
     global-styles/    GlobalStylesPanel + 6 *Tab.vue
-    media-library/    MediaLibraryModal + FolderList/Toolbar/Grid/DetailPanel
+    media-library/    MediaLibraryModal (title bar + search/type/sort/view controls) + Breadcrumb/Grid/DetailPanel (unified in-area folders+files, grid+list, DnD, context menu, private flag)
 stores/               canvas globalStyles media siteSettings locales userComponents collections
 lib/                  tree ids nodeFactory styles animations unitValue media siteDefaults
 constants/            canvas.ts propertyOptions.ts injectionKeys.ts

@@ -13,6 +13,7 @@ import backupRoutes from './routes/backup'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
+import { currentUser } from './lib/session'
 
 ensureSchema()
 
@@ -67,12 +68,15 @@ const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml'
 app.get('/media/:id', (c) => {
   const file = readMediaFile(c.req.param('id'))
   if (!file) return c.notFound()
+  // Private media (flagged, or inside a private folder) is admin-only: hide its
+  // existence from anonymous callers (404, not 403) and never cache it publicly.
+  if (file.private && !currentUser(c)) return c.notFound()
   const dangerous = DANGEROUS_MIME.has(file.mime)
   const headers: Record<string, string> = {
     'Content-Type': dangerous ? 'application/octet-stream' : file.mime,
     'X-Content-Type-Options': 'nosniff',
     'Content-Security-Policy': 'sandbox',
-    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Cache-Control': file.private ? 'private, no-store' : 'public, max-age=31536000, immutable',
   }
   if (dangerous) headers['Content-Disposition'] = 'attachment'
   return new Response(file.bytes, { headers })

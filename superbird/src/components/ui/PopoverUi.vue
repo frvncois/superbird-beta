@@ -94,7 +94,7 @@ const tx = computed(() =>
   <span ref="anchor" aria-hidden="true" class="hidden" />
 
   <Teleport to="body">
-    <div v-if="open && backdrop" class="fixed inset-0 z-[84]" @click="open = false" />
+    <div v-if="open && backdrop" class="fixed inset-0 z-[101]" @click="open = false" />
     <Transition
       :enter-active-class="tx.active"
       :enter-from-class="tx.from"
@@ -106,7 +106,7 @@ const tx = computed(() =>
       <div
         v-if="open"
         :style="panelStyle"
-        :class="['z-[85] origin-top rounded-xl border bg-background shadow-lg', panelClass]"
+        :class="['z-[102] origin-top rounded-xl bg-background shadow-lg', panelClass]"
       >
         <slot />
       </div>

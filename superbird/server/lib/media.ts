@@ -25,12 +25,14 @@ export interface MediaItemDTO {
   folderId?: string
   alt?: string
   tags: string[]
+  private: boolean
   createdAt: string
 }
 export interface MediaFolderDTO {
   id: string
   name: string
   parentId?: string
+  private: boolean
 }
 
 // ── Image compression ──
@@ -108,6 +110,7 @@ function rowToItem(row: MediaRow): MediaItemDTO {
     folderId: row.folderId ?? undefined,
     alt: row.alt ?? undefined,
     tags: JSON.parse(row.tags) as string[],
+    private: row.private === 1,
     createdAt: row.createdAt,
   }
 }
@@ -119,7 +122,7 @@ export function listMedia(projectId: string): { items: MediaItemDTO[]; folders: 
     .from(mediaFolders)
     .where(eq(mediaFolders.projectId, projectId))
     .all()
-    .map((f) => ({ id: f.id, name: f.name, parentId: f.parentId ?? undefined }))
+    .map((f) => ({ id: f.id, name: f.name, parentId: f.parentId ?? undefined, private: f.private === 1 }))
   return { items, folders }
 }
 
@@ -171,13 +174,14 @@ export async function createMedia(
 
 export function updateMedia(
   id: string,
-  patch: { name?: string; alt?: string; tags?: string[]; folderId?: string | null },
+  patch: { name?: string; alt?: string; tags?: string[]; folderId?: string | null; private?: boolean },
 ): MediaItemDTO | null {
   const set: Partial<MediaRow> = {}
   if (patch.name !== undefined) set.name = patch.name
   if (patch.alt !== undefined) set.alt = patch.alt
   if (patch.tags !== undefined) set.tags = JSON.stringify(patch.tags)
   if (patch.folderId !== undefined) set.folderId = patch.folderId
+  if (patch.private !== undefined) set.private = patch.private ? 1 : 0
   if (Object.keys(set).length) db.update(media).set(set).where(eq(media.id, id)).run()
   const row = db.select().from(media).where(eq(media.id, id)).get()
   return row ? rowToItem(row) : null
@@ -191,24 +195,43 @@ export function deleteMedia(id: string): void {
   db.delete(media).where(eq(media.id, id)).run()
 }
 
-/** Read a stored file for serving. Returns bytes + mime, or null. */
-export function readMediaFile(id: string): { bytes: Buffer; mime: string } | null {
+/** Read a stored file for serving. Returns bytes + mime + effective privacy. */
+export function readMediaFile(id: string): { bytes: Buffer; mime: string; private: boolean } | null {
   const row = db.select().from(media).where(eq(media.id, id)).get()
   if (!row) return null
   const path = resolve(MEDIA_DIR, row.filename)
   if (!existsSync(path)) return null
-  return { bytes: readFileSync(path), mime: row.mime }
+  return { bytes: readFileSync(path), mime: row.mime, private: isMediaPrivate(row) }
+}
+
+// Effective privacy: the item itself, or any ancestor folder, being private
+// makes it admin-only. Walks the folder chain (guarded against cycles).
+function isMediaPrivate(row: MediaRow): boolean {
+  if (row.private === 1) return true
+  let folderId = row.folderId
+  const seen = new Set<string>()
+  while (folderId && !seen.has(folderId)) {
+    seen.add(folderId)
+    const folder = db.select().from(mediaFolders).where(eq(mediaFolders.id, folderId)).get()
+    if (!folder) break
+    if (folder.private === 1) return true
+    folderId = folder.parentId
+  }
+  return false
 }
 
 // ── Folders ──
 export function createFolder(projectId: string, name: string, parentId?: string): MediaFolderDTO {
   const id = randomId('folder')
   db.insert(mediaFolders).values({ id, projectId, name, parentId: parentId ?? null }).run()
-  return { id, name, parentId }
+  return { id, name, parentId, private: false }
 }
 
-export function renameFolder(id: string, name: string): void {
-  db.update(mediaFolders).set({ name }).where(eq(mediaFolders.id, id)).run()
+export function updateFolder(id: string, patch: { name?: string; private?: boolean }): void {
+  const set: Partial<typeof mediaFolders.$inferSelect> = {}
+  if (patch.name !== undefined) set.name = patch.name
+  if (patch.private !== undefined) set.private = patch.private ? 1 : 0
+  if (Object.keys(set).length) db.update(mediaFolders).set(set).where(eq(mediaFolders.id, id)).run()
 }
 
 export function deleteFolder(id: string): void {

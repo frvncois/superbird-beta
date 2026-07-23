@@ -93,7 +93,7 @@ export const useMediaStore = defineStore('media', () => {
 
   async function updateMediaItem(
     id: string,
-    updates: Partial<Pick<MediaItem, 'name' | 'alt' | 'tags' | 'folderId'>>,
+    updates: Partial<Pick<MediaItem, 'name' | 'alt' | 'tags' | 'folderId' | 'private'>>,
   ) {
     const item = mediaItems.value.find((m) => m.id === id)
     if (item) Object.assign(item, updates)
@@ -127,6 +127,12 @@ export const useMediaStore = defineStore('media', () => {
     await apiPatch(`/api/media/folders/${id}`, { name })
   }
 
+  async function setMediaFolderPrivate(id: string, isPrivate: boolean) {
+    const folder = mediaFolders.value.find((f) => f.id === id)
+    if (folder) folder.private = isPrivate
+    await apiPatch(`/api/media/folders/${id}`, { private: isPrivate })
+  }
+
   return {
     mediaItems,
     mediaFolders,
@@ -145,5 +151,6 @@ export const useMediaStore = defineStore('media', () => {
     addMediaFolder,
     removeMediaFolder,
     renameMediaFolder,
+    setMediaFolderPrivate,
   }
 })

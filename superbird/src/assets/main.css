@@ -206,6 +206,25 @@
   }
 }
 
+/* ─── Overlay backdrop blur ───
+   Drives blur with an explicit backdrop-filter (not Tailwind's composed
+   `backdrop-blur-*` var, which collapses once transition classes are stripped),
+   so the blur ramps smoothly on enter/leave AND persists while open. Pair with
+   the `.sb-backdrop-off` state on a Vue <Transition> enter-from / leave-to. */
+.sb-backdrop {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    opacity 300ms ease-out,
+    backdrop-filter 300ms ease-out,
+    -webkit-backdrop-filter 300ms ease-out;
+}
+.sb-backdrop-off {
+  opacity: 0;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+
 /* ─── Canvas Artboard Isolation ─── */
 .canvas-artboard {
   --color-background: #ffffff;

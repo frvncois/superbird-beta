@@ -44,6 +44,8 @@ export const media = sqliteTable('media', {
   folderId: text('folder_id'),
   alt: text('alt'),
   tags: text('tags').notNull().default('[]'), // JSON string[]
+  // 1 = private: served only to an authenticated admin, never on the public site.
+  private: integer('private').notNull().default(0),
   createdAt: text('created_at').notNull(),
 })
 
@@ -69,6 +71,8 @@ export const mediaFolders = sqliteTable('media_folders', {
     .references(() => projects.id),
   name: text('name').notNull(),
   parentId: text('parent_id'),
+  // 1 = private: this folder and everything inside it is admin-only (cascade).
+  private: integer('private').notNull().default(0),
 })
 
 // The whole editable project as one JSON document (design + content). A later

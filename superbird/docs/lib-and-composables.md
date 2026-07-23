@@ -32,7 +32,9 @@
 | `useHistory()` | → `{undo, redo, canUndo, canRedo}` | **module-scope singleton**; snapshots the 3 undo-stores |
 | `useKeyboardShortcuts()` | side-effecting | Cmd+Z/⇧Z, delete, copy/paste/duplicate; mounts listeners |
 | `useContextMenu()` | → `{visible, x, y, items, open(e, items), close}` | position/open state only |
-| `useNodeContextMenu` | `buildNodeActions(node, 'canvas'\|'layers', callbacks?)`, `buildElementActions(type)` | builds `ContextMenuItem[]`; one builder, context-parameterized |
+| `useNodeContextMenu` | `buildNodeActions(node, 'canvas'\|'layers', callbacks?)`, `buildElementActions(type)`, `deleteNodeWithUndo(id)` | builds `ContextMenuItem[]`; `deleteNodeWithUndo` removes + shows an Undo toast (re-inserts via `store.restoreNode`) |
+| `useDialog()` | → `{state, confirm(opts)→Promise<bool>, prompt(opts)→Promise<string\|null>, process(opts)→controller, ...}` | **module-scope singleton**; one active dialog rendered by `ConfirmDialogUi` (mounted in `App.vue`). `process()` returns `{progress, update, succeed, fail, close}` for spinner/progress/result. Use instead of native `confirm/alert/prompt` |
+| `useToast()` | → `{toasts, success(msg,opts?), error(...), info(...), dismiss, runAction}` | **module-scope singleton**; queue rendered by `ToastHost` (mounted in `App.vue`). `opts.action = {label, handler}` = e.g. Undo; `opts.duration = 0` keeps it until dismissed |
 | `useDragScrub(getValue, onUpdate)` | pointer scrub | ignores drags starting on input/select/button; skips `auto`/`token` |
 | `useInteractionRunner(elRef, interactions)` | attaches WAAPI animations | targets `[data-canvas-node]` / `[data-canvas-scroll]` — keep those attrs on canvas markup |
 

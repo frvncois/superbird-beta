@@ -8,6 +8,7 @@ import { useSetupStore } from '@/stores/setup'
 import { useAuthStore } from '@/stores/auth'
 import { useMediaStore } from '@/stores/media'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
+import { useToast } from '@/composables/useToast'
 
 import './assets/main.css'
 
@@ -28,6 +29,11 @@ try {
   }
 } catch (e) {
   console.error('[superbird] Could not reach the API on startup.', e)
+  // Surface it — the queued toast renders as soon as ToastHost mounts below.
+  useToast().error('Couldn’t reach the server. Some features may not work.', {
+    duration: 0,
+    action: { label: 'Reload', handler: () => location.reload() },
+  })
 }
 
 app.use(router)

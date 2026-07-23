@@ -409,16 +409,34 @@ export const useCanvasStore = defineStore('canvas', () => {
     Object.assign(node, updates)
   }
 
-  function removeNode(id: string) {
+  // Returns what was removed (node + its parent + index) so callers can offer
+  // an "Undo" toast via restoreNode. null when nothing was removed.
+  function removeNode(id: string): { node: CanvasNode; parentId: string; index: number } | null {
     const body = activePage.value.body
-    if (id === body.id) return
+    if (id === body.id) return null
 
     const result = findParent(body.children, id)
-    if (!result) return
-    result.parent.splice(result.index, 1)
+    if (!result) return null
+    const parentId = getParentId(id) ?? body.id
+    const index = result.index
+    const [node] = result.parent.splice(index, 1)
     if (selectedNodeId.value === id) {
       selectedNodeId.value = null
     }
+    return node ? { node, parentId, index } : null
+  }
+
+  // Re-insert a previously removed node at its original spot (undo of removeNode).
+  function restoreNode(node: CanvasNode, parentId: string, index: number) {
+    const body = activePage.value.body
+    const parent = parentId === body.id ? body : findNode(body.children, parentId)
+    if (!parent) {
+      body.children.push(node)
+    } else {
+      const clamped = Math.min(Math.max(index, 0), parent.children.length)
+      parent.children.splice(clamped, 0, node)
+    }
+    selectedNodeId.value = node.id
   }
 
   function setNodeSettings(
@@ -622,11 +640,24 @@ export const useCanvasStore = defineStore('canvas', () => {
     return ix
   }
 
-  function removeInteraction(nodeId: string, interactionId: string) {
+  // Returns the removed interaction + its index so callers can offer an Undo.
+  function removeInteraction(nodeId: string, interactionId: string): { interaction: Interaction; index: number } | null {
     const body = activePage.value.body
     const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node?.interactions) return
-    node.interactions = node.interactions.filter((ix) => ix.id !== interactionId)
+    if (!node?.interactions) return null
+    const index = node.interactions.findIndex((ix) => ix.id === interactionId)
+    if (index === -1) return null
+    const [interaction] = node.interactions.splice(index, 1)
+    return interaction ? { interaction, index } : null
+  }
+
+  function restoreInteraction(nodeId: string, interaction: Interaction, index: number) {
+    const body = activePage.value.body
+    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
+    if (!node) return
+    if (!node.interactions) node.interactions = []
+    const clamped = Math.min(Math.max(index, 0), node.interactions.length)
+    node.interactions.splice(clamped, 0, interaction)
   }
 
   function updateInteraction(nodeId: string, interactionId: string, updates: Partial<Pick<Interaction, 'name' | 'trigger' | 'triggerValue' | 'options'>>) {
@@ -730,6 +761,23 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  // Remove every reference to a media id on one page (used by the media library's
+  // "Used on → Detach"). Clears the content of matching elements; returns how many.
+  function detachMediaOnPage(pageId: string, mediaId: string): number {
+    const page = pages.value.find((p) => p.id === pageId)
+    if (!page?.body) return 0
+    let cleared = 0
+    const walk = (node: CanvasNode) => {
+      if (node.content === mediaId) {
+        node.content = ''
+        cleared++
+      }
+      for (const child of node.children ?? []) walk(child)
+    }
+    walk(page.body)
+    return cleared
+  }
+
   return {
     // Pages
     pages,
@@ -781,6 +829,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     moveNode,
     updateNode,
     removeNode,
+    restoreNode,
+    detachMediaOnPage,
     setNodeSettings,
     setCustomAttribute,
     removeCustomAttribute,
@@ -805,6 +855,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     getNodeInteractions,
     addInteraction,
     removeInteraction,
+    restoreInteraction,
     updateInteraction,
     addStep,
     removeStep,

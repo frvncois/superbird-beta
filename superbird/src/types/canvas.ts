@@ -287,6 +287,9 @@ export interface MediaItem {
   folderId?: string
   tags: string[]
   alt?: string
+  // Private media is served only to an authenticated admin — never on the
+  // published public site (also cascades from a private parent folder).
+  private?: boolean
   createdAt: string
 }
 
@@ -294,6 +297,7 @@ export interface MediaFolder {
   id: string
   name: string
   parentId?: string
+  private?: boolean
 }
 
 // --- Site settings ---

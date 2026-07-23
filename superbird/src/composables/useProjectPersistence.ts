@@ -1,5 +1,6 @@
 import { watch, nextTick } from 'vue'
 import { apiGet, apiPut, apiPost } from '@/lib/api'
+import { useToast } from '@/composables/useToast'
 import { useSetupStore } from '@/stores/setup'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
@@ -86,6 +87,21 @@ async function save(): Promise<void> {
   await apiPut('/api/project', buildSnapshot())
 }
 
+// Surface a failed autosave once, so silent data loss can't go unnoticed. We
+// only warn again after a subsequent save succeeds.
+let autosaveWarned = false
+async function autosave(): Promise<void> {
+  try {
+    await save()
+    autosaveWarned = false
+  } catch {
+    if (!autosaveWarned) {
+      autosaveWarned = true
+      useToast().error('Couldn’t save your changes. Check your connection — we’ll keep trying.', { duration: 0 })
+    }
+  }
+}
+
 function startAutosave(): void {
   if (watching) return
   watching = true
@@ -94,7 +110,7 @@ function startAutosave(): void {
     () => {
       if (suspend) return
       if (timer) clearTimeout(timer)
-      timer = setTimeout(() => void save(), 800)
+      timer = setTimeout(() => void autosave(), 800)
     },
   )
 }

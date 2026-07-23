@@ -5,11 +5,27 @@ import { useUserComponentsStore } from '@/stores/userComponents'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 
 const store = useCanvasStore()
 const componentsStore = useUserComponentsStore()
 const ctx = useContextMenu()
+const dialog = useDialog()
+const toast = useToast()
+
+async function confirmDeleteComponent(compId: string, name: string) {
+  const ok = await dialog.confirm({
+    title: 'Delete component',
+    message: `Delete “${name}”? Instances placed on your pages will be detached. This can’t be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (!ok) return
+  componentsStore.deleteComponent(compId)
+  toast.success(`Component “${name}” deleted`)
+}
 
 const userComponentsList = computed(() => Object.values(componentsStore.userComponents))
 
@@ -48,7 +64,7 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       label: `Delete "${comp.name}"`,
       icon: 'delete',
       danger: true,
-      handler: () => componentsStore.deleteComponent(compId),
+      handler: () => confirmDeleteComponent(compId, comp.name),
     },
   ])
   ctx.open(e, items)

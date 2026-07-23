@@ -70,6 +70,12 @@ import {
   ArrowTopRightOnSquareIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  LockClosedIcon,
+  MusicalNoteIcon,
+  ScaleIcon,
 } from '@heroicons/vue/24/outline'
 
 // Named icons → HeroIcons (24px outline). Rendered by IconUi.
@@ -90,6 +96,10 @@ export const ICONS: Record<string, Component> = {
   search: MagnifyingGlassIcon,
   users: UsersIcon,
   sparkles: SparklesIcon,
+  info: InformationCircleIcon,
+  alert: ExclamationTriangleIcon,
+  'check-circle': CheckCircleIcon,
+  lock: LockClosedIcon,
   folder: FolderIcon,
   upload: ArrowUpTrayIcon,
   download: ArrowDownTrayIcon,
@@ -161,6 +171,8 @@ export const ICONS: Record<string, Component> = {
   blockquote: ChatBubbleBottomCenterTextIcon,
   image: PhotoIcon,
   video: VideoCameraIcon,
+  audio: MusicalNoteIcon,
+  weight: ScaleIcon,
   embed: CodeBracketIcon,
   form: QueueListIcon,
   input: Bars3Icon,

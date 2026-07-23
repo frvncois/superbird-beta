@@ -7,6 +7,8 @@ import type { Breakpoint } from '@/types/canvas'
 import { fontSetStack } from '@/lib/fonts'
 import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import { uploadFontFace, deleteFontFiles } from '@/lib/fontApi'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import SettingsSection from './SettingsSection.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
@@ -18,6 +20,8 @@ import LabelUi from '@/components/ui/LabelUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 
 const store = useGlobalStylesStore()
+const dialog = useDialog()
+const toast = useToast()
 
 // ── Uploaded font families ──
 const uploadName = ref('')
@@ -47,6 +51,7 @@ async function onUploadFile(e: Event) {
       faces: [face],
     })
     uploadName.value = ''
+    toast.success(`“${name}” added`)
   } catch (err) {
     uploadError.value = err instanceof Error ? err.message : 'Upload failed.'
   } finally {
@@ -57,7 +62,15 @@ async function onUploadFile(e: Event) {
 
 async function removeFamily(id: string) {
   const family = store.globalStyles.fontSet?.find((f) => f.id === id)
+  const ok = await dialog.confirm({
+    title: 'Remove font family',
+    message: `Remove “${family?.name ?? 'this font'}”? Its uploaded files are deleted and any text using it falls back to a default. This can’t be undone.`,
+    confirmLabel: 'Remove',
+    danger: true,
+  })
+  if (!ok) return
   store.removeFontFamily(id)
+  toast.success(`“${family?.name ?? 'Font'}” removed`)
   // Reclaim the self-hosted files (best-effort; the family is already removed).
   const urls = family?.faces.map((f) => f.url).filter(Boolean) ?? []
   if (urls.length) {

@@ -1,8 +1,21 @@
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import { separator, type ContextMenuItem } from '@/types/contextMenu'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import type { CanvasNode, NodeType } from '@/types/canvas'
+
+// Remove a node and offer an "Undo" toast that re-inserts it in place.
+export function deleteNodeWithUndo(nodeId: string) {
+  const store = useCanvasStore()
+  const toast = useToast()
+  const removed = store.removeNode(nodeId)
+  if (!removed) return
+  toast.success('Element deleted', {
+    action: { label: 'Undo', handler: () => store.restoreNode(removed.node, removed.parentId, removed.index) },
+  })
+}
 
 export type NodeMenuContext = 'canvas' | 'layers'
 
@@ -11,10 +24,19 @@ export interface NodeMenuCallbacks {
   onCreateComponent?: () => void
 }
 
-function promptCreateComponent(nodeId: string) {
+async function promptCreateComponent(nodeId: string) {
   const componentsStore = useUserComponentsStore()
-  const name = prompt('Component name:')
-  if (name) componentsStore.createComponentFromNode(nodeId, name)
+  const { prompt } = useDialog()
+  const name = await prompt({
+    title: 'Create component',
+    message: 'Save this element as a reusable component.',
+    placeholder: 'Component name',
+    confirmLabel: 'Create',
+  })
+  if (name) {
+    componentsStore.createComponentFromNode(nodeId, name)
+    useToast().success(`Component “${name}” created`)
+  }
 }
 
 /**
@@ -169,7 +191,7 @@ export function buildNodeActions(
       icon: 'delete',
       shortcut: '⌫',
       danger: true,
-      handler: () => store.removeNode(node.id),
+      handler: () => deleteNodeWithUndo(node.id),
       hidden: isBody,
     },
   ]

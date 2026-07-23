@@ -23,6 +23,11 @@ Posture and hardening for a self-hosted, internet-facing Superbird instance.
   nosniff` + `Content-Security-Policy: sandbox`, and HTML/XML types are forced to
   `application/octet-stream; attachment` -- a malicious SVG/HTML upload can't run
   script on the admin origin.
+- **Private media**: a media item flagged `private` (or living in a `private`
+  folder -- the flag cascades down the folder tree) is served by `/media/:id`
+  only to an authenticated admin; anonymous callers get `404` (existence hidden,
+  not `403`) and the response is `Cache-Control: private, no-store`. Set/cleared
+  in the media library (item toggle or folder context menu).
 - **HTTP headers**: `secureHeaders()` globally -- `X-Frame-Options: SAMEORIGIN`
   (clickjacking), `nosniff`, `Referrer-Policy`, HSTS.
 - **DoS**: 30 MB request-body limit; SSR render walkers cap depth at 64

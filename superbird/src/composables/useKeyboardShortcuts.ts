@@ -3,6 +3,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useMcpStore } from '@/stores/mcp'
 import { CONTAINER_TYPES } from '@/constants/canvas'
 import { useHistory } from './useHistory'
+import { deleteNodeWithUndo } from './useNodeContextMenu'
 
 export function useKeyboardShortcuts() {
   const store = useCanvasStore()
@@ -52,7 +53,7 @@ export function useKeyboardShortcuts() {
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (selectedNode.type === 'body') return
       e.preventDefault()
-      store.removeNode(selectedId)
+      deleteNodeWithUndo(selectedId)
       return
     }
 

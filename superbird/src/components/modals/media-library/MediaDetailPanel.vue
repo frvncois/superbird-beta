@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMediaStore } from '@/stores/media'
+import { useCanvasStore } from '@/stores/canvas'
+import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import { formatFileSize } from '@/lib/media'
-import type { MediaItem } from '@/types/canvas'
+import type { CanvasNode, MediaItem } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
+import ToggleUi from '@/components/ui/ToggleUi.vue'
+import IconButtonUi from '@/components/ui/IconButtonUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 
 const props = defineProps<{
   item: MediaItem
@@ -17,13 +23,51 @@ const emit = defineEmits<{
 }>()
 
 const store = useMediaStore()
+const canvas = useCanvasStore()
+const dialog = useDialog()
+const toast = useToast()
 
 const folderOptions = computed(() => [
   { value: '', label: 'Uncategorized' },
   ...store.mediaFolders.map((f) => ({ value: f.id, label: f.name })),
 ])
 
-function deleteItem() {
+function fmtDate(iso: string): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+// Where this media is used: image elements whose content references its id,
+// grouped by page (across every page's node tree).
+const usage = computed(() => {
+  const out: { pageId: string; pageName: string; count: number }[] = []
+  const visit = (node: CanvasNode, tally: { n: number }) => {
+    if (node.content === props.item.id) tally.n++
+    for (const child of node.children ?? []) visit(child, tally)
+  }
+  for (const page of canvas.pages) {
+    if (!page.body) continue
+    const tally = { n: 0 }
+    visit(page.body, tally)
+    if (tally.n) out.push({ pageId: page.id, pageName: page.name, count: tally.n })
+  }
+  return out
+})
+
+function detach(pageId: string, pageName: string) {
+  const n = canvas.detachMediaOnPage(pageId, props.item.id)
+  if (n) toast.success(`Removed from ${pageName}`)
+}
+
+async function deleteItem() {
+  const ok = await dialog.confirm({
+    title: 'Delete media',
+    message: `Delete “${props.item.name}”? Any element using it will lose its image. This can’t be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+  })
+  if (!ok) return
   store.removeMediaItem(props.item.id)
   emit('deleted')
 }
@@ -68,11 +112,63 @@ function deleteItem() {
             @update:model-value="store.moveMediaToFolder(item.id, $event || undefined)"
           />
         </div>
-        <div class="flex items-center justify-between text-[10px] text-secondary pt-1">
-          <span>{{ formatFileSize(item.size) }}</span>
-          <span v-if="item.width">{{ item.width }} x {{ item.height }}</span>
+        <!-- Metadata -->
+        <div class="space-y-1 pt-1 text-[10px]">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-secondary">Weight</span>
+            <span class="font-medium">{{ formatFileSize(item.size) }}</span>
+          </div>
+          <div v-if="item.width" class="flex items-center justify-between gap-2">
+            <span class="text-secondary">Dimensions</span>
+            <span class="font-medium">{{ item.width }} × {{ item.height }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-secondary">Uploaded</span>
+            <span class="font-medium">{{ fmtDate(item.createdAt) }}</span>
+          </div>
         </div>
-        <div class="text-[10px] text-secondary">{{ item.createdAt }}</div>
+      </div>
+
+      <!-- Used on -->
+      <div class="space-y-1">
+        <LabelUi size="xs">Used on</LabelUi>
+        <div v-if="usage.length" class="space-y-0.5">
+          <div
+            v-for="u in usage"
+            :key="u.pageId"
+            class="group flex items-center gap-2 text-[10px]"
+          >
+            <span class="min-w-0 flex-1 truncate">{{ u.pageName }}</span>
+            <span class="shrink-0 text-secondary">{{ u.count }}×</span>
+            <IconButtonUi
+              size="xs"
+              variant="danger"
+              title="Detach from this page"
+              class="opacity-0 group-hover:opacity-100"
+              @click="detach(u.pageId, u.pageName)"
+            >
+              <IconUi name="close" size="size-3" />
+            </IconButtonUi>
+          </div>
+        </div>
+        <p v-else class="text-[10px] text-secondary">Not used on any page yet.</p>
+      </div>
+
+      <!-- Privacy -->
+      <div class="rounded-lg bg-secondary/5 p-2.5 space-y-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <IconUi name="lock" size="size-3.5" class="text-secondary" />
+            <span class="text-[11px] font-medium">Private</span>
+          </div>
+          <ToggleUi
+            :model-value="item.private ?? false"
+            @update:model-value="store.updateMediaItem(item.id, { private: $event })"
+          />
+        </div>
+        <p class="text-[10px] leading-relaxed text-secondary">
+          Hidden from the published site and non-logged-in visitors.
+        </p>
       </div>
     </div>
 

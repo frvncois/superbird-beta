@@ -11,6 +11,7 @@ import TypographyPanel from '@/components/settings/TypographyPanel.vue'
 import MediaPanel from '@/components/settings/MediaPanel.vue'
 import SeoPanel from '@/components/settings/SeoPanel.vue'
 import FormsPanel from '@/components/settings/FormsPanel.vue'
+import StorePanel from '@/components/settings/StorePanel.vue'
 import UsersPanel from '@/components/settings/UsersPanel.vue'
 import BackupPanel from '@/components/settings/BackupPanel.vue'
 import AdvancedPanel from '@/components/settings/AdvancedPanel.vue'
@@ -29,6 +30,7 @@ const categories = [
   { key: 'media', label: 'Media', icon: 'image', component: MediaPanel },
   { key: 'seo', label: 'SEO', icon: 'search', component: SeoPanel },
   { key: 'forms', label: 'Forms', icon: 'form', component: FormsPanel },
+  { key: 'store', label: 'Store', icon: 'store', component: StorePanel },
   { key: 'users', label: 'Users', icon: 'users', component: UsersPanel },
   { key: 'backup', label: 'Backup', icon: 'archive', component: BackupPanel },
   { key: 'advanced', label: 'Advanced', icon: 'embed', component: AdvancedPanel },

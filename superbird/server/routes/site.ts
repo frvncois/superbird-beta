@@ -6,8 +6,10 @@ import {
   collectInteractions,
   interactionsScript,
   formsRuntimeScript,
+  storefrontRuntimeScript,
   type RenderContext,
 } from '@/lib/render'
+import { currentCustomer } from '../lib/customerSession'
 import type { CanvasNode, Collection, Entry, GlobalStyles, Page, StyleClass } from '@/types/canvas'
 
 // Shared external asset paths (linked from every page).
@@ -89,7 +91,7 @@ site.get('/script.js', (c) => {
   if (!design) return c.body('', 404)
   const map: Record<string, unknown> = {}
   for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
-  return new Response(interactionsScript(map) + formsRuntimeScript(), {
+  return new Response(interactionsScript(map) + formsRuntimeScript() + storefrontRuntimeScript(), {
     headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
   })
 })
@@ -137,10 +139,17 @@ site.get('*', (c) => {
     if (home) return c.html(render(home.body, buildContext(published, collections), pageHead(home)))
   }
 
-  // Static page (single segment)
+  // Static page (single segment) — incl. store system pages by slug.
   if (segments.length === 1) {
     const page = pages.find((p) => p.pageType !== 'collection' && p.slug === segments[0])
-    if (page) return c.html(render(page.body, buildContext(published, collections), pageHead(page)))
+    if (page) {
+      // Customer-auth gating for the store's system pages.
+      if (page.systemKey === 'account' && !currentCustomer(c)) return c.redirect('/login')
+      if (page.systemKey === 'login' && currentCustomer(c)) return c.redirect('/account')
+      const ctx = buildContext(published, collections)
+      ctx.systemKey = page.systemKey
+      return c.html(render(page.body, ctx, pageHead(page)))
+    }
   }
 
   // Collection single (two segments: <basePath>/<entry-slug>)
@@ -149,7 +158,10 @@ site.get('*', (c) => {
     const template = col ? pages.find((p) => p.id === col.templatePageId) : undefined
     const entry = col ? published.find((e) => e.collectionId === col.id && e.slug === segments[1]) : undefined
     if (col && template && entry) {
-      return c.html(render(template.body, buildContext(published, collections, entry), { title: entry.title }))
+      const ctx = buildContext(published, collections, entry)
+      // Products-collection single → expose the entry id for add-to-cart.
+      if ((col as Collection & { isProducts?: boolean }).isProducts) ctx.productEntryId = entry.id
+      return c.html(render(template.body, ctx, { title: entry.title }))
     }
   }
 

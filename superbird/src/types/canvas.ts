@@ -197,6 +197,10 @@ export interface UserComponent {
 
 export type PageType = 'page' | 'collection' | 'system'
 
+// Store system pages, generated when the store is activated. `systemKey`
+// identifies a page's fixed role (routing + which runtime it uses).
+export type SystemPageKey = 'login' | 'account' | 'cart' | 'order-confirmation'
+
 export interface PageTypeConfig {
   key: PageType
   label: string
@@ -224,6 +228,7 @@ export interface Page {
   name: string
   slug: string
   pageType: PageType
+  systemKey?: SystemPageKey
   status?: 'draft' | 'published'
   seo?: PageSeo
   body: CanvasNode
@@ -250,6 +255,7 @@ export interface Collection {
   basePath: string        // URL segment, e.g. "blog"
   status?: 'draft' | 'published'
   templatePageId: string  // the Page (pageType 'collection') this collection edits
+  isProducts?: boolean    // the store's Products collection (entries = products)
 }
 
 export interface Entry {

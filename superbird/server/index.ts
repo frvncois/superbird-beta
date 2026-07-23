@@ -12,6 +12,9 @@ import mcpRoutes from './routes/mcp'
 import backupRoutes from './routes/backup'
 import publicFormsRoutes from './routes/publicForms'
 import formsRoutes from './routes/forms'
+import storeAuthRoutes from './routes/storeAuth'
+import storePublicRoutes from './routes/storePublic'
+import storeRoutes from './routes/store'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -55,6 +58,10 @@ app.route('/api', authRoutes)
 // Public form submissions (no session — visitors post here). Registered before
 // the session-guarded routers so their `/api/*` guards don't intercept it.
 app.route('/api', publicFormsRoutes)
+// Public customer auth for the storefront (separate identity from admin users).
+app.route('/api', storeAuthRoutes)
+// Public storefront: catalog, checkout, Stripe webhook, order lookup.
+app.route('/api', storePublicRoutes)
 // MCP bridge (no session — a local developer bridge). Registered before the
 // session-guarded routers so their `/api/*` guards don't intercept it.
 app.route('/api', mcpRoutes)
@@ -64,6 +71,7 @@ app.route('/api', fontsRoutes)
 app.route('/api', usersRoutes)
 app.route('/api', backupRoutes)
 app.route('/api', formsRoutes)
+app.route('/api', storeRoutes)
 
 // Document types that would execute as HTML if navigated to — force download.
 const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])

@@ -76,6 +76,9 @@ import {
   LockClosedIcon,
   MusicalNoteIcon,
   ScaleIcon,
+  ShoppingBagIcon,
+  ShoppingCartIcon,
+  TruckIcon,
 } from '@heroicons/vue/24/outline'
 
 // Named icons → HeroIcons (24px outline). Rendered by IconUi.
@@ -100,6 +103,9 @@ export const ICONS: Record<string, Component> = {
   alert: ExclamationTriangleIcon,
   'check-circle': CheckCircleIcon,
   lock: LockClosedIcon,
+  store: ShoppingBagIcon,
+  cart: ShoppingCartIcon,
+  shipping: TruckIcon,
   folder: FolderIcon,
   upload: ArrowUpTrayIcon,
   download: ArrowDownTrayIcon,

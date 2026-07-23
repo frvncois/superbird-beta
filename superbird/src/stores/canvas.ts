@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
+import { SYSTEM_PAGE_DEFS, buildSystemPage } from '@/lib/storeSystemPages'
 import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
 import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree } from '@/lib/tree'
 import { CONTAINER_TYPES, FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
@@ -9,7 +10,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, TriggerType } from '@/types/canvas'
+import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, SystemPageKey, TriggerType } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -93,6 +94,24 @@ export const useCanvasStore = defineStore('canvas', () => {
     pages.value.push(page)
     setActivePage(page.id)
     return page
+  }
+
+  function systemPage(key: SystemPageKey): Page | undefined {
+    return pages.value.find((p) => p.systemKey === key)
+  }
+
+  // Create any missing store system pages (login/account/cart/confirmation).
+  // Idempotent — safe to call every time the store is activated.
+  function ensureStoreSystemPages(): Page[] {
+    const created: Page[] = []
+    for (const def of SYSTEM_PAGE_DEFS) {
+      if (!systemPage(def.key)) {
+        const page = buildSystemPage(def)
+        pages.value.push(page)
+        created.push(page)
+      }
+    }
+    return created
   }
 
   function removePage(pageId: string) {
@@ -786,6 +805,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     pagesByType,
     setActivePage,
     hydratePages,
+    systemPage,
+    ensureStoreSystemPages,
     // Collection / entry context
     activeEntryId,
     activeEntry,

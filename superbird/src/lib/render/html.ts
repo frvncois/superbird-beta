@@ -63,8 +63,9 @@ function buildAttributes(
     out += attr('src', safeUrl(node.props.src))
   }
 
-  // Form controls
-  if (node.type === 'form') out += attr('data-sb-form', node.id)
+  // Form controls. On a system page the form is wired by the storefront runtime
+  // (login/etc.), so it doesn't get the generic form-submission marker.
+  if (node.type === 'form' && !ctx.systemKey) out += attr('data-sb-form', node.id)
   if (node.type === 'input') out += attr('type', node.props.type ?? 'text')
   if (node.type === 'checkbox') out += ' type="checkbox"'
   if (node.type === 'radio') out += ' type="radio"'

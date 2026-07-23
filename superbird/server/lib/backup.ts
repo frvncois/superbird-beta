@@ -2,7 +2,7 @@ import { resolve, basename } from 'node:path'
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { eq, desc } from 'drizzle-orm'
 import { db } from '../db/client'
-import { backups, media, mediaFolders, submissions } from '../db/schema'
+import { backups, media, mediaFolders, submissions, products, orders, orderItems, customers } from '../db/schema'
 import { getWorkingDocument, setWorkingDocument } from './project'
 import { MEDIA_DIR } from './media'
 import { FONTS_DIR } from './fonts'
@@ -117,6 +117,11 @@ export function buildExport(projectId: string): string {
   }
   const folders = db.select().from(mediaFolders).where(eq(mediaFolders.projectId, projectId)).all()
   const submissionRows = db.select().from(submissions).where(eq(submissions.projectId, projectId)).all()
+  const productRows = db.select().from(products).where(eq(products.projectId, projectId)).all()
+  const customerRows = db.select().from(customers).where(eq(customers.projectId, projectId)).all()
+  const orderRows = db.select().from(orders).where(eq(orders.projectId, projectId)).all()
+  const orderIds = new Set(orderRows.map((o) => o.id))
+  const orderItemRows = db.select().from(orderItems).all().filter((i) => orderIds.has(i.orderId))
   const fonts: FontEntry[] = []
   for (const file of referencedFontFiles(doc)) {
     const path = resolve(FONTS_DIR, basename(file))
@@ -130,6 +135,10 @@ export function buildExport(projectId: string): string {
     media: mediaEntries,
     mediaFolders: folders,
     submissions: submissionRows,
+    products: productRows,
+    customers: customerRows,
+    orders: orderRows,
+    orderItems: orderItemRows,
     fonts,
   })
 }
@@ -145,6 +154,10 @@ export function applyImport(projectId: string, json: string): void {
     media?: MediaEntry[]
     mediaFolders?: Array<typeof mediaFolders.$inferSelect>
     submissions?: Array<typeof submissions.$inferSelect>
+    products?: Array<typeof products.$inferSelect>
+    customers?: Array<typeof customers.$inferSelect>
+    orders?: Array<typeof orders.$inferSelect>
+    orderItems?: Array<typeof orderItems.$inferSelect>
     fonts?: FontEntry[]
   }
   try {
@@ -169,6 +182,12 @@ export function applyImport(projectId: string, json: string): void {
   db.delete(media).where(eq(media.projectId, projectId)).run()
   db.delete(mediaFolders).where(eq(mediaFolders.projectId, projectId)).run()
   db.delete(submissions).where(eq(submissions.projectId, projectId)).run()
+  // Store data (Stripe secrets are NOT in the bundle — they stay server-side).
+  const existingOrders = db.select().from(orders).where(eq(orders.projectId, projectId)).all()
+  for (const o of existingOrders) db.delete(orderItems).where(eq(orderItems.orderId, o.id)).run()
+  db.delete(orders).where(eq(orders.projectId, projectId)).run()
+  db.delete(products).where(eq(products.projectId, projectId)).run()
+  db.delete(customers).where(eq(customers.projectId, projectId)).run()
 
   for (const m of bundle.media ?? []) {
     const filename = basename(m.row.filename) // block path traversal from a crafted bundle
@@ -181,6 +200,18 @@ export function applyImport(projectId: string, json: string): void {
   }
   for (const s of bundle.submissions ?? []) {
     db.insert(submissions).values({ ...s, projectId }).run()
+  }
+  for (const p of bundle.products ?? []) {
+    db.insert(products).values({ ...p, projectId }).run()
+  }
+  for (const cu of bundle.customers ?? []) {
+    db.insert(customers).values({ ...cu, projectId }).run()
+  }
+  for (const o of bundle.orders ?? []) {
+    db.insert(orders).values({ ...o, projectId }).run()
+  }
+  for (const it of bundle.orderItems ?? []) {
+    db.insert(orderItems).values(it).run()
   }
   for (const ft of bundle.fonts ?? []) {
     const file = basename(ft.file)

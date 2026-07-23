@@ -4,6 +4,7 @@ export { renderNodeToHtml } from './html'
 export { compilePageCss, compileSiteCss } from './css'
 export { interactionsScript } from './interactionsRuntime'
 export { formsRuntimeScript } from './formsRuntime'
+export { storefrontRuntimeScript } from './storefrontRuntime'
 export type { RenderContext } from './context'
 
 import type { CanvasNode, GlobalStyles, StyleClass } from '@/types/canvas'
@@ -55,6 +56,9 @@ export function renderDocument(
   const html = renderNodeToHtml(body, ctx)
   const ixMap = collectInteractions(body)
   const hasIx = Object.keys(ixMap).length > 0
+  // The shared runtime also powers forms + the storefront (login/etc.), so it
+  // must load on those pages even without interactions.
+  const needsScript = hasIx || containsForm(body) || !!ctx.systemKey
 
   let headTags = ''
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
@@ -73,20 +77,26 @@ export function renderDocument(
   // when given; otherwise inline the data + runtime. `<` in the embedded JSON is
   // escaped so a value can never break out of the inline <script>.
   let scriptTag = ''
-  if (hasIx) {
-    if (assets.scriptSrc) {
-      scriptTag = `<script src="${escapeAttr(assets.scriptSrc)}" defer></script>`
-    } else {
-      const json = JSON.stringify(ixMap).replace(/</g, '\\u003c')
-      scriptTag = `<script>window.__SB_IX__=${json};${interactionsRuntimeScript()}</script>`
-    }
+  if (assets.scriptSrc) {
+    if (needsScript) scriptTag = `<script src="${escapeAttr(assets.scriptSrc)}" defer></script>`
+  } else if (hasIx) {
+    // Inline path (editor Preview): only interactions are needed there.
+    const json = JSON.stringify(ixMap).replace(/</g, '\\u003c')
+    scriptTag = `<script>window.__SB_IX__=${json};${interactionsRuntimeScript()}</script>`
   }
 
+  let bodyAttrs = ctx.systemKey ? ` data-sb-system="${ctx.systemKey}"` : ''
+  if (ctx.productEntryId) bodyAttrs += ` data-sb-entry="${escapeAttr(ctx.productEntryId)}"`
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
     headTags +
     styleTag +
-    `</head><body>${html}${scriptTag}</body></html>`
+    `</head><body${bodyAttrs}>${html}${scriptTag}</body></html>`
   )
+}
+
+function containsForm(node: CanvasNode): boolean {
+  if (node.type === 'form') return true
+  return (node.children ?? []).some(containsForm)
 }

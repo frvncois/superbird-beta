@@ -39,7 +39,7 @@ function closeFloating() {
   <div class="relative flex h-full">
     <!-- EXPANDED: normal content with border handle -->
     <template v-if="!collapsed">
-      <div class="flex-1 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto" :data-sidebar-scroll="side">
         <slot />
       </div>
       <!-- Border handle to collapse -->
@@ -101,6 +101,7 @@ function closeFloating() {
     <template v-if="collapsed && floatingTab">
       <div class="fixed inset-0 z-[80]" @click="closeFloating" />
       <div
+        :data-sidebar-scroll="side"
         :class="[
           'fixed top-[4em] z-[81] w-[300px] bg-background border rounded-2xl shadow-xl overflow-y-auto',
           side === 'left' ? 'left-[4em] border-r' : 'right-[4em] border-l',

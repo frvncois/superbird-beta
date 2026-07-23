@@ -18,8 +18,11 @@ import TabsUi from '@/components/ui/TabsUi.vue'
 import PreviewOverlay from '@/components/preview/PreviewOverlay.vue'
 import McpOverlay from '@/components/mcp/McpOverlay.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useSelectionSync } from '@/composables/useSelectionSync'
 
 useKeyboardShortcuts()
+// Scroll canvas + tree to the selected node; reset properties scroll to top.
+useSelectionSync()
 
 // While the editor is open, connect the live MCP bridge so an external MCP
 // client (Claude Code, …) can drive the canvas.

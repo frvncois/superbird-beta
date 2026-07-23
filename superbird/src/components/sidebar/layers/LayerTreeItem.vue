@@ -73,6 +73,7 @@ function toggleExpand(e: MouseEvent) {
 
     <!-- Row -->
     <div
+      :data-layer-id="node.id"
       :class="[
         'layer-row group flex items-center h-7 pr-2 cursor-pointer mx-1 rounded',
         isSelected && !isDragged && isComponent

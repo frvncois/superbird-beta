@@ -24,6 +24,13 @@ Claude Code ⇄ server/mcp-stdio.ts ⇄ POST /api/mcp/tool ⇄ ┌ live: SSE →
 The tool schemas live in `shared/aiTools.ts` — one source of truth shared by the
 in-app assistant, the headless executor, and the MCP server.
 
+### TODO
+
+- **Headless coverage**: `add_interaction` and `set_translation` aren't
+  implemented in `server/lib/mcpHeadless.ts` yet — with no editor open they reply
+  "open the editor". Live mode covers them. Implement them on the saved-doc JSON
+  to close the gap.
+
 ## Connect Claude Code
 
 This is a **stdio** MCP server (Claude Code launches it as a subprocess) — **not**

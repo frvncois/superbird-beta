@@ -288,6 +288,11 @@ const HEADLESS: Record<string, (input: Input) => string> = {
     setWorkingDocument(pid, doc as unknown as ProjectDocument)
     return `Added locale ${input.code}.`
   },
+  // TODO(headless): implement these two headlessly so they work with no editor
+  // open. Both are just JSON on the doc but fiddly: add_interaction must build
+  // the interaction → step → actions object with generated ids; set_translation
+  // writes into the node's per-locale content map. Live mode (editor open)
+  // already covers them via the browser executors.
   add_interaction() {
     return EDITOR_ONLY('add_interaction')
   },

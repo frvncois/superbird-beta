@@ -34,8 +34,12 @@ const query = ref('')
 const isFocused = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 
-// Per-chip menu + inline rename (transient interaction state).
+// Per-chip menu + inline rename (transient interaction state). The menu is
+// teleported to <body> and fixed-positioned from the toggle button, so the
+// sidebar's overflow can't clip it.
 const menuFor = ref<string | null>(null)
+const menuPos = ref<{ top: number; right: number } | null>(null)
+const menuIsCustom = computed(() => (menuFor.value ? isCustomClass(menuFor.value) : false))
 const renaming = ref<string | null>(null)
 const renameValue = ref('')
 const renameRef = ref<HTMLInputElement | null>(null)
@@ -49,11 +53,18 @@ function isCustomClass(cls: string): boolean {
   return props.allClassNames.includes(cls)
 }
 
-function openMenu(cls: string) {
-  menuFor.value = menuFor.value === cls ? null : cls
+function openMenu(cls: string, e: MouseEvent) {
+  if (menuFor.value === cls) {
+    closeMenu()
+    return
+  }
+  const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  menuPos.value = { top: r.bottom + 4, right: Math.max(0, window.innerWidth - r.right) }
+  menuFor.value = cls
 }
 function closeMenu() {
   menuFor.value = null
+  menuPos.value = null
 }
 
 function startRename(cls: string) {
@@ -143,9 +154,6 @@ function selectState(state: StyleState) {
 
 <template>
   <div class="relative">
-    <!-- Click-away for the chip menu -->
-    <div v-if="menuFor" class="fixed inset-0 z-[55]" @click="closeMenu" />
-
     <!-- Chips + input -->
     <div
       :class="[
@@ -182,48 +190,10 @@ function selectState(state: StyleState) {
           <button
             class="pr-1.5 pl-0.5 py-1 cursor-pointer opacity-60 hover:opacity-100"
             :aria-label="`${cls} options`"
-            @click.stop="openMenu(cls)"
+            @click.stop="openMenu(cls, $event)"
           >
             <IconUi name="chevron-down" size="size-2.5" />
           </button>
-        </div>
-
-        <!-- Chip menu -->
-        <div
-          v-if="menuFor === cls"
-          class="absolute right-0 top-full z-[60] mt-1 w-36 rounded-xl border bg-background p-1 shadow-lg"
-          @click.stop
-        >
-          <button
-            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-            @click="emit('remove', cls); closeMenu()"
-          >
-            <IconUi name="close" size="size-3" class="text-secondary" />
-            Remove class
-          </button>
-          <template v-if="isCustomClass(cls)">
-            <button
-              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-              @click="startRename(cls)"
-            >
-              <IconUi name="rename" size="size-3" class="text-secondary" />
-              Rename class
-            </button>
-            <button
-              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-              @click="emit('duplicate', cls); closeMenu()"
-            >
-              <IconUi name="duplicate" size="size-3" class="text-secondary" />
-              Duplicate class
-            </button>
-            <button
-              class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-red-fg cursor-pointer hover:bg-red-bg/40 transition-colors duration-100"
-              @click="emit('delete', cls); closeMenu()"
-            >
-              <IconUi name="delete" size="size-3" />
-              Delete class
-            </button>
-          </template>
         </div>
       </div>
 
@@ -306,5 +276,48 @@ function selectState(state: StyleState) {
           </div>
         </div>
     </PopoverUi>
+
+    <!-- Chip options menu — teleported + fixed so the sidebar overflow can't
+         clip it and it stacks above the canvas. -->
+    <Teleport to="body">
+      <div v-if="menuFor" class="fixed inset-0 z-[84]" @click="closeMenu" />
+      <div
+        v-if="menuFor && menuPos"
+        class="fixed z-[85] w-36 rounded-xl border bg-background p-1 shadow-lg"
+        :style="{ top: `${menuPos.top}px`, right: `${menuPos.right}px` }"
+        @click.stop
+      >
+        <button
+          class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+          @click="emit('remove', menuFor); closeMenu()"
+        >
+          <IconUi name="close" size="size-3" class="text-secondary" />
+          Remove class
+        </button>
+        <template v-if="menuIsCustom">
+          <button
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            @click="startRename(menuFor)"
+          >
+            <IconUi name="rename" size="size-3" class="text-secondary" />
+            Rename class
+          </button>
+          <button
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+            @click="emit('duplicate', menuFor); closeMenu()"
+          >
+            <IconUi name="duplicate" size="size-3" class="text-secondary" />
+            Duplicate class
+          </button>
+          <button
+            class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-red-fg cursor-pointer hover:bg-red-bg/40 transition-colors duration-100"
+            @click="emit('delete', menuFor); closeMenu()"
+          >
+            <IconUi name="delete" size="size-3" />
+            Delete class
+          </button>
+        </template>
+      </div>
+    </Teleport>
   </div>
 </template>

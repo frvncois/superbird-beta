@@ -63,9 +63,13 @@ function buildAttributes(
     out += attr('src', safeUrl(node.props.src))
   }
 
+  // Prebuilt "Dynamic" element → the storefront runtime wires its action.
+  if (node.element) out += attr('data-sb-el', node.element)
+
   // Form controls. On a system page the form is wired by the storefront runtime
-  // (login/etc.), so it doesn't get the generic form-submission marker.
-  if (node.type === 'form' && !ctx.systemKey) out += attr('data-sb-form', node.id)
+  // (login/etc.), and a prebuilt-element form (login) has its own marker — so
+  // neither gets the generic form-submission marker.
+  if (node.type === 'form' && !ctx.systemKey && !node.element) out += attr('data-sb-form', node.id)
   if (node.type === 'input') out += attr('type', node.props.type ?? 'text')
   if (node.type === 'checkbox') out += ' type="checkbox"'
   if (node.type === 'radio') out += ' type="radio"'

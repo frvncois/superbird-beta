@@ -2,7 +2,7 @@ import { ref, computed, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import { CONTAINER_TYPES } from '@/constants/canvas'
-import type { CanvasNode, FieldType } from '@/types/canvas'
+import type { CanvasNode, FieldType, PrebuiltElementKey } from '@/types/canvas'
 
 /**
  * Drag & drop behavior for a canvas node: acting as a drag source (reorder)
@@ -73,6 +73,13 @@ export function useNodeDnD(node: Ref<CanvasNode>) {
         pos,
       )
       store.setDraggedComponent(null)
+      return
+    }
+
+    // Dropping a prebuilt "Dynamic" element (login/cart) → inserts its tree
+    const prebuilt = e.dataTransfer!.getData('application/superbird-prebuilt')
+    if (prebuilt) {
+      store.addPrebuilt(prebuilt as PrebuiltElementKey, node.value.id, pos)
       return
     }
 

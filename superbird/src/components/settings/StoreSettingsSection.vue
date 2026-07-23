@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { apiGet, apiPut } from '@/lib/api'
 import { useCanvasStore } from '@/stores/canvas'
+import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
@@ -19,6 +20,7 @@ interface StoreConfig {
 }
 
 const canvas = useCanvasStore()
+const dialog = useDialog()
 const toast = useToast()
 
 const cfg = reactive({ enabled: false, currency: 'usd', stripePublishableKey: '' })
@@ -40,18 +42,35 @@ async function load() {
 onMounted(load)
 
 async function toggleEnabled(v: boolean) {
-  busy.value = true
-  try {
-    if (v) {
+  if (v) {
+    busy.value = true
+    try {
       const created = canvas.ensureStoreSystemPages()
       await apiPut('/api/store/config', { enabled: true })
       cfg.enabled = true
       toast.success(created.length ? `Store activated — ${created.length} system page${created.length > 1 ? 's' : ''} created` : 'Store activated')
-    } else {
-      await apiPut('/api/store/config', { enabled: false })
-      cfg.enabled = false
-      toast.success('Store deactivated')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update the store.')
+    } finally {
+      busy.value = false
     }
+    return
+  }
+
+  // Deactivating removes the store system pages — confirm first.
+  const ok = await dialog.confirm({
+    title: 'Deactivate store',
+    message: 'This turns off the storefront and removes its Login, Account, Cart, and Order-confirmation pages. Your products, orders, and customers are kept.',
+    confirmLabel: 'Deactivate',
+    danger: true,
+  })
+  if (!ok) return
+  busy.value = true
+  try {
+    const removed = canvas.removeStoreSystemPages()
+    await apiPut('/api/store/config', { enabled: false })
+    cfg.enabled = false
+    toast.success(removed ? `Store deactivated — ${removed} system page${removed > 1 ? 's' : ''} removed` : 'Store deactivated')
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Could not update the store.')
   } finally {

@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
 import { SYSTEM_PAGE_DEFS, buildSystemPage } from '@/lib/storeSystemPages'
+import { buildPrebuilt } from '@/lib/prebuiltElements'
 import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
 import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree } from '@/lib/tree'
 import { CONTAINER_TYPES, FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
@@ -10,7 +11,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, SystemPageKey, TriggerType } from '@/types/canvas'
+import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, PrebuiltElementKey, SystemPageKey, TriggerType } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -112,6 +113,17 @@ export const useCanvasStore = defineStore('canvas', () => {
       }
     }
     return created
+  }
+
+  // Remove the store system pages (on deactivation). Returns how many went.
+  function removeStoreSystemPages(): number {
+    const keys = new Set<SystemPageKey>(SYSTEM_PAGE_DEFS.map((d) => d.key))
+    const before = pages.value.length
+    pages.value = pages.value.filter((p) => !(p.systemKey && keys.has(p.systemKey)))
+    if (!pages.value.find((p) => p.id === activePageId.value)) {
+      setActivePage(pages.value[0]?.id ?? '')
+    }
+    return before - pages.value.length
   }
 
   function removePage(pageId: string) {
@@ -363,6 +375,13 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
 
     return insertNode(node, targetId, position)
+  }
+
+  // Insert a prebuilt "Dynamic" element tree (login/cart/…) at the drop target.
+  function addPrebuilt(key: PrebuiltElementKey, targetId?: string, position?: 'before' | 'after' | 'inside') {
+    const tree = buildPrebuilt(key)
+    if (!tree) return null
+    return insertNode(tree, targetId, position)
   }
 
   function insertNode(
@@ -807,6 +826,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     hydratePages,
     systemPage,
     ensureStoreSystemPages,
+    removeStoreSystemPages,
     // Collection / entry context
     activeEntryId,
     activeEntry,
@@ -846,6 +866,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     // Node mutations
     findNode,
     addNode,
+    addPrebuilt,
     insertNode,
     moveNode,
     updateNode,

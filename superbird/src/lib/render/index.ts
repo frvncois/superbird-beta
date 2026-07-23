@@ -58,7 +58,7 @@ export function renderDocument(
   const hasIx = Object.keys(ixMap).length > 0
   // The shared runtime also powers forms + the storefront (login/etc.), so it
   // must load on those pages even without interactions.
-  const needsScript = hasIx || containsForm(body) || !!ctx.systemKey
+  const needsScript = hasIx || hasRuntimeNode(body) || !!ctx.systemKey
 
   let headTags = ''
   if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
@@ -96,7 +96,8 @@ export function renderDocument(
   )
 }
 
-function containsForm(node: CanvasNode): boolean {
-  if (node.type === 'form') return true
-  return (node.children ?? []).some(containsForm)
+// Any node that the shared runtime needs to wire (a form, or a prebuilt element).
+function hasRuntimeNode(node: CanvasNode): boolean {
+  if (node.type === 'form' || node.element) return true
+  return (node.children ?? []).some(hasRuntimeNode)
 }

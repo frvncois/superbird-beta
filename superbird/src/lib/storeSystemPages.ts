@@ -40,7 +40,7 @@ interface SystemPageDef {
 export const SYSTEM_PAGE_DEFS: SystemPageDef[] = [
   { key: 'login', name: 'Login', slug: 'login', build: () => [heading('Sign in'), loginForm()] },
   { key: 'account', name: 'Account', slug: 'account', build: () => [heading('My account'), text('Your orders will appear here.'), link('Log out', '/api/store/auth/logout')] },
-  { key: 'cart', name: 'Cart', slug: 'cart', build: () => [heading('Your cart'), text('Your cart is empty.')] },
+  { key: 'cart', name: 'Cart', slug: 'cart', build: () => [heading('Your cart'), createNode('div', { element: 'cart', children: [text('Your cart is empty.')] })] },
   { key: 'order-confirmation', name: 'Order confirmation', slug: 'order-confirmation', build: () => [heading('Thank you!'), text('Your order has been received.')] },
 ]
 

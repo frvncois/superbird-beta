@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useCanvasStore } from '@/stores/canvas'
-import type { FieldType, NodeType } from '@/types/canvas'
+import type { FieldType, NodeType, PrebuiltElementKey } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
@@ -25,7 +25,9 @@ function handleFieldDragStart(e: DragEvent, type: FieldType) {
   e.dataTransfer!.setData('application/superbird-dynamic-field', type)
 }
 
-interface ElementDef { type: NodeType; label: string; icon: string }
+// `prebuilt` marks a ready-made "Dynamic" element (login/cart) — dragged with a
+// different MIME so the drop inserts a whole tree instead of a single node.
+interface ElementDef { type: NodeType; label: string; icon: string; prebuilt?: PrebuiltElementKey }
 interface ElementCategory { label: string; elements: ElementDef[] }
 
 const categories: ElementCategory[] = [
@@ -78,17 +80,23 @@ const categories: ElementCategory[] = [
     ],
   },
   {
-    label: 'Data',
+    label: 'Dynamic',
     elements: [
       { type: 'collection-list', label: 'Collection', icon: 'collection' },
+      { type: 'form', label: 'Login', icon: 'users', prebuilt: 'login' },
+      { type: 'div', label: 'Cart', icon: 'cart', prebuilt: 'cart' },
     ],
   },
 ]
 
-function handleDragStart(e: DragEvent, type: NodeType) {
+function handleDragStart(e: DragEvent, el: ElementDef) {
   e.dataTransfer!.effectAllowed = 'copyMove'
-  e.dataTransfer!.setData('application/superbird-component', type)
-  store.setDraggedComponent(type)
+  if (el.prebuilt) {
+    e.dataTransfer!.setData('application/superbird-prebuilt', el.prebuilt)
+  } else {
+    e.dataTransfer!.setData('application/superbird-component', el.type)
+    store.setDraggedComponent(el.type)
+  }
 }
 
 function handleDragEnd() {
@@ -127,7 +135,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           :key="el.type"
           class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground active:cursor-grabbing"
           draggable="true"
-          @dragstart="handleDragStart($event, el.type)"
+          @dragstart="handleDragStart($event, el)"
           @dragend="handleDragEnd"
           @contextmenu.prevent="handleContextMenu($event, el.type)"
         >

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { apiGet } from '@/lib/api'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import AppHeader from '@/components/header/AppHeader.vue'
 import SitePreview from '@/components/canvas/SitePreview.vue'
@@ -7,6 +8,7 @@ import ProjectInfoCard from '@/components/dashboard/ProjectInfoCard.vue'
 import AnalyticsCard from '@/components/dashboard/AnalyticsCard.vue'
 import FormSubmissionsCard from '@/components/dashboard/FormSubmissionsCard.vue'
 import SalesCard from '@/components/dashboard/SalesCard.vue'
+import StoreFeatureCard from '@/components/dashboard/StoreFeatureCard.vue'
 import DashboardDetailPanel from '@/components/dashboard/DashboardDetailPanel.vue'
 import SubmissionsSection from '@/components/settings/SubmissionsSection.vue'
 import OrdersSection from '@/components/settings/OrdersSection.vue'
@@ -18,6 +20,17 @@ type Detail = 'sales' | 'submissions' | 'analytics'
 const detail = ref<Detail | null>(null)
 function open(d: Detail) { detail.value = d }
 function back() { detail.value = null }
+
+// Only show the sales card once we know the store is on; otherwise a promo card.
+const storeEnabled = ref<boolean | null>(null)
+onMounted(async () => {
+  try {
+    const c = await apiGet<{ enabled: boolean }>('/api/store/config')
+    storeEnabled.value = c.enabled
+  } catch {
+    storeEnabled.value = false
+  }
+})
 </script>
 
 <template>
@@ -32,7 +45,8 @@ function back() { detail.value = null }
         <ProjectInfoCard class="animate-fade-in-up" />
         <AnalyticsCard class="animate-fade-in-up" style="animation-delay: 60ms" @view="open('analytics')" />
         <FormSubmissionsCard class="animate-fade-in-up" style="animation-delay: 120ms" @view="open('submissions')" />
-        <SalesCard class="animate-fade-in-up" style="animation-delay: 180ms" @view="open('sales')" />
+        <SalesCard v-if="storeEnabled === true" class="animate-fade-in-up" style="animation-delay: 180ms" @view="open('sales')" />
+        <StoreFeatureCard v-else-if="storeEnabled === false" class="animate-fade-in-up" style="animation-delay: 180ms" />
       </div>
 
       <!-- Detail -->

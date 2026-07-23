@@ -175,7 +175,12 @@ export interface CanvasNode {
   advanced?: NodeAdvanced
   interactions?: Interaction[]
   translations?: Record<string, string>
+  // Prebuilt "dynamic" element with a premade action (login/cart/lang-switcher).
+  // The tree is user-editable; the runtime wires the action via data-sb-el.
+  element?: PrebuiltElementKey
 }
+
+export type PrebuiltElementKey = 'login' | 'cart' | 'lang-switcher'
 
 // --- Locales ---
 

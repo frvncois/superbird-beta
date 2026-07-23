@@ -9,7 +9,7 @@ import VisibilityBlock from './VisibilityBlock.vue'
 import AttributesBlock from './AttributesBlock.vue'
 import LinkBlock from './LinkBlock.vue'
 
-const { node, isTextNode, isCollectionList, boundField } = useNodeSettings()
+const { node, isTextNode, isCollectionList, isLinkable, boundField } = useNodeSettings()
 </script>
 
 <template>
@@ -28,7 +28,7 @@ const { node, isTextNode, isCollectionList, boundField } = useNodeSettings()
     <div class="border-y">
       <VisibilityBlock />
       <AttributesBlock />
-      <LinkBlock />
+      <LinkBlock v-if="isLinkable" />
     </div>
   </div>
 </template>

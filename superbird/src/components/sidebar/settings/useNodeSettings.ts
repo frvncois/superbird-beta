@@ -19,6 +19,11 @@ export function useNodeSettings() {
   )
   const isImage = computed(() => node.value?.type === 'image')
   const isCollectionList = computed(() => node.value?.type === 'collection-list')
+  // Only link-ish elements get a Link section (a URL editor makes no sense on a
+  // plain div/text). Matches the renderer's isLinked types.
+  const isLinkable = computed(
+    () => !!node.value && ['button', 'link', 'link-block'].includes(node.value.type),
+  )
 
   // Fields of the collection currently being edited (derived from the template's
   // placed dynamic-field elements). Empty on a regular page.
@@ -41,6 +46,7 @@ export function useNodeSettings() {
     isTextNode,
     isImage,
     isCollectionList,
+    isLinkable,
     schemaFields,
     hasFields,
     boundField,

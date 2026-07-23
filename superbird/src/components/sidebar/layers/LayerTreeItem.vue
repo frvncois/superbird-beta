@@ -54,9 +54,6 @@ const isHiddenAtBreakpoint = computed(() => {
     (bp === 'mobile' && vis.hideMobile)
 })
 const hasChildren = computed(() => props.node.children.length > 0)
-const isContainerType = computed(() =>
-  ['body', 'container', 'section', 'columns', 'column', 'component'].includes(props.node.type),
-)
 
 const isDropTarget = computed(() => dropTarget?.value?.id === props.node.id)
 const dropPosition = computed(() => isDropTarget.value ? dropTarget!.value!.position : null)
@@ -99,7 +96,7 @@ function toggleExpand(e: MouseEvent) {
     >
       <!-- Expand/collapse chevron -->
       <button
-        v-if="isContainerType"
+        v-if="hasChildren"
         class="flex size-4 shrink-0 items-center justify-center rounded cursor-pointer hover:bg-secondary/15"
         @click="toggleExpand"
       >
@@ -151,7 +148,7 @@ function toggleExpand(e: MouseEvent) {
     <div v-if="!isBody && dropPosition === 'after'" class="layer-drop-line" :style="{ marginLeft: `${indent + 16}px` }" />
 
     <!-- Children -->
-    <div v-if="isContainerType && expanded && hasChildren">
+    <div v-if="expanded && hasChildren">
       <LayerTreeItem
         v-for="child in node.children"
         :key="child.id"

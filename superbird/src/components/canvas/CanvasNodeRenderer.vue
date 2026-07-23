@@ -249,9 +249,9 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       <div v-else class="markdown-body" v-html="markdownHtml" />
     </div>
 
-    <!-- Node content -->
+    <!-- Node content (only when it has no children of its own) -->
     <div
-      v-else-if="isTextEditable"
+      v-else-if="isTextEditable && node.children.length === 0"
       ref="editableRef"
       :contenteditable="isEditing"
       :class="[
@@ -265,8 +265,9 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       v-text="nodeContent(node)"
     />
 
-    <!-- Container / Body: render children -->
-    <template v-else-if="isContainer">
+    <!-- Container / body, or any node that has children (e.g. a list-item with
+         spans) — render the children. Matches the published renderer (html.ts). -->
+    <template v-else-if="isContainer || node.children.length > 0">
       <!-- Collection List indicator -->
       <div v-if="node.type === 'collection-list' && !preview" class="flex items-center gap-1.5 px-2 py-1 mb-1 rounded-lg bg-amber-bg/50 text-[10px] font-mono text-amber-fg">
         <span>&#8634;</span>

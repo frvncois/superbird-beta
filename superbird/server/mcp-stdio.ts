@@ -11,6 +11,7 @@ import { AI_TOOL_DEFS } from '../shared/aiTools'
 // Point it at a running Superbird with SUPERBIRD_URL (default localhost:3001).
 
 const BASE = process.env.SUPERBIRD_URL ?? 'http://localhost:3001'
+const TOKEN = process.env.SUPERBIRD_MCP_TOKEN ?? ''
 
 const server = new Server(
   { name: 'superbird', version: '1.0.0' },
@@ -26,7 +27,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   try {
     const res = await fetch(`${BASE}/api/mcp/tool`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-superbird-mcp-token': TOKEN },
       body: JSON.stringify({ name, input: args ?? {} }),
     })
     if (!res.ok) {
@@ -45,6 +46,7 @@ async function main() {
   await server.connect(new StdioServerTransport())
   // Log to stderr (stdout is the MCP protocol channel).
   console.error(`Superbird MCP server connected → ${BASE}`)
+  if (!TOKEN) console.error('⚠ SUPERBIRD_MCP_TOKEN is not set — the bridge is disabled server-side until it is.')
 }
 main().catch((e) => {
   console.error('MCP server failed:', e)

@@ -157,12 +157,12 @@ function selectState(state: StyleState) {
     <!-- Chips + input -->
     <div
       :class="[
-        'flex flex-wrap items-center gap-1 min-h-8 px-1 py-0.5 rounded-xl border cursor-text transition-colors duration-150',
+        'flex flex-wrap items-center gap-1 min-h-8 px-1 py-1 rounded-xl border cursor-text transition-colors duration-150',
         isFocused ? 'border-input-border-focus outline-3 outline-secondary/10' : 'border-input-border hover:border-input-border-focus',
       ]"
       @click="focusInput"
     >
-      <div v-for="cls in classes" :key="cls" class="relative shrink-0">
+      <div v-for="cls in classes" :key="cls" class="relative flex items-center gap-0.5">
         <!-- Inline rename -->
         <input
           v-if="renaming === cls"

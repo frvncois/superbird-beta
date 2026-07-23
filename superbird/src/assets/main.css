@@ -20,7 +20,7 @@
   --color-primary-hover: #818cf8;
   --color-input: #ffffff;
   /* Input borders — tuned per mode (not derived from foreground opacity). */
-  --color-input-border: #000000;
+  --color-input-border: #dfdfdf;
   --color-input-border-focus: #9ca3af;
 
   /* Semantic color pairs */

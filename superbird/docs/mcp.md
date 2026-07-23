@@ -33,19 +33,29 @@ in-app assistant, the headless executor, and the MCP server.
 
 ## Connect Claude Code
 
-This is a **stdio** MCP server (Claude Code launches it as a subprocess) — **not**
-an HTTP endpoint. Do not `claude mcp add --transport http http://localhost:3001/…`;
-`:3001` is the Superbird web/API server the stdio process talks to internally
-(`/api/mcp/*`), not an MCP endpoint.
+This is a **stdio** MCP server: "stdio" is the MCP *transport* — Claude Code
+launches `mcp-stdio.ts` as a subprocess and exchanges JSON-RPC over its
+**stdin/stdout** (so stdout stays clean; logs go to stderr). It is **not** an
+HTTP endpoint — do not `claude mcp add --transport http …`. `:3001` is the
+Superbird web/API server the stdio process talks to *internally* (`/api/mcp/*`).
 
-1. Start Superbird: `npm run dev` (its API must be on `http://localhost:3001`;
-   override with `SUPERBIRD_URL`).
-2. Register the MCP server. Use **absolute paths** so it launches regardless of
-   the working directory Claude Code spawns it from:
+The bridge is **disabled unless `SUPERBIRD_MCP_TOKEN` is set** (fail-closed).
+
+1. Start Superbird with a token (any random string), so the API on
+   `http://localhost:3001` accepts the bridge:
 
    ```sh
-   claude mcp add superbird -- /ABSOLUTE/PATH/TO/superbird/node_modules/.bin/tsx \
-     /ABSOLUTE/PATH/TO/superbird/server/mcp-stdio.ts
+   SUPERBIRD_MCP_TOKEN=my-dev-secret npm run dev
+   ```
+2. Register the MCP server. Pass the **same token** (and `SUPERBIRD_URL` if the
+   API isn't at localhost:3001) via `-e`, and use **absolute paths** so it
+   launches from any working directory:
+
+   ```sh
+   claude mcp add superbird \
+     -e SUPERBIRD_MCP_TOKEN=my-dev-secret \
+     -- /ABSOLUTE/PATH/TO/superbird/node_modules/.bin/tsx \
+        /ABSOLUTE/PATH/TO/superbird/server/mcp-stdio.ts
    ```
 3. **Restart Claude Code** — newly added MCP servers only load on restart. Then
    `claude mcp list` should show `superbird`.
@@ -54,9 +64,18 @@ an HTTP endpoint. Do not `claude mcp add --transport http http://localhost:3001/
    feature cards.”* Edits appear on the canvas as it works. With no editor open,
    edits apply headlessly to the saved project.
 
-## Security note
+## Security & deployment
 
-The `/api/mcp/*` routes are **not** session-guarded — it's a local developer
-bridge on the same origin. Only expose Superbird's API port to trusted local
-clients. (Publish/SSR runs on separate origins in production and doesn't include
-this bridge.)
+- **Fail-closed:** with no `SUPERBIRD_MCP_TOKEN`, `/api/mcp/tool|tools|status`
+  return 403 (bridge off). So it's safe by default in production — you opt in by
+  setting the token.
+- **Auth split:** the external-client endpoints (`tool`/`tools`/`status`) require
+  the `x-superbird-mcp-token` header; the editor endpoints (`events`/`result`)
+  require an authenticated admin session.
+- **Deploying behind a proxy:** to point the local stdio server at a hosted
+  Superbird, set `-e SUPERBIRD_URL=https://your-domain.com` and the token. Two
+  proxy caveats: (1) the token travels in a header, so **use HTTPS**; (2) the
+  **live** path uses Server-Sent Events — disable proxy buffering for
+  `/api/mcp/events` (nginx: `proxy_buffering off;` + `proxy_read_timeout` high),
+  or the live bridge hangs. Headless works without SSE.
+- Keep the token secret; rotate it by restarting with a new value.

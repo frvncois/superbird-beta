@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
+import type { Context, Next } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { AI_TOOL_DEFS } from '../../shared/aiTools'
 import { runHeadless } from '../lib/mcpHeadless'
+import { requireAuth } from '../lib/session'
 import { randomHex } from '../lib/ids'
 
 // The MCP bridge. An external MCP client (e.g. Claude Code, via the stdio server)
@@ -9,9 +11,31 @@ import { randomHex } from '../lib/ids'
 // the call to it (live — runs against the open canvas); otherwise we apply it
 // headlessly to the saved project document.
 //
-// Not session-guarded: it's a local developer bridge on the same origin.
+// Security: OFF unless SUPERBIRD_MCP_TOKEN is set (fail-closed, safe to deploy).
+// The external-client endpoints (tool/tools/status) require that token; the
+// editor endpoints (events/result) require an admin session.
 
 const mcp = new Hono()
+
+// Read lazily so setting/rotating the env doesn't require code changes.
+function mcpToken(): string {
+  return process.env.SUPERBIRD_MCP_TOKEN ?? ''
+}
+
+// Guards the endpoints an external MCP client hits.
+async function requireToken(c: Context, next: Next): Promise<Response | void> {
+  const token = mcpToken()
+  if (!token) return c.json({ error: 'MCP bridge is disabled. Set SUPERBIRD_MCP_TOKEN to enable it.' }, 403)
+  if (c.req.header('x-superbird-mcp-token') !== token) return c.json({ error: 'Invalid MCP token.' }, 401)
+  await next()
+}
+
+// External MCP client → token. Editor (browser) → admin session.
+mcp.use('/mcp/tool', requireToken)
+mcp.use('/mcp/tools', requireToken)
+mcp.use('/mcp/status', requireToken)
+mcp.use('/mcp/events', requireAuth)
+mcp.use('/mcp/result', requireAuth)
 
 interface EditorConn {
   send: (payload: unknown) => Promise<void>

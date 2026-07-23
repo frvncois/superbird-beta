@@ -54,11 +54,16 @@ publicForms.post('/public/forms', async (c) => {
   // Delivery — email + webhook, decided entirely from the server-side config.
   let emailStatus: EmailStatus = 'skipped'
   let emailedTo: string | undefined
-  const notify = form.config.notificationEmail?.trim()
-  if (notify && isSmtpConfigured(proj.id)) {
-    const res = await sendSubmissionEmail(proj.id, notify, form.name, data, pageUrl)
+  // One or several comma-separated recipients.
+  const recipients = (form.config.notificationEmail ?? '')
+    .split(',')
+    .map((a) => a.trim())
+    .filter(Boolean)
+  if (recipients.length && isSmtpConfigured(proj.id)) {
+    const to = recipients.join(', ')
+    const res = await sendSubmissionEmail(proj.id, to, form.name, data, pageUrl)
     emailStatus = res.ok ? 'sent' : 'failed'
-    if (res.ok) emailedTo = notify
+    if (res.ok) emailedTo = to
   }
   if (form.config.webhookUrl) {
     // Best-effort — a failing webhook must not fail the visitor's submission.

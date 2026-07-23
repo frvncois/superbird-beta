@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import type { CanvasNode, FormConfig } from '@/types/canvas'
@@ -10,6 +10,14 @@ import InputUi from '@/components/ui/InputUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
+import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
+
+const tab = ref<'settings' | 'submissions'>('settings')
+const tabOptions = [
+  { value: 'settings', label: 'Settings' },
+  { value: 'submissions', label: 'Submissions' },
+]
+const tabProxy = computed<string>({ get: () => tab.value, set: (v) => (tab.value = v as 'settings' | 'submissions') })
 
 const canvas = useCanvasStore()
 const site = useSiteSettingsStore()
@@ -52,10 +60,15 @@ function update(formId: string, patch: Partial<FormConfig>) {
 </script>
 
 <template>
-  <div class="space-y-10">
-    <SmtpSection />
+  <div class="space-y-8">
+    <SegmentedControlUi v-model="tabProxy" :options="tabOptions" />
 
-    <section class="space-y-3">
+    <SubmissionsSection v-if="tab === 'submissions'" />
+
+    <template v-else>
+      <SmtpSection />
+
+      <section class="space-y-3">
       <div class="space-y-1">
         <h3 class="text-sm font-semibold text-foreground">Form settings</h3>
         <p class="text-xs leading-relaxed text-secondary">
@@ -105,10 +118,10 @@ function update(formId: string, patch: Partial<FormConfig>) {
               @update:model-value="update(form.formId, { saveToDb: $event })"
             />
           </SettingsRow>
-          <SettingsRow label="Notification email" description="Email each submission here (needs SMTP configured).">
+          <SettingsRow label="Notification emails" description="Where submissions are emailed. Comma-separate for several recipients (needs SMTP).">
             <InputUi
               :model-value="cfg(form.formId).notificationEmail ?? ''"
-              placeholder="you@site.com"
+              placeholder="you@site.com, team@site.com"
               @update:model-value="update(form.formId, { notificationEmail: $event || undefined })"
             />
           </SettingsRow>
@@ -128,8 +141,7 @@ function update(formId: string, patch: Partial<FormConfig>) {
           </SettingsRow>
         </div>
       </div>
-    </section>
-
-    <SubmissionsSection />
+      </section>
+    </template>
   </div>
 </template>

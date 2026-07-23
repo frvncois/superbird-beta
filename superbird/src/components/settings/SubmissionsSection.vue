@@ -70,7 +70,11 @@ function summary(s: Submission): string {
 // Delivery + read state collapsed into one badge.
 function badge(s: Submission): { label: string; cls: string } {
   if (s.seen) return { label: 'Seen', cls: 'bg-muted-bg text-muted-fg' }
-  if (s.emailStatus === 'sent') return { label: s.emailedTo ? `Sent · ${s.emailedTo}` : 'Sent', cls: 'bg-blue-bg text-blue-fg' }
+  if (s.emailStatus === 'sent') {
+    const recipients = (s.emailedTo ?? '').split(',').filter((a) => a.trim())
+    const label = recipients.length > 1 ? `Sent · ${recipients.length} recipients` : recipients.length === 1 ? `Sent · ${recipients[0]!.trim()}` : 'Sent'
+    return { label, cls: 'bg-blue-bg text-blue-fg' }
+  }
   return { label: 'Unread', cls: 'bg-amber-bg text-amber-fg' }
 }
 

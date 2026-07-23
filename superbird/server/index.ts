@@ -1,5 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { secureHeaders } from 'hono/secure-headers'
+import { bodyLimit } from 'hono/body-limit'
 import { ensureSchema } from './db/client'
 import authRoutes from './routes/auth'
 import projectRoutes from './routes/project'
@@ -15,6 +17,33 @@ ensureSchema()
 
 const app = new Hono()
 
+// Normalize errors — never leak stack traces / internals to the client.
+app.onError((err, c) => {
+  console.error('[superbird] unhandled error:', err)
+  return c.json({ error: 'Internal server error.' }, 500)
+})
+
+// Security headers on every response: clickjacking (X-Frame-Options), MIME
+// sniffing (nosniff), referrer + HSTS. No global CSP (would break published
+// sites and the admin SPA); resource-isolation headers are left off so the
+// published site can load its own /media and /fonts.
+app.use(
+  '*',
+  secureHeaders({
+    xFrameOptions: 'SAMEORIGIN',
+    xContentTypeOptions: 'nosniff',
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    strictTransportSecurity: 'max-age=63072000; includeSubDomains',
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    contentSecurityPolicy: undefined,
+  }),
+)
+
+// Cap request bodies (uploads + the project document) to prevent OOM DoS.
+app.use('*', bodyLimit({ maxSize: 30 * 1024 * 1024, onError: (c) => c.json({ error: 'Payload too large (max 30 MB).' }, 413) }))
+
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
 // MCP bridge (no session — a local developer bridge). Registered before the
@@ -25,16 +54,24 @@ app.route('/api', mediaRoutes)
 app.route('/api', fontsRoutes)
 app.route('/api', usersRoutes)
 
-// Public media files (no auth — referenced by published pages).
+// Document types that would execute as HTML if navigated to — force download.
+const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])
+
+// Public media files (no auth — referenced by published pages). Served with
+// nosniff + CSP sandbox so a malicious upload (e.g. an SVG or HTML with script)
+// can't execute in the same origin as the admin/API.
 app.get('/media/:id', (c) => {
   const file = readMediaFile(c.req.param('id'))
   if (!file) return c.notFound()
-  return new Response(file.bytes, {
-    headers: {
-      'Content-Type': file.mime,
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  })
+  const dangerous = DANGEROUS_MIME.has(file.mime)
+  const headers: Record<string, string> = {
+    'Content-Type': dangerous ? 'application/octet-stream' : file.mime,
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': 'sandbox',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+  }
+  if (dangerous) headers['Content-Disposition'] = 'attachment'
+  return new Response(file.bytes, { headers })
 })
 
 // Public font files (no auth — referenced by @font-face in published pages).
@@ -44,6 +81,7 @@ app.get('/fonts/:file', (c) => {
   return new Response(file.bytes, {
     headers: {
       'Content-Type': file.mime,
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=31536000, immutable',
     },
   })

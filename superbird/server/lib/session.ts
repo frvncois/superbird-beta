@@ -8,6 +8,8 @@ import type { User } from '../../shared/types'
 
 export const SESSION_COOKIE = 'sb_session'
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
+// Send the cookie only over HTTPS in production (localhost dev stays HTTP).
+const SECURE_COOKIE = process.env.NODE_ENV === 'production'
 
 // Row → public User (never exposes passwordHash). Single-admin model: every
 // user is a full admin (see docs — roles were intentionally dropped).
@@ -43,6 +45,7 @@ export function startSession(c: Context, userId: string): void {
     .run()
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
+    secure: SECURE_COOKIE,
     sameSite: 'Lax',
     path: '/',
     maxAge: SESSION_TTL_MS / 1000,
@@ -67,5 +70,5 @@ export function currentUser(c: Context): User | null {
 export function endSession(c: Context): void {
   const token = getCookie(c, SESSION_COOKIE)
   if (token) db.delete(sessions).where(eq(sessions.id, token)).run()
-  deleteCookie(c, SESSION_COOKIE, { path: '/' })
+  deleteCookie(c, SESSION_COOKIE, { path: '/', secure: SECURE_COOKIE })
 }

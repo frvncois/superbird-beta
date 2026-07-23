@@ -9,7 +9,7 @@ import { media, mediaFolders } from '../db/schema'
 import { getWorkingDocument } from './project'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const MEDIA_DIR = process.env.SUPERBIRD_MEDIA ?? resolve(here, '../../data/media')
+export const MEDIA_DIR = process.env.SUPERBIRD_MEDIA ?? resolve(here, '../../data/media')
 mkdirSync(MEDIA_DIR, { recursive: true })
 
 // Client-facing shape (matches the client's MediaItem / MediaFolder).

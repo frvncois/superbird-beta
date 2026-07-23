@@ -6,7 +6,7 @@ import { randomHex } from './ids'
 
 const here = dirname(fileURLToPath(import.meta.url))
 // Uploaded fonts (git-ignored, per project).
-const FONTS_DIR = process.env.SUPERBIRD_FONTS ?? resolve(here, '../../data/fonts')
+export const FONTS_DIR = process.env.SUPERBIRD_FONTS ?? resolve(here, '../../data/fonts')
 // Bundled "default" fonts shipped with the app (committed).
 const DEFAULTS_DIR = resolve(here, '../assets/fonts')
 mkdirSync(FONTS_DIR, { recursive: true })

@@ -107,3 +107,13 @@ export interface AiToolDef {
   description: string
   input_schema: Record<string, unknown>
 }
+
+// ── Backup / Export ──
+
+export interface BackupMeta {
+  id: string
+  label: string
+  kind: 'manual' | 'auto'
+  size: number
+  createdAt: string
+}

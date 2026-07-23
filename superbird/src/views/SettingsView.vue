@@ -11,6 +11,7 @@ import TypographyPanel from '@/components/settings/TypographyPanel.vue'
 import MediaPanel from '@/components/settings/MediaPanel.vue'
 import SeoPanel from '@/components/settings/SeoPanel.vue'
 import UsersPanel from '@/components/settings/UsersPanel.vue'
+import BackupPanel from '@/components/settings/BackupPanel.vue'
 import AdvancedPanel from '@/components/settings/AdvancedPanel.vue'
 
 // Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches).
@@ -27,6 +28,7 @@ const categories = [
   { key: 'media', label: 'Media', icon: 'image', component: MediaPanel },
   { key: 'seo', label: 'SEO', icon: 'search', component: SeoPanel },
   { key: 'users', label: 'Users', icon: 'users', component: UsersPanel },
+  { key: 'backup', label: 'Backup', icon: 'archive', component: BackupPanel },
   { key: 'advanced', label: 'Advanced', icon: 'embed', component: AdvancedPanel },
 ] as const
 

@@ -47,6 +47,21 @@ export const media = sqliteTable('media', {
   createdAt: text('created_at').notNull(),
 })
 
+// Point-in-time snapshots of the working document (design + content). Media/font
+// bytes are NOT duplicated here — they live on disk and are shared across
+// snapshots; a full portable copy is produced on demand by the export endpoint.
+export const backups = sqliteTable('backups', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  label: text('label').notNull(),
+  kind: text('kind').notNull().default('manual'), // 'manual' | 'auto'
+  document: text('document').notNull(), // JSON snapshot of the working document
+  size: integer('size').notNull(),
+  createdAt: text('created_at').notNull(),
+})
+
 export const mediaFolders = sqliteTable('media_folders', {
   id: text('id').primaryKey(),
   projectId: text('project_id')

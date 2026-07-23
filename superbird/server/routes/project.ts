@@ -4,6 +4,7 @@ import { db } from '../db/client'
 import { projectState } from '../db/schema'
 import { requireAuth } from '../lib/session'
 import { getInstalledProject, publishDesign } from '../lib/project'
+import { maybeAutoBackup } from '../lib/backup'
 import type { ProjectDocument, PublishResult } from '../../shared/types'
 
 const project = new Hono()
@@ -39,6 +40,8 @@ project.put('/project', async (c) => {
       set: { document: JSON.stringify(body), updatedAt: now },
     })
     .run()
+  // Lazily take an automatic backup (at most once/day; prunes old autos).
+  maybeAutoBackup(proj.id)
   return c.json({ ok: true })
 })
 

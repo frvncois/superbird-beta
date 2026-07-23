@@ -9,6 +9,7 @@ import mediaRoutes from './routes/media'
 import fontsRoutes from './routes/fonts'
 import usersRoutes from './routes/users'
 import mcpRoutes from './routes/mcp'
+import backupRoutes from './routes/backup'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -42,7 +43,9 @@ app.use(
 )
 
 // Cap request bodies (uploads + the project document) to prevent OOM DoS.
-app.use('*', bodyLimit({ maxSize: 30 * 1024 * 1024, onError: (c) => c.json({ error: 'Payload too large (max 30 MB).' }, 413) }))
+// /api/import is exempt — it has its own (larger) limit since backups bundle media.
+const globalBodyLimit = bodyLimit({ maxSize: 30 * 1024 * 1024, onError: (c) => c.json({ error: 'Payload too large (max 30 MB).' }, 413) })
+app.use('*', (c, next) => (c.req.path === '/api/import' ? next() : globalBodyLimit(c, next)))
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
@@ -53,6 +56,7 @@ app.route('/api', projectRoutes)
 app.route('/api', mediaRoutes)
 app.route('/api', fontsRoutes)
 app.route('/api', usersRoutes)
+app.route('/api', backupRoutes)
 
 // Document types that would execute as HTML if navigated to — force download.
 const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])

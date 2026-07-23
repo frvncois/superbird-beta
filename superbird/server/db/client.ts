@@ -49,6 +49,15 @@ export function ensureSchema(): void {
       published_design TEXT,
       published_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS backups (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id),
+      label TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'manual',
+      document TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS media (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),

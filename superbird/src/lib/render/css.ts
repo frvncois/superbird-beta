@@ -175,13 +175,14 @@ function compileBodiesCss(
   const maxMedia: Record<string, string[]> = {}
   const minMedia: Record<string, string[]> = {}
 
-  const walk = (node: CanvasNode) => {
+  const walk = (node: CanvasNode, depth: number) => {
+    if (depth > 64) return // stack-overflow guard (mirrors render/html.ts)
     if (node.classes.length > 0 || Object.keys(node.styles).length > 0) {
       elementRules(node, styleClasses, base, maxMedia, minMedia)
     }
-    for (const child of node.children) walk(child)
+    for (const child of node.children) walk(child, depth + 1)
   }
-  for (const body of bodies) walk(body)
+  for (const body of bodies) walk(body, 0)
 
   const parts = [baseCss(globalStyles), base.join('')]
   for (const w of ['768px', '375px']) if (maxMedia[w]) parts.push(`@media (max-width:${w}){${maxMedia[w]!.join('')}}`)

@@ -16,8 +16,11 @@ fontsApi.post('/fonts/upload', async (c) => {
   const weight = typeof body['weight'] === 'string' ? body['weight'] : '400'
   const style = body['style'] === 'italic' ? 'italic' : 'normal'
   const bytes = Buffer.from(await file.arrayBuffer())
-  const face = saveCustomFace(bytes, file.name, weight, style)
-  return c.json(face, 201)
+  try {
+    return c.json(saveCustomFace(bytes, file.name, weight, style), 201)
+  } catch (e) {
+    return c.json({ error: e instanceof Error ? e.message : 'Invalid font file.' }, 400)
+  }
 })
 
 // Delete self-hosted upload files for a removed font family (reclaims disk).

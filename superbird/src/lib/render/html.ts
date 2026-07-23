@@ -119,17 +119,22 @@ function linkHref(node: CanvasNode, ctx: RenderContext, entry: Entry | undefined
   return safeUrl(node.link?.url)
 }
 
-export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry, repeated = false): string {
+// Cap recursion so a maliciously deep (or huge) published tree can't stack-
+// overflow the public SSR request. Real content is nowhere near this.
+const MAX_DEPTH = 64
+
+export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: Entry, repeated = false, depth = 0): string {
+  if (depth > MAX_DEPTH) return ''
   // A linked button becomes an <a> so it actually navigates.
   const tag = node.type === 'button' && hasLink(node) ? 'a' : node.tag || 'div'
 
   // Collection list: render the container, repeating its item template per entry.
   // Items are `repeated` so their author-set htmlIds aren't duplicated per row.
   if (node.type === 'collection-list') {
-    const limit = parseInt(node.props.limit ?? '3', 10) || 3
+    const limit = Math.min(100, Math.max(0, parseInt(node.props.limit ?? '3', 10) || 3))
     const list = ctx.entriesFor(node.props.source, limit)
     const inner = list
-      .map((e) => node.children.map((child) => renderNodeToHtml(child, ctx, e, true)).join(''))
+      .map((e) => node.children.map((child) => renderNodeToHtml(child, ctx, e, true, depth + 1)).join(''))
       .join('')
     return `<${tag}${buildAttributes(node, ctx, entry, repeated)}>${inner}</${tag}>`
   }
@@ -144,7 +149,7 @@ export function renderNodeToHtml(node: CanvasNode, ctx: RenderContext, entry?: E
   if (node.type === 'markdown') {
     inner = renderMarkdown(ctx.content(node, entry))
   } else if (node.children.length > 0 || isContainer(node)) {
-    inner = node.children.map((child) => renderNodeToHtml(child, ctx, entry, repeated)).join('')
+    inner = node.children.map((child) => renderNodeToHtml(child, ctx, entry, repeated, depth + 1)).join('')
   } else {
     inner = escapeHtml(ctx.content(node, entry))
   }

@@ -70,7 +70,9 @@ async function compressToWebp(
   bytes: Buffer,
   opts: CompressionSettings,
 ): Promise<{ bytes: Buffer; width?: number; height?: number }> {
-  const out = await sharp(bytes)
+  // limitInputPixels guards against decompression bombs (small file, huge
+  // dimensions) exhausting server memory during decode.
+  const out = await sharp(bytes, { limitInputPixels: 100_000_000, failOn: 'error' })
     .rotate() // honor EXIF orientation before stripping metadata
     .resize(opts.maxWidth, opts.maxHeight, { fit: 'inside', withoutEnlargement: true })
     .webp({ quality: opts.quality })

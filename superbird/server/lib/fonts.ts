@@ -55,6 +55,18 @@ export function deleteFontFiles(urls: string[]): void {
   }
 }
 
+const ALLOWED_FONT_EXT = new Set(['woff2', 'woff', 'ttf', 'otf'])
+
+// Sniff the file signature so an arbitrary blob can't be written to the fonts
+// dir (and later served). Covers woff2/woff/otf/ttf/ttc.
+function looksLikeFont(bytes: Buffer): boolean {
+  if (bytes.length < 4) return false
+  const tag = bytes.subarray(0, 4).toString('latin1')
+  if (tag === 'wOF2' || tag === 'wOFF' || tag === 'OTTO' || tag === 'true' || tag === 'ttcf') return true
+  // TrueType sfnt version 0x00010000
+  return bytes[0] === 0x00 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00
+}
+
 /** Save one uploaded custom face (weight/style) and return its DTO. */
 export function saveCustomFace(
   bytes: Buffer,
@@ -62,7 +74,9 @@ export function saveCustomFace(
   weight: string,
   style: 'normal' | 'italic',
 ): FontFaceDTO {
-  const ext = (filename.slice(filename.lastIndexOf('.') + 1) || 'woff2').toLowerCase()
+  const ext = (filename.slice(filename.lastIndexOf('.') + 1) || '').toLowerCase()
+  if (!ALLOWED_FONT_EXT.has(ext)) throw new Error('Unsupported font type. Use .woff2, .woff, .ttf or .otf.')
+  if (!looksLikeFont(bytes)) throw new Error('That file is not a valid font.')
   const { url } = saveFontFile(bytes, ext)
   return { weight, style, url, format: FORMAT_BY_EXT[ext] ?? 'woff2' }
 }

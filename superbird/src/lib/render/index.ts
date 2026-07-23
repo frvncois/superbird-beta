@@ -34,11 +34,12 @@ type IxMap = Record<string, NonNullable<CanvasNode['interactions']>>
 // id — the shape embedded as window.__SB_IX__ and read by the runtime.
 export function collectInteractions(node: CanvasNode): IxMap {
   const map: IxMap = {}
-  const walk = (n: CanvasNode) => {
+  const walk = (n: CanvasNode, depth: number) => {
+    if (depth > 64) return // stack-overflow guard (mirrors render/html.ts)
     if (n.interactions && n.interactions.length > 0) map[n.id] = n.interactions
-    for (const child of n.children) walk(child)
+    for (const child of n.children) walk(child, depth + 1)
   }
-  walk(node)
+  walk(node, 0)
   return map
 }
 

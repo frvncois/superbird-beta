@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Dashboard shell: header on top, a data sidebar, and a site preview canvas.
-// Mirrors EditorLayout's grid, minus the right sidebar.
+// The sidebar widens (`wide`) when a "View all" detail is open.
+withDefaults(defineProps<{ wide?: boolean }>(), { wide: false })
 </script>
 
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="wide && 'is-wide'">
     <header class="dashboard-header border-b p-4 flex items-center justify-between">
       <slot name="header" />
     </header>
@@ -31,6 +32,11 @@
   width: 100vw;
   overflow: hidden;
   background-color: var(--color-background);
+  transition: grid-template-columns 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-layout.is-wide {
+  grid-template-columns: 520px 1fr;
 }
 
 .dashboard-header { grid-area: header; }

@@ -79,6 +79,8 @@ import {
   ShoppingBagIcon,
   ShoppingCartIcon,
   TruckIcon,
+  SunIcon,
+  MoonIcon,
 } from '@heroicons/vue/24/outline'
 
 // Named icons → HeroIcons (24px outline). Rendered by IconUi.
@@ -106,6 +108,8 @@ export const ICONS: Record<string, Component> = {
   store: ShoppingBagIcon,
   cart: ShoppingCartIcon,
   shipping: TruckIcon,
+  sun: SunIcon,
+  moon: MoonIcon,
   folder: FolderIcon,
   upload: ArrowUpTrayIcon,
   download: ArrowDownTrayIcon,

@@ -14,6 +14,9 @@ import ModalUi from '@/components/ui/ModalUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 
+// `embedded` hides the internal title (the dashboard panel supplies its own).
+defineProps<{ embedded?: boolean }>()
+
 const store = useSubmissionsStore()
 const dialog = useDialog()
 const toast = useToast()
@@ -143,11 +146,11 @@ async function runExport() {
 <template>
   <section class="space-y-3">
     <div class="flex items-start justify-between gap-3">
-      <div class="space-y-1">
+      <div v-if="!embedded" class="space-y-1">
         <h3 class="text-sm font-semibold text-foreground">Submissions</h3>
         <p class="text-xs leading-relaxed text-secondary">Everything captured from forms with “Save to database” on. Private — only signed-in admins can see this.</p>
       </div>
-      <ButtonUi variant="outline" size="sm" class="shrink-0" @click="openExport">
+      <ButtonUi variant="outline" size="sm" class="shrink-0" :class="embedded && 'ml-auto'" @click="openExport">
         <IconUi name="download" size="size-3.5" /> Export
       </ButtonUi>
     </div>

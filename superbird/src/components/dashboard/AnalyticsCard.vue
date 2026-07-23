@@ -4,6 +4,8 @@ import CardUi from '@/components/ui/CardUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ChartUi from '@/components/ui/ChartUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+
+const emit = defineEmits<{ view: [] }>()
 </script>
 
 <template>
@@ -18,7 +20,7 @@ import IconUi from '@/components/ui/IconUi.vue'
     </div>
 
     <template #actions>
-      <ButtonUi variant="outline" size="sm" class="flex-1">
+      <ButtonUi variant="outline" size="sm" class="flex-1" @click="emit('view')">
         View analytics
         <IconUi name="arrow-right" size="size-3" />
       </ButtonUi>

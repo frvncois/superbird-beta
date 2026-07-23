@@ -44,13 +44,21 @@ function fmtDate(iso: string) { const d = new Date(iso); return Number.isNaN(d.g
 function shortId(id: string) { return id.replace(/^order_/, '#').slice(0, 9) }
 function summary(o: Order) { return o.items.map((i) => `${i.title} × ${i.qty}`).join(', ') || '—' }
 
+const unavailable = ref(false)
 async function load() {
-  const [cfg, res] = await Promise.all([
-    apiGet<{ currency: string }>('/api/store/config'),
-    apiGet<{ orders: Order[] }>(`/api/store/orders${status.value ? `?status=${status.value}` : ''}`),
-  ])
-  currency.value = cfg.currency
-  orders.value = res.orders
+  try {
+    const [cfg, res] = await Promise.all([
+      apiGet<{ currency: string }>('/api/store/config'),
+      apiGet<{ orders: Order[] }>(`/api/store/orders${status.value ? `?status=${status.value}` : ''}`),
+    ])
+    currency.value = cfg.currency
+    orders.value = res.orders
+    unavailable.value = false
+  } catch {
+    // Store not installed/enabled yet.
+    orders.value = []
+    unavailable.value = true
+  }
 }
 onMounted(load)
 watch(status, load)
@@ -70,7 +78,7 @@ async function changeStatus(o: Order, next: string) {
       <div class="w-40"><SelectUi v-model="status" :options="filterOptions" /></div>
     </div>
 
-    <EmptyStateUi v-if="!orders.length" compact message="No orders yet." class="rounded-xl border border-border/70 py-12" />
+    <EmptyStateUi v-if="!orders.length" compact :message="unavailable ? 'Activate the store to take orders.' : 'No orders yet.'" class="rounded-xl border border-border/70 py-12" />
 
     <div v-else class="overflow-hidden rounded-xl border border-border/70 bg-background divide-y divide-border/60">
       <div v-for="o in orders" :key="o.id">

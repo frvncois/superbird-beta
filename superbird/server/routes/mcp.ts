@@ -1,10 +1,12 @@
 import { Hono } from 'hono'
 import type { Context, Next } from 'hono'
 import { streamSSE } from 'hono/streaming'
+import { timingSafeEqual } from 'node:crypto'
 import { AI_TOOL_DEFS } from '../../shared/aiTools'
 import { runHeadless } from '../lib/mcpHeadless'
 import { requireAuth } from '../lib/session'
 import { randomHex } from '../lib/ids'
+import { hit, clientIp } from '../lib/rateLimit'
 
 // The MCP bridge. An external MCP client (e.g. Claude Code, via the stdio server)
 // calls POST /api/mcp/tool. If a Superbird editor is connected over SSE we relay
@@ -22,11 +24,21 @@ function mcpToken(): string {
   return process.env.SUPERBIRD_MCP_TOKEN ?? ''
 }
 
+function tokensMatch(a: string, b: string): boolean {
+  const ba = Buffer.from(a)
+  const bb = Buffer.from(b)
+  return ba.length === bb.length && timingSafeEqual(ba, bb)
+}
+
 // Guards the endpoints an external MCP client hits.
 async function requireToken(c: Context, next: Next): Promise<Response | void> {
   const token = mcpToken()
   if (!token) return c.json({ error: 'MCP bridge is disabled. Set SUPERBIRD_MCP_TOKEN to enable it.' }, 403)
-  if (c.req.header('x-superbird-mcp-token') !== token) return c.json({ error: 'Invalid MCP token.' }, 401)
+  // Rate-limit to blunt any token guessing.
+  const lim = hit(`mcp:${clientIp(c)}`, 60, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many requests.' }, 429, { 'Retry-After': String(lim.retryAfter) })
+  const provided = c.req.header('x-superbird-mcp-token') ?? ''
+  if (!tokensMatch(provided, token)) return c.json({ error: 'Invalid MCP token.' }, 401)
   await next()
 }
 

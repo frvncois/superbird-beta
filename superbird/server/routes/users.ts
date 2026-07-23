@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { users, sessions } from '../db/schema'
-import { hashPassword } from '../lib/password'
+import { hashPassword, validatePassword } from '../lib/password'
 import { currentUser, requireAuth, toUser } from '../lib/session'
 import { randomId } from '../lib/ids'
 
@@ -25,7 +25,8 @@ usersApi.post('/users', async (c) => {
   const password = body.password
   if (!name || !email || !password) return c.json({ error: 'Name, email and password are required.' }, 400)
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return c.json({ error: 'Enter a valid email.' }, 400)
-  if (password.length < 6) return c.json({ error: 'Password must be at least 6 characters.' }, 400)
+  const pwErr = validatePassword(password)
+  if (pwErr) return c.json({ error: pwErr }, 400)
 
   const existing = db.select().from(users).where(eq(users.email, email)).get()
   if (existing) return c.json({ error: 'A user with that email already exists.' }, 409)

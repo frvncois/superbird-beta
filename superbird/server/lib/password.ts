@@ -19,3 +19,15 @@ export function verifyPassword(password: string, stored: string): boolean {
   const actual = scryptSync(password, salt, KEYLEN)
   return expected.length === actual.length && timingSafeEqual(expected, actual)
 }
+
+// One password policy, shared by install + user creation so they can't drift.
+// Returns an error message, or null if acceptable. Max length bounds scrypt CPU.
+export function validatePassword(password: unknown): string | null {
+  if (typeof password !== 'string' || password.length < 8) return 'Password must be at least 8 characters.'
+  if (password.length > 256) return 'Password is too long (max 256).'
+  return null
+}
+
+// A fixed hash to verify against when an account doesn't exist, so login does
+// equal scrypt work either way (no timing oracle for user enumeration).
+export const DUMMY_HASH = hashPassword('superbird-timing-equalizer')

@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto'
 
-// Prefixed opaque id, e.g. randomId('user') → 'user_a1b2c3d4e5f6'.
+// Prefixed opaque id (96-bit random). Used for public, unguessable resource ids
+// (e.g. /media/:id served without auth), so keep the entropy high.
 export function randomId(prefix: string): string {
-  return `${prefix}_${randomBytes(6).toString('hex')}`
+  return `${prefix}_${randomBytes(12).toString('hex')}`
 }
 
 // Bare hex token (e.g. for on-disk filenames).

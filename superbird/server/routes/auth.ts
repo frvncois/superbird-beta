@@ -2,10 +2,11 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projects, users } from '../db/schema'
-import { hashPassword, verifyPassword } from '../lib/password'
+import { hashPassword, verifyPassword, validatePassword, DUMMY_HASH } from '../lib/password'
 import { startSession, endSession, currentUser, toUser } from '../lib/session'
 import { getPublishedAt } from '../lib/project'
 import { randomId } from '../lib/ids'
+import { hit, clientIp } from '../lib/rateLimit'
 import type {
   SetupPayload,
   LoginPayload,
@@ -44,6 +45,8 @@ auth.post('/install', async (c) => {
   if (!name || !handle || !admin?.name?.trim() || !admin?.email?.trim() || !admin?.password) {
     return c.json({ error: 'Missing required fields.' }, 400)
   }
+  const pwErr = validatePassword(admin.password)
+  if (pwErr) return c.json({ error: pwErr }, 400)
 
   const now = new Date().toISOString()
   const project: Project = { id: randomId('proj'), name, handle, createdAt: now }
@@ -77,8 +80,20 @@ auth.post('/login', async (c) => {
   const password = body.password
   if (!email || !password) return c.json({ error: 'Missing credentials.' }, 400)
 
+  // Rate limit brute-force: per-IP (all accounts) + per-account (targeted).
+  const ip = clientIp(c)
+  const ipLimit = hit(`login:ip:${ip}`, 30, 5 * 60_000)
+  const emailLimit = hit(`login:email:${email}`, 10, 15 * 60_000)
+  if (!ipLimit.ok || !emailLimit.ok) {
+    const retry = Math.max(ipLimit.retryAfter, emailLimit.retryAfter)
+    return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(retry) })
+  }
+
   const row = db.select().from(users).where(eq(users.email, email)).get()
-  if (!row || !verifyPassword(password, row.passwordHash)) {
+  // Always run scrypt (against a dummy hash if the user doesn't exist) so the
+  // response time doesn't reveal whether the email is registered.
+  const valid = row ? verifyPassword(password, row.passwordHash) : (verifyPassword(password, DUMMY_HASH), false)
+  if (!row || !valid) {
     return c.json({ error: 'Incorrect email or password.' }, 401)
   }
 

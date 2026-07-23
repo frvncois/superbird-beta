@@ -20,7 +20,7 @@
   --color-primary-hover: #818cf8;
   --color-input: #ffffff;
   /* Input borders — tuned per mode (not derived from foreground opacity). */
-  --color-input-border: #d4d4d8;
+  --color-input-border: #000000;
   --color-input-border-focus: #9ca3af;
 
   /* Semantic color pairs */
@@ -160,7 +160,7 @@
   --color-secondary: #6a6a6e;
   --color-icon-bg: #1a1a1a;
   --color-input: #131313;
-  --color-input-border: #3a3a3a;
+  --color-input-border: #c72424;
   --color-input-border-focus: #5c5c5c;
 
   /* Semantic color pairs */
@@ -190,16 +190,20 @@
 }
 
 /* ─── Base Reset ─── */
-*,
-*::before,
-*::after {
-  border-color: var(--color-border);
-}
+/* In @layer base so Tailwind's `utilities` layer (border-*, etc.) can override
+   the default border-color. Unlayered, this `*` rule beats every utility. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--color-border);
+  }
 
-html {
-  font-family: var(--font-sans);
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
 }
 
 /* ─── Canvas Artboard Isolation ─── */

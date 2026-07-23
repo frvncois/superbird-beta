@@ -15,6 +15,7 @@ import StorePanel from '@/components/settings/StorePanel.vue'
 import UsersPanel from '@/components/settings/UsersPanel.vue'
 import BackupPanel from '@/components/settings/BackupPanel.vue'
 import AdvancedPanel from '@/components/settings/AdvancedPanel.vue'
+import ThemeToggle from '@/components/settings/ThemeToggle.vue'
 
 // Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches).
 const globalStylesStore = useGlobalStylesStore()
@@ -55,21 +56,28 @@ const activeLabel = computed(() => categories.find((c) => c.key === active.value
 
     <div class="flex min-h-0 flex-1">
       <!-- Left nav -->
-      <nav class="w-56 shrink-0 space-y-0.5 overflow-y-auto border-r p-3">
-        <button
-          v-for="cat in categories"
-          :key="cat.key"
-          :class="[
-            'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors duration-100',
-            active === cat.key
-              ? 'bg-foreground/5 font-medium text-foreground'
-              : 'text-secondary hover:bg-foreground/5 hover:text-foreground',
-          ]"
-          @click="active = cat.key"
-        >
-          <IconUi :name="cat.icon" size="size-4" :class="active === cat.key ? 'text-foreground' : 'text-secondary'" />
-          {{ cat.label }}
-        </button>
+      <nav class="flex w-56 shrink-0 flex-col border-r p-3">
+        <div class="flex-1 space-y-0.5 overflow-y-auto">
+          <button
+            v-for="cat in categories"
+            :key="cat.key"
+            :class="[
+              'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors duration-100',
+              active === cat.key
+                ? 'bg-foreground/5 font-medium text-foreground'
+                : 'text-secondary hover:bg-foreground/5 hover:text-foreground',
+            ]"
+            @click="active = cat.key"
+          >
+            <IconUi :name="cat.icon" size="size-4" :class="active === cat.key ? 'text-foreground' : 'text-secondary'" />
+            {{ cat.label }}
+          </button>
+        </div>
+
+        <!-- Bottom: editor theme -->
+        <div class="mt-2 border-t border-border/60 pt-2">
+          <ThemeToggle />
+        </div>
       </nav>
 
       <!-- Content -->

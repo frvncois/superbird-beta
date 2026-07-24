@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, inArray } from 'drizzle-orm'
 import { db } from '../db/client'
 import { orders, orderItems, customers } from '../db/schema'
 import { randomId } from './ids'
@@ -124,8 +124,9 @@ export interface OrderDTO {
   items: { title: string; unitPrice: number; qty: number }[]
 }
 
-function toDTO(row: typeof orders.$inferSelect): OrderDTO {
-  const items = db.select().from(orderItems).where(eq(orderItems.orderId, row.id)).all()
+type OrderItemDTO = { title: string; unitPrice: number; qty: number }
+
+function mapOrder(row: typeof orders.$inferSelect, items: OrderItemDTO[]): OrderDTO {
   return {
     id: row.id,
     email: row.email,
@@ -135,8 +136,27 @@ function toDTO(row: typeof orders.$inferSelect): OrderDTO {
     total: row.total,
     customerId: row.customerId ?? undefined,
     createdAt: row.createdAt,
-    items: items.map((i) => ({ title: i.title, unitPrice: i.unitPrice, qty: i.qty })),
+    items,
   }
+}
+
+function toDTO(row: typeof orders.$inferSelect): OrderDTO {
+  const items = db.select().from(orderItems).where(eq(orderItems.orderId, row.id)).all()
+  return mapOrder(row, items.map((i) => ({ title: i.title, unitPrice: i.unitPrice, qty: i.qty })))
+}
+
+// Batch variant: one query for all items across the given orders (avoids the
+// per-order N+1). Preserves the input order.
+function toDTOs(rows: (typeof orders.$inferSelect)[]): OrderDTO[] {
+  if (!rows.length) return []
+  const items = db.select().from(orderItems).where(inArray(orderItems.orderId, rows.map((r) => r.id))).all()
+  const byOrder = new Map<string, OrderItemDTO[]>()
+  for (const it of items) {
+    const list = byOrder.get(it.orderId) ?? []
+    list.push({ title: it.title, unitPrice: it.unitPrice, qty: it.qty })
+    byOrder.set(it.orderId, list)
+  }
+  return rows.map((row) => mapOrder(row, byOrder.get(row.id) ?? []))
 }
 
 export function getOrderBySession(sessionId: string): OrderDTO | null {
@@ -152,7 +172,7 @@ export function listOrders(projectId: string, status?: string): OrderDTO[] {
     .orderBy(desc(orders.createdAt))
     .all()
   // Hide never-completed pending checkouts unless explicitly requested.
-  return rows.filter((o) => status !== undefined || o.status !== 'pending').map(toDTO)
+  return toDTOs(rows.filter((o) => status !== undefined || o.status !== 'pending'))
 }
 
 export function updateOrderStatus(projectId: string, id: string, status: string): OrderDTO | null {
@@ -164,13 +184,13 @@ export function updateOrderStatus(projectId: string, id: string, status: string)
 }
 
 export function ordersByCustomer(projectId: string, customerId: string): OrderDTO[] {
-  return db
+  const rows = db
     .select()
     .from(orders)
     .where(and(eq(orders.projectId, projectId), eq(orders.customerId, customerId)))
     .orderBy(desc(orders.createdAt))
     .all()
-    .map(toDTO)
+  return toDTOs(rows)
 }
 
 // ── Customers (admin) ──
@@ -188,11 +208,20 @@ export interface CustomerDTO {
 export function listCustomers(projectId: string): CustomerDTO[] {
   const rows = db.select().from(customers).where(eq(customers.projectId, projectId)).all()
   const currency = storeCurrency(projectId)
+  // One project-wide orders query, grouped by customer — not one query per row.
+  const orderRows = db.select().from(orders).where(eq(orders.projectId, projectId)).all()
+  const byCustomer = new Map<string, (typeof orders.$inferSelect)[]>()
+  for (const o of orderRows) {
+    if (!o.customerId) continue
+    const list = byCustomer.get(o.customerId) ?? []
+    list.push(o)
+    byCustomer.set(o.customerId, list)
+  }
   return rows
     .map((cu) => {
-      const orderRows = db.select().from(orders).where(and(eq(orders.projectId, projectId), eq(orders.customerId, cu.id))).all()
-      const counted = orderRows.filter((o) => o.status !== 'pending')
-      const totalSpent = orderRows.filter((o) => SPENT_STATUSES.has(o.status)).reduce((s, o) => s + o.total, 0)
+      const custOrders = byCustomer.get(cu.id) ?? []
+      const counted = custOrders.filter((o) => o.status !== 'pending')
+      const totalSpent = custOrders.filter((o) => SPENT_STATUSES.has(o.status)).reduce((s, o) => s + o.total, 0)
       return { id: cu.id, email: cu.email, name: cu.name, createdAt: cu.createdAt, orderCount: counted.length, totalSpent, currency }
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))

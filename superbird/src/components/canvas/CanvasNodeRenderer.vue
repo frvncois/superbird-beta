@@ -89,7 +89,8 @@ const previewEntries = computed<Entry[]>(() => {
   if (props.node.type !== 'collection-list') return []
   const col = collectionsStore.collectionById(props.node.props.source)
   if (!col) return []
-  const limit = parseInt(props.node.props.limit ?? '3', 10) || 3
+  // Match the SSR/html.ts clamp so the canvas preview count can't drift from it.
+  const limit = Math.min(100, Math.max(0, parseInt(props.node.props.limit ?? '3', 10) || 3))
   return collectionsStore.entriesByCollection(col.id).slice(0, limit)
 })
 
@@ -105,20 +106,20 @@ const isHiddenAtBreakpoint = computed(() => {
 const computedStyles = computed(() => globalStylesStore.resolveStyles(props.node))
 const ctx = useContextMenu()
 
-function handleClick(e: MouseEvent) {
+function onClick(e: MouseEvent) {
   if (props.preview) return
   e.stopPropagation()
   store.selectNode(props.node.id)
 }
 
-function handleContextMenu(e: MouseEvent) {
+function onContextMenu(e: MouseEvent) {
   if (props.preview) return
   e.stopPropagation()
   store.selectNode(props.node.id)
   ctx.open(e, buildNodeActions(props.node, 'canvas'))
 }
 
-function handleDoubleClick(e: MouseEvent) {
+function onDoubleClick(e: MouseEvent) {
   if (props.preview) return
   // Image nodes: double-click to choose media (stored per-entry or on template).
   if (props.node.type === 'image') {
@@ -140,7 +141,7 @@ function handleDoubleClick(e: MouseEvent) {
   requestAnimationFrame(() => editableRef.value?.focus())
 }
 
-function handleBlur() {
+function onBlur() {
   if (!isEditing.value) return
   isEditing.value = false
   if (isMarkdown.value) {
@@ -151,7 +152,7 @@ function handleBlur() {
   store.setNodeContent(props.node.id, text)
 }
 
-function handleKeydown(e: KeyboardEvent) {
+function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) {
     e.preventDefault()
     editableRef.value?.blur()
@@ -159,7 +160,7 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 // Markdown source is multi-line — Enter inserts a newline; only Escape commits.
-function handleMarkdownKeydown(e: KeyboardEvent) {
+function onMarkdownKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
     textareaRef.value?.blur()
@@ -197,9 +198,9 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     :role="node.accessibility?.role || undefined"
     :aria-label="node.accessibility?.ariaLabel || undefined"
     :draggable="!isEditing && !isBody && !preview"
-    @click="handleClick"
-    @contextmenu.prevent="handleContextMenu"
-    @dblclick="handleDoubleClick"
+    @click="onClick"
+    @contextmenu.prevent="onContextMenu"
+    @dblclick="onDoubleClick"
     @mouseenter.self="isHovered = true"
     @mouseleave.self="isHovered = false"
     @dragstart="onDragStart"
@@ -238,8 +239,8 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
           v-model="draft"
           spellcheck="false"
           class="w-full min-h-24 resize-y rounded px-2 py-1.5 bg-transparent font-mono text-xs leading-relaxed text-foreground outline-none ring-1 ring-primary/30"
-          @blur="handleBlur"
-          @keydown="handleMarkdownKeydown"
+          @blur="onBlur"
+          @keydown="onMarkdownKeydown"
         />
         <div class="mt-2 border-t border-border/60 pt-2">
           <div class="mb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/60">Preview</div>
@@ -260,8 +261,8 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
         node.type === 'text' && 'text-sm',
         isEditing && 'cursor-text ring-1 ring-primary/30 rounded px-1',
       ]"
-      @blur="handleBlur"
-      @keydown="handleKeydown"
+      @blur="onBlur"
+      @keydown="onKeydown"
       v-text="nodeContent(node)"
     />
 

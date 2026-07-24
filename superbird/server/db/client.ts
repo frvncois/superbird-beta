@@ -167,6 +167,17 @@ export function ensureSchema(): void {
       unit_price INTEGER NOT NULL,
       qty INTEGER NOT NULL
     );
+
+    -- Secondary indexes for hot public + admin paths (kept in lockstep with the
+    -- index() declarations in schema.ts). Without these, every webhook, login,
+    -- checkout, order/customer list and submissions query full-scans its table.
+    CREATE INDEX IF NOT EXISTS idx_orders_session ON orders(stripe_session_id);
+    CREATE INDEX IF NOT EXISTS idx_orders_project_created ON orders(project_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+    CREATE INDEX IF NOT EXISTS idx_customers_project_email ON customers(project_id, email);
+    CREATE INDEX IF NOT EXISTS idx_submissions_project_created ON submissions(project_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_products_project_entry ON products(project_id, entry_id);
   `)
 
   // Migrate older DBs that predate later columns.

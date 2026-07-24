@@ -35,6 +35,17 @@ function cartTree(): CanvasNode {
   })
 }
 
+function addToCartTree(): CanvasNode {
+  // A single button; the runtime's delegated click handler adds the current
+  // product (resolved from data-sb-add-to-cart / the nearest [data-sb-entry])
+  // to the cart. Restyleable like any button.
+  return createNode('button', {
+    label: 'Add to cart',
+    element: 'add-to-cart',
+    content: 'Add to cart',
+  })
+}
+
 function langSwitcherTree(): CanvasNode {
   // Placeholder links for the editor; the published site regenerates them from
   // the site's actual locales.
@@ -53,6 +64,7 @@ export const PREBUILT_ELEMENTS: PrebuiltDef[] = [
   { key: 'lang-switcher', label: 'Lang', icon: 'globe', build: langSwitcherTree },
   { key: 'login', label: 'Login', icon: 'users', build: loginTree },
   { key: 'cart', label: 'Cart', icon: 'cart', build: cartTree },
+  { key: 'add-to-cart', label: 'Add to cart', icon: 'cart', build: addToCartTree },
 ]
 
 export function buildPrebuilt(key: PrebuiltElementKey): CanvasNode | null {

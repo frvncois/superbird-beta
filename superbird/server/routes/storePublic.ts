@@ -26,7 +26,8 @@ storePublic.get('/store/catalog', (c) => {
 storePublic.post('/store/checkout', async (c) => {
   const proj = requireStore()
   if (!proj) return c.json({ error: 'Store unavailable.' }, 409)
-  if (!hit(`checkout:${clientIp(c)}`, 20, 60_000)) return c.json({ error: 'Too many attempts. Try again shortly.' }, 429)
+  const limit = hit(`checkout:${clientIp(c)}`, 20, 60_000)
+  if (!limit.ok) return c.json({ error: 'Too many attempts. Try again shortly.' }, 429, { 'Retry-After': String(limit.retryAfter) })
 
   const stripe = getStripe(proj.id)
   if (!stripe) return c.json({ error: 'Payments are not configured.' }, 503)

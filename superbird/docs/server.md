@@ -1,15 +1,19 @@
 # Backend tier (server / API / DB)
 
-> **Status: first slice shipped — auth/install only.** Content tables
-> (collections, fields, entries, media), the render pipeline, and SSR are not
-> built yet (see `cms-architecture.md` build order steps 3–5).
+> **Status: shipped.** Auth/install, the whole-document project store
+> (design + content: collections/entries live in the `project_state` JSON, not
+> yet normalised into rows), media (files-on-disk + metadata), forms +
+> submissions, the store/commerce tier (products, orders, customers, Stripe),
+> the render pipeline, and the **public SSR site** (draft/publish, per-request
+> render with an in-memory published-design + compiled-asset cache) are all
+> built. See the routes table below and `render.md`.
 
 The standalone backend that replaces WordPress's database + admin API. Same
 repo as the Vue client; shares TypeScript types via `@shared`.
 
 ## Stack
 
-- **Hono** (`server/`) — the HTTP/API layer; will also host the public SSR runtime later.
+- **Hono** (`server/`) — the HTTP/API layer; also hosts the public SSR runtime (`routes/site.ts`).
 - **SQLite via better-sqlite3 + Drizzle ORM** — one file per project at `data/superbird.db` (git-ignored). "Move the folder, it runs."
 - **Node `scrypt`** for password hashing (no native/3rd-party crypto dep).
 - **Cookie sessions** — opaque token in a `sb_session` httpOnly cookie, rows in the `sessions` table.
@@ -85,7 +89,8 @@ the original bytes.
 The whole editable project is **one JSON document** per project (`project_state`
 table, one row). It holds `design` (pages, styleClasses, globalStyles,
 userComponents, siteSettings, locales) + `content` (collections, entries).
-Media is **not** persisted yet (files-on-disk pipeline is a later slice).
+Media isn't in this document — the bytes live on disk (`data/media/`) with metadata
+in the `media` table, served at `/media/:id` (see Media above).
 
 - Client: `src/composables/useProjectPersistence.ts` — `load()` fetches the
   document and hydrates every store; a debounced (800 ms) watcher autosaves any

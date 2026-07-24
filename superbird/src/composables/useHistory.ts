@@ -20,6 +20,11 @@ const canUndo = computed(() => undoStack.value.length > 0)
 const canRedo = computed(() => redoStack.value.length > 0)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 let watcherStarted = false
+// The last *committed* document snapshot. Undo must restore the state as it was
+// before the most recent change, so the undo stack holds pre-mutation snapshots;
+// `lastSnapshot` is the one to push when the next change commits. Seeded with a
+// baseline when the watcher starts so the very first undo has something to pop.
+let lastSnapshot: Snapshot | null = null
 
 export function useHistory() {
   const canvas = useCanvasStore()
@@ -53,24 +58,32 @@ export function useHistory() {
 
   function pushState() {
     if (paused.value) return
-    undoStack.value.push(takeSnapshot())
-    if (undoStack.value.length > MAX_HISTORY) {
-      undoStack.value.shift()
+    // Stack the state *before* this change (lastSnapshot), then advance the
+    // baseline to the new current state. Pushing the post-mutation snapshot
+    // (as before) made the first undo a no-op and lost the original baseline.
+    if (lastSnapshot) {
+      undoStack.value.push(lastSnapshot)
+      if (undoStack.value.length > MAX_HISTORY) {
+        undoStack.value.shift()
+      }
     }
+    lastSnapshot = takeSnapshot()
     redoStack.value = []
   }
 
   function undo() {
     if (undoStack.value.length === 0) return
-    redoStack.value.push(takeSnapshot())
+    redoStack.value.push(lastSnapshot ?? takeSnapshot())
     const snapshot = undoStack.value.pop()!
+    lastSnapshot = snapshot
     applySnapshot(snapshot)
   }
 
   function redo() {
     if (redoStack.value.length === 0) return
-    undoStack.value.push(takeSnapshot())
+    undoStack.value.push(lastSnapshot ?? takeSnapshot())
     const snapshot = redoStack.value.pop()!
+    lastSnapshot = snapshot
     applySnapshot(snapshot)
   }
 
@@ -78,13 +91,21 @@ export function useHistory() {
   // no matter how many components call useHistory()
   if (!watcherStarted) {
     watcherStarted = true
+    // Seed the baseline from the already-hydrated document (the editor mounts,
+    // and thus this watcher starts, only after project load completes).
+    lastSnapshot = takeSnapshot()
+    // Deep-watch the source refs directly. Using JSON.stringify as the watch
+    // *source* would re-serialize the whole document on every reactive flush
+    // (e.g. per pointermove during a drag); the stringify belongs inside the
+    // debounced pushState (takeSnapshot), which is where it now lives.
     watch(
-      () => JSON.stringify(canvas.pages) + JSON.stringify(globalStyles.styleClasses) + JSON.stringify(components.userComponents),
+      [() => canvas.pages, () => globalStyles.styleClasses, () => components.userComponents],
       () => {
         if (paused.value) return
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => pushState(), 300)
       },
+      { deep: true },
     )
   }
 

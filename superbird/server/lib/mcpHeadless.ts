@@ -1,6 +1,7 @@
 import { getInstalledProject, getWorkingDocument, setWorkingDocument } from './project'
 import { createNode, createPage, createStyleClassStyles, deepCloneNode } from '@/lib/nodeFactory'
 import { findNode, findParent } from '@/lib/tree'
+import { isTailwindUtility } from '@/lib/tailwindToStyles'
 import type {
   Breakpoint,
   CanvasNode,
@@ -42,7 +43,9 @@ function load(): { doc: Doc; pid: string } {
   if (!proj) throw new Error('No project installed.')
   const raw = getWorkingDocument(proj.id)
   if (!raw?.design) throw new Error('No saved project yet — open Superbird once to initialize it.')
-  const doc = raw as unknown as Doc
+  // getWorkingDocument returns the shared cached object; clone before mutating so
+  // a tool that throws mid-edit can't leave uncommitted changes in the cache.
+  const doc = structuredClone(raw) as unknown as Doc
   if (!doc.design.pages.some((p) => p.id === ctx.activePageId)) {
     ctx.activePageId = doc.design.pages[0]?.id ?? ''
   }
@@ -222,6 +225,7 @@ const HEADLESS: Record<string, (input: Input) => string> = {
   create_style_class(input) {
     const { doc, pid } = load()
     const name = input.name as string
+    if (isTailwindUtility(name)) throw new Error(`"${name}" is a Tailwind utility, not a style-class name. Add it as a class instead, or pick a distinct name.`)
     ensureClass(doc, name)
     applyClassStyles(doc, name, (input.styles as Record<string, string>) ?? {}, input)
     setWorkingDocument(pid, doc as unknown as ProjectDocument)
@@ -235,6 +239,7 @@ const HEADLESS: Record<string, (input: Input) => string> = {
     const styles = (input.styles as Record<string, string>) ?? {}
     const className = input.className as string | undefined
     if (className) {
+      if (isTailwindUtility(className)) throw new Error(`"${className}" is a Tailwind utility; add it as a class rather than styling it as a custom class.`)
       ensureClass(doc, className)
       if (!node.classes.includes(className)) node.classes.push(className)
       applyClassStyles(doc, className, styles, input)
@@ -302,11 +307,13 @@ const HEADLESS: Record<string, (input: Input) => string> = {
 }
 
 function ensureClass(doc: Doc, name: string): void {
-  // Tailwind utilities aren't style-class records; skip anything with a separator
-  // or that already looks like a utility isn't distinguishable here, so only
-  // create a record when the name has no space and isn't already present.
   if (doc.design.styleClasses[name]) return
-  // Heuristic: treat single-token names the user asked to "create" as classes.
+  // Tailwind utilities are raw classes, not editable style-class records.
+  // Creating an empty record for e.g. "flex" would permanently shadow that
+  // utility for every node — styles.ts checks styleClasses[name] before the
+  // utility fallback — corrupting layout in the canvas and compiled site CSS.
+  // Mirror the browser's addClassToNode, which keeps utilities as raw classes.
+  if (isTailwindUtility(name)) return
   doc.design.styleClasses[name] = { name, styles: createStyleClassStyles() }
 }
 

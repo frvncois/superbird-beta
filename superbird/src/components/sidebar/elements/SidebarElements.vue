@@ -86,6 +86,7 @@ const categories: ElementCategory[] = [
       { type: 'div', label: 'Lang', icon: 'globe', prebuilt: 'lang-switcher' },
       { type: 'form', label: 'Login', icon: 'users', prebuilt: 'login' },
       { type: 'div', label: 'Cart', icon: 'cart', prebuilt: 'cart' },
+      { type: 'button', label: 'Add to cart', icon: 'cart', prebuilt: 'add-to-cart' },
     ],
   },
 ]

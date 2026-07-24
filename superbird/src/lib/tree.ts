@@ -88,29 +88,36 @@ export function detachAllInstances(node: CanvasNode, compId: string): void {
   })
 }
 
-export function collectContentFromTree(node: CanvasNode, overrides: Record<string, string>): void {
-  walkTree(node, (n) => {
-    if (n.content !== undefined) {
-      overrides[n.id] = n.content
-    }
+// Per-instance content is keyed by structural path — the child-index path from
+// the instance root (e.g. "0.2.1") — not by node id: ids are regenerated on
+// every clone, so they can't line an existing instance up against a freshly
+// cloned definition tree. Same structure ⇒ same paths ⇒ overrides survive sync.
+function contentByPath(nodes: CanvasNode[], prefix: string, out: Record<string, string>): void {
+  nodes.forEach((n, i) => {
+    const path = prefix ? `${prefix}.${i}` : String(i)
+    if (n.content !== undefined) out[path] = n.content
+    contentByPath(n.children, path, out)
   })
 }
 
 export function collectContentOverrides(node: CanvasNode): Record<string, string> {
   const overrides: Record<string, string> = {}
-  if (node.contentOverrides) {
-    Object.assign(overrides, node.contentOverrides)
-  }
-  collectContentFromTree(node, overrides)
+  contentByPath(node.children, '', overrides)
   return overrides
 }
 
 export function applyContentOverrides(node: CanvasNode, overrides: Record<string, string>): void {
-  // Content overrides are applied by position index since IDs change on clone.
-  // For simplicity, instances keep their own content via the contentOverrides map.
-  for (const child of node.children) {
-    applyContentOverrides(child, overrides)
+  const apply = (nodes: CanvasNode[], prefix: string): void => {
+    nodes.forEach((n, i) => {
+      const path = prefix ? `${prefix}.${i}` : String(i)
+      // Only restore where the (possibly re-structured) definition still has a
+      // content slot at this path; overrides for removed slots are dropped.
+      const val = overrides[path]
+      if (n.content !== undefined && val !== undefined) n.content = val
+      apply(n.children, path)
+    })
   }
+  apply(node.children, '')
 }
 
 export function syncInstancesInTree(node: CanvasNode, comp: UserComponent): void {

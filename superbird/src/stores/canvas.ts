@@ -1,17 +1,20 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { createNode, createPage, deepCloneNode } from '@/lib/nodeFactory'
+import { createNode, createPage } from '@/lib/nodeFactory'
 import { SYSTEM_PAGE_DEFS, buildSystemPage } from '@/lib/storeSystemPages'
 import { buildPrebuilt } from '@/lib/prebuiltElements'
-import { generateInteractionId, generateStepId, generateFieldId } from '@/lib/ids'
-import { findNode, findParent, findParentNode, renameClassInTree, removeClassFromTree } from '@/lib/tree'
-import { CONTAINER_TYPES, FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
-import { isTailwindUtility } from '@/lib/tailwindToStyles'
+import { generateFieldId } from '@/lib/ids'
+import { findNode, findParent, findParentNode } from '@/lib/tree'
+import { FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
+import { resolveNodeContent } from '@/lib/render/context'
+import { useInteractionOps } from './canvas/interactions'
+import { useClipboardOps } from './canvas/clipboard'
+import { useClassBindings } from './canvas/classBindings'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { AnimateAction, CanvasNode, ClassAction, FieldType, Interaction, InteractionAction, InteractionStep, InteractionTarget, NodeType, Page, PageType, PrebuiltElementKey, SystemPageKey, TriggerType } from '@/types/canvas'
+import type { CanvasNode, FieldType, NodeType, Page, PageType, PrebuiltElementKey, SystemPageKey } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -200,123 +203,15 @@ export const useCanvasStore = defineStore('canvas', () => {
     draggedComponentType.value = type
   }
 
-  // --- Class <-> node bindings ---
-
-  function renameClass(oldName: string, newName: string) {
-    const cls = globalStylesStore.styleClasses[oldName]
-    if (!cls || globalStylesStore.styleClasses[newName]) return
-    cls.name = newName
-    globalStylesStore.styleClasses[newName] = cls
-    delete globalStylesStore.styleClasses[oldName]
-    // Update all nodes referencing the old name
-    for (const page of pages.value) {
-      renameClassInTree(page.body, oldName, newName)
-    }
-    if (globalStylesStore.activeClassName === oldName) {
-      globalStylesStore.setActiveClass(newName)
-    }
-  }
-
-  function deleteStyleClass(name: string) {
-    delete globalStylesStore.styleClasses[name]
-    // Remove from all nodes
-    for (const page of pages.value) {
-      removeClassFromTree(page.body, name)
-    }
-    if (globalStylesStore.activeClassName === name) {
-      globalStylesStore.setActiveClass(null)
-    }
-  }
-
-  function addClassToNode(nodeId: string, className: string) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return
-    if (node.classes.includes(className)) return
-
-    // Tailwind utilities are raw classes — not editable style classes.
-    if (isTailwindUtility(className)) {
-      node.classes.push(className)
-      return
-    }
-
-    const isNew = !globalStylesStore.styleClasses[className]
-    if (isNew) {
-      globalStylesStore.createStyleClass(className)
-    }
-
-    // Migrate instance styles into the class if new, otherwise just discard them
-    const hasInstanceStyles = Object.keys(node.styles).length > 0
-    if (hasInstanceStyles) {
-      if (isNew) {
-        const cls = globalStylesStore.styleClasses[className]!
-        Object.assign(cls.styles.desktop.default, node.styles)
-      }
-      node.styles = {}
-    }
-
-    node.classes.push(className)
-    globalStylesStore.setActiveClass(className)
-  }
-
-  function removeClassFromNode(nodeId: string, className: string) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return
-    node.classes = node.classes.filter((c) => c !== className)
-    if (globalStylesStore.activeClassName === className) {
-      globalStylesStore.setActiveClass(node.classes.length > 0 ? node.classes[node.classes.length - 1]! : null)
-    }
-  }
-
-  // Find a class name not yet taken by any style class.
-  function uniqueClassName(base: string): string {
-    if (!globalStylesStore.styleClasses[base]) return base
-    let n = 2
-    while (globalStylesStore.styleClasses[`${base}-${n}`]) n++
-    return `${base}-${n}`
-  }
-
-  // Duplicate a style class into a new one (styles copied) and swap it in on the
-  // node in place of the original, so this element can diverge. Tailwind
-  // utilities aren't real style classes — nothing to duplicate. Returns the new
-  // name (for inline rename).
-  function duplicateClass(nodeId: string, className: string): string | null {
-    const cls = globalStylesStore.styleClasses[className]
-    if (!cls) return null
-    const newName = uniqueClassName(`${className}-copy`)
-    globalStylesStore.styleClasses[newName] = {
-      name: newName,
-      styles: JSON.parse(JSON.stringify(cls.styles)),
-    }
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (node) {
-      const i = node.classes.indexOf(className)
-      if (i !== -1) node.classes.splice(i, 1, newName)
-    }
-    globalStylesStore.setActiveClass(newName)
-    return newName
-  }
-
-  // Create a fresh, empty custom style class and append it to the node. Used when
-  // the user tries to edit properties while a Tailwind utility is the active
-  // class — we never mutate Tailwind classes, so styling spills into a new class
-  // added at the end (last wins). Returns the new name.
-  function createCustomClassOnNode(nodeId: string): string {
-    let name = randomClassName()
-    while (globalStylesStore.styleClasses[name]) name = randomClassName()
-    addClassToNode(nodeId, name)
-    return name
-  }
-
-  // A short random class name (5 lowercase letters) — leading letter keeps it a
-  // valid CSS identifier.
-  function randomClassName(): string {
-    let s = ''
-    for (let i = 0; i < 5; i++) s += String.fromCharCode(97 + Math.floor(Math.random() * 26))
-    return s
-  }
+  // --- Class <-> node bindings --- (extracted to ./canvas/classBindings.ts)
+  const {
+    renameClass,
+    deleteStyleClass,
+    duplicateClass,
+    createCustomClassOnNode,
+    addClassToNode,
+    removeClassFromNode,
+  } = useClassBindings(activePage, pages)
 
   // --- Node Mutations ---
 
@@ -502,134 +397,23 @@ export const useCanvasStore = defineStore('canvas', () => {
     delete node.customAttributes[key]
   }
 
-  // --- Clipboard ---
-
-  const clipboardNode = ref<CanvasNode | null>(null)
-  const clipboardClasses = ref<string[]>([])
-
-  function copyNode(id: string) {
-    const body = activePage.value.body
-    const node = id === body.id ? body : findNode(body.children, id)
-    if (!node || node.type === 'body') return
-    clipboardNode.value = deepCloneNode(node)
-  }
-
-  function pasteNode(targetId: string, position: 'before' | 'after' | 'inside') {
-    if (!clipboardNode.value) return
-    const clone = deepCloneNode(clipboardNode.value)
-    const body = activePage.value.body
-
-    if (position === 'inside') {
-      const target = targetId === body.id ? body : findNode(body.children, targetId)
-      if (target) {
-        target.children.push(clone)
-        selectedNodeId.value = clone.id
-        return
-      }
-    }
-
-    const result = findParent(body.children, targetId)
-    if (result) {
-      const idx = position === 'after' ? result.index + 1 : result.index
-      result.parent.splice(idx, 0, clone)
-      selectedNodeId.value = clone.id
-    }
-  }
-
-  function duplicateNode(id: string) {
-    const body = activePage.value.body
-    if (id === body.id) return
-    const result = findParent(body.children, id)
-    if (!result) return
-    const original = result.parent[result.index]!
-    const clone = deepCloneNode(original)
-    result.parent.splice(result.index + 1, 0, clone)
-    selectedNodeId.value = clone.id
-  }
-
-  function wrapInContainer(id: string) {
-    const body = activePage.value.body
-    if (id === body.id) return
-    const result = findParent(body.children, id)
-    if (!result) return
-    const node = result.parent[result.index]!
-    const container = createNode('container', { children: [node] })
-    result.parent[result.index] = container
-    selectedNodeId.value = container.id
-  }
-
-  function unwrapNode(id: string) {
-    const body = activePage.value.body
-    if (id === body.id) return
-    const node = findNode(body.children, id)
-    if (!node || node.children.length === 0) return
-    const isContainer = ['container', 'section', 'columns', 'column'].includes(node.type)
-    if (!isContainer) return
-
-    const result = findParent(body.children, id)
-    if (!result) return
-    const children = [...node.children]
-    result.parent.splice(result.index, 1, ...children)
-    selectedNodeId.value = children[0]?.id ?? null
-  }
-
-  function moveUp(id: string) {
-    const body = activePage.value.body
-    if (id === body.id) return
-    const result = findParent(body.children, id)
-    if (!result || result.index === 0) return
-    const [node] = result.parent.splice(result.index, 1)
-    result.parent.splice(result.index - 1, 0, node!)
-  }
-
-  function moveDown(id: string) {
-    const body = activePage.value.body
-    if (id === body.id) return
-    const result = findParent(body.children, id)
-    if (!result || result.index >= result.parent.length - 1) return
-    const [node] = result.parent.splice(result.index, 1)
-    result.parent.splice(result.index + 1, 0, node!)
-  }
-
-  function copyClasses(id: string) {
-    const body = activePage.value.body
-    const node = id === body.id ? body : findNode(body.children, id)
-    if (!node) return
-    clipboardClasses.value = [...node.classes]
-  }
-
-  function pasteClasses(id: string) {
-    if (clipboardClasses.value.length === 0) return
-    const body = activePage.value.body
-    const node = id === body.id ? body : findNode(body.children, id)
-    if (!node) return
-    for (const cls of clipboardClasses.value) {
-      if (!node.classes.includes(cls)) {
-        if (!globalStylesStore.styleClasses[cls]) globalStylesStore.createStyleClass(cls)
-        node.classes.push(cls)
-      }
-    }
-  }
-
-  function getNodeIndex(id: string): { index: number; total: number } | null {
-    const body = activePage.value.body
-    const result = findParent(body.children, id)
-    if (!result) return null
-    return { index: result.index, total: result.parent.length }
-  }
-
-  function isContainerNode(id: string): boolean {
-    const body = activePage.value.body
-    const node = id === body.id ? body : findNode(body.children, id)
-    if (!node) return false
-    return CONTAINER_TYPES.includes(node.type)
-  }
-
-  function getParentId(id: string): string | null {
-    const body = activePage.value.body
-    if (id === body.id) return null
-    return findParentNode(body, id)?.id ?? null
-  }
+  // --- Clipboard & operations --- (extracted to ./canvas/clipboard.ts)
+  const {
+    clipboardNode,
+    clipboardClasses,
+    copyNode,
+    pasteNode,
+    duplicateNode,
+    wrapInContainer,
+    unwrapNode,
+    moveUp,
+    moveDown,
+    copyClasses,
+    pasteClasses,
+    getNodeIndex,
+    isContainerNode,
+    getParentId,
+  } = useClipboardOps(activePage, selectedNodeId)
 
   // --- Dynamic Fields ---
 
@@ -654,130 +438,31 @@ export const useCanvasStore = defineStore('canvas', () => {
     }, targetId, position)
   }
 
-  // --- Interactions ---
-
-  function getNodeInteractions(nodeId: string): Interaction[] {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    return node?.interactions ?? []
-  }
-
-  function addInteraction(nodeId: string, trigger: TriggerType, name?: string): Interaction | null {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return null
-    if (!node.interactions) node.interactions = []
-    const ix: Interaction = {
-      id: generateInteractionId(),
-      name: name ?? `${trigger} interaction`,
-      trigger,
-      steps: [],
-      options: {},
-    }
-    node.interactions.push(ix)
-    return ix
-  }
-
-  // Returns the removed interaction + its index so callers can offer an Undo.
-  function removeInteraction(nodeId: string, interactionId: string): { interaction: Interaction; index: number } | null {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node?.interactions) return null
-    const index = node.interactions.findIndex((ix) => ix.id === interactionId)
-    if (index === -1) return null
-    const [interaction] = node.interactions.splice(index, 1)
-    return interaction ? { interaction, index } : null
-  }
-
-  function restoreInteraction(nodeId: string, interaction: Interaction, index: number) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    if (!node) return
-    if (!node.interactions) node.interactions = []
-    const clamped = Math.min(Math.max(index, 0), node.interactions.length)
-    node.interactions.splice(clamped, 0, interaction)
-  }
-
-  function updateInteraction(nodeId: string, interactionId: string, updates: Partial<Pick<Interaction, 'name' | 'trigger' | 'triggerValue' | 'options'>>) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    if (!ix) return
-    Object.assign(ix, updates)
-  }
-
-  function addStep(nodeId: string, interactionId: string, target?: InteractionTarget): InteractionStep | null {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    if (!ix) return null
-    const step: InteractionStep = {
-      id: generateStepId(),
-      target: target ?? { type: 'self' },
-      delay: 0,
-      duration: 300,
-      easing: 'ease-out',
-      actions: [],
-    }
-    ix.steps.push(step)
-    return step
-  }
-
-  function removeStep(nodeId: string, interactionId: string, stepId: string) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    if (!ix) return
-    ix.steps = ix.steps.filter((s) => s.id !== stepId)
-  }
-
-  function updateStep(nodeId: string, interactionId: string, stepId: string, updates: Partial<Pick<InteractionStep, 'target' | 'delay' | 'duration' | 'easing' | 'stagger'>>) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    const step = ix?.steps.find((s) => s.id === stepId)
-    if (!step) return
-    Object.assign(step, updates)
-  }
-
-  function addActionToStep(nodeId: string, interactionId: string, stepId: string, action: InteractionAction) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    const step = ix?.steps.find((s) => s.id === stepId)
-    if (!step) return
-    step.actions.push(action)
-  }
-
-  function removeActionFromStep(nodeId: string, interactionId: string, stepId: string, actionIndex: number) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    const step = ix?.steps.find((s) => s.id === stepId)
-    if (!step) return
-    step.actions.splice(actionIndex, 1)
-  }
-
-  function updateActionInStep(nodeId: string, interactionId: string, stepId: string, actionIndex: number, updates: Partial<AnimateAction> | Partial<ClassAction>) {
-    const body = activePage.value.body
-    const node = nodeId === body.id ? body : findNode(body.children, nodeId)
-    const ix = node?.interactions?.find((i) => i.id === interactionId)
-    const step = ix?.steps.find((s) => s.id === stepId)
-    if (!step || !step.actions[actionIndex]) return
-    Object.assign(step.actions[actionIndex], updates)
-  }
+  // --- Interactions --- (extracted to ./canvas/interactions.ts)
+  const {
+    getNodeInteractions,
+    addInteraction,
+    removeInteraction,
+    restoreInteraction,
+    updateInteraction,
+    addStep,
+    removeStep,
+    updateStep,
+    addActionToStep,
+    removeActionFromStep,
+    updateActionInStep,
+  } = useInteractionOps(activePage)
 
   // --- Localized content ---
 
   function getNodeContent(node: CanvasNode): string {
-    // Field-bound node with an entry loaded → the entry's value (its content).
-    if (node.dynamicField && activeEntry.value) {
-      return activeEntry.value.values[node.dynamicField] ?? node.content ?? ''
-    }
-    if (localesStore.isDefaultLocale) {
-      return node.content ?? ''
-    }
-    return node.translations?.[localesStore.activeLocale] ?? node.content ?? ''
+    // Field-bound node with an entry loaded → the entry value; else locale
+    // translation → authored content. Shared with SSR + Preview via the factory.
+    return resolveNodeContent(node, {
+      entry: activeEntry.value ?? undefined,
+      locale: localesStore.activeLocale,
+      defaultLocale: localesStore.defaultLocale,
+    })
   }
 
   function setNodeContent(nodeId: string, content: string) {

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
 // Auth/install tables. Content tables (collections, fields, entries, media)
 // land in a later slice.
@@ -114,7 +114,7 @@ export const products = sqliteTable('products', {
   stripePriceId: text('stripe_price_id'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
-})
+}, (t) => [index('idx_products_project_entry').on(t.projectId, t.entryId)])
 
 // Customers — a fully separate identity space from admin `users`.
 export const customers = sqliteTable('customers', {
@@ -127,7 +127,7 @@ export const customers = sqliteTable('customers', {
   passwordHash: text('password_hash').notNull().default(''),
   stripeCustomerId: text('stripe_customer_id'),
   createdAt: text('created_at').notNull(),
-})
+}, (t) => [index('idx_customers_project_email').on(t.projectId, t.email)])
 
 export const customerSessions = sqliteTable('customer_sessions', {
   id: text('id').primaryKey(), // opaque token
@@ -154,7 +154,11 @@ export const orders = sqliteTable('orders', {
   shipping: text('shipping'), // JSON: name/address
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
-})
+}, (t) => [
+  index('idx_orders_session').on(t.stripeSessionId),
+  index('idx_orders_project_created').on(t.projectId, t.createdAt),
+  index('idx_orders_customer').on(t.customerId),
+])
 
 export const orderItems = sqliteTable('order_items', {
   id: text('id').primaryKey(),
@@ -165,7 +169,7 @@ export const orderItems = sqliteTable('order_items', {
   title: text('title').notNull(),
   unitPrice: integer('unit_price').notNull(),
   qty: integer('qty').notNull(),
-})
+}, (t) => [index('idx_order_items_order').on(t.orderId)])
 
 // Form submissions from the published site. Admin-only (never served publicly).
 export const submissions = sqliteTable('submissions', {
@@ -182,7 +186,7 @@ export const submissions = sqliteTable('submissions', {
   emailStatus: text('email_status').notNull().default('skipped'), // skipped | sent | failed
   emailedTo: text('emailed_to'),
   createdAt: text('created_at').notNull(),
-})
+}, (t) => [index('idx_submissions_project_created').on(t.projectId, t.createdAt)])
 
 export const mediaFolders = sqliteTable('media_folders', {
   id: text('id').primaryKey(),

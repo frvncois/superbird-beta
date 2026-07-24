@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { getInstalledProject, getWorkingDocument, getPublishedDesign } from '../lib/project'
+import { getInstalledProject, getWorkingDocument, getPublishedDesign, getPublishedAt } from '../lib/project'
 import {
   renderDocument,
   compileSiteCss,
@@ -7,11 +7,14 @@ import {
   interactionsScript,
   formsRuntimeScript,
   storefrontRuntimeScript,
+  buildRenderContext,
   type RenderContext,
+  type LocaleContext,
+  type SiteChrome,
 } from '@/lib/render'
 import { currentCustomer } from '../lib/customerSession'
 import { getCookie, setCookie } from 'hono/cookie'
-import type { CanvasNode, Collection, Entry, GlobalStyles, Page, StyleClass } from '@/types/canvas'
+import type { CanvasNode, Collection, Entry, GlobalStyles, Page, SiteSettings, StyleClass } from '@/types/canvas'
 
 // Shared external asset paths (linked from every page).
 const STYLE_HREF = '/style.css'
@@ -32,39 +35,20 @@ function placeholder(message: string): string {
   )
 }
 
-interface LocaleCtx {
-  locale: string
-  defaultLocale: string
-  locales: { code: string; label: string }[]
-}
+type LocaleCtx = LocaleContext
 
+// Thin wrapper over the shared factory. The public site is the faithful render:
+// only published entries go live (includeDrafts: false). Media resolves to the
+// deterministic /media/:id path that the media route streams.
 function buildContext(entries: Entry[], collections: Collection[], activeEntry?: Entry, loc?: LocaleCtx): RenderContext {
-  return {
-    content(node: CanvasNode, listEntry?: Entry) {
-      const e = listEntry ?? activeEntry
-      if (e && node.dynamicField) return e.values[node.dynamicField] ?? node.content ?? ''
-      // Non-default locale → prefer the node's translation for that locale.
-      if (loc && loc.locale !== loc.defaultLocale) return node.translations?.[loc.locale] ?? node.content ?? ''
-      return node.content ?? ''
-    },
-    mediaUrl(id: string) {
-      // Deterministic served path; the /media/:id route streams the file.
-      return id ? `/media/${id}` : ''
-    },
-    entriesFor(source: string | undefined, limit: number): Entry[] {
-      const col = collections.find((c) => c.id === source)
-      if (!col) return []
-      // `entries` is already published-filtered.
-      return entries.filter((e) => e.collectionId === col.id).slice(0, limit)
-    },
-    entryUrl(entry: Entry): string {
-      const col = collections.find((c) => c.id === entry.collectionId)
-      return col ? `/${col.basePath}/${entry.slug}` : '#'
-    },
-    currentEntry: activeEntry,
-    locale: loc?.locale,
-    locales: loc?.locales,
-  }
+  return buildRenderContext({
+    entries,
+    collections,
+    mediaUrl: (id: string) => (id ? `/media/${id}` : ''),
+    activeEntry,
+    locale: loc,
+    includeDrafts: false,
+  })
 }
 
 // The published design (pages + styles), or null if not installed/published.
@@ -82,28 +66,52 @@ function loadDesign():
   }
 }
 
+// CSS and JS are pure functions of the published design, so they change only on
+// publish. Recompiling them per request (they were `no-cache` with no ETag)
+// meant a full parse + full-site recompile on every asset hit. Cache the
+// compiled string keyed on publishedAt (this process owns every write) and let
+// the browser revalidate cheaply via ETag → 304.
+let cssCache: { key: string; css: string } | null = null
+let jsCache: { key: string; js: string } | null = null
+
 // One shared stylesheet for the whole site (element rules are node-id scoped).
 site.get('/style.css', (c) => {
-  const design = loadDesign()
-  if (!design) return c.body('', 404)
-  const css = compileSiteCss(
-    design.pages.map((p) => p.body),
-    design.styleClasses,
-    design.globalStyles,
-  )
-  return new Response(css, {
-    headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-cache' },
+  const proj = getInstalledProject()
+  const publishedAt = proj && getPublishedAt(proj.id)
+  if (!publishedAt) return c.body('', 404)
+  const etag = `"css-${publishedAt}"`
+  if (c.req.header('if-none-match') === etag) return new Response(null, { status: 304, headers: { ETag: etag } })
+  if (cssCache?.key !== publishedAt) {
+    const design = loadDesign()
+    if (!design) return c.body('', 404)
+    const css = compileSiteCss(
+      design.pages.map((p) => p.body),
+      design.styleClasses,
+      design.globalStyles,
+    )
+    cssCache = { key: publishedAt, css }
+  }
+  return new Response(cssCache.css, {
+    headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-cache', ETag: etag },
   })
 })
 
 // One shared script: the interaction runtime + every page's interaction data.
 site.get('/script.js', (c) => {
-  const design = loadDesign()
-  if (!design) return c.body('', 404)
-  const map: Record<string, unknown> = {}
-  for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
-  return new Response(interactionsScript(map) + formsRuntimeScript() + storefrontRuntimeScript(), {
-    headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
+  const proj = getInstalledProject()
+  const publishedAt = proj && getPublishedAt(proj.id)
+  if (!publishedAt) return c.body('', 404)
+  const etag = `"js-${publishedAt}"`
+  if (c.req.header('if-none-match') === etag) return new Response(null, { status: 304, headers: { ETag: etag } })
+  if (jsCache?.key !== publishedAt) {
+    const design = loadDesign()
+    if (!design) return c.body('', 404)
+    const map: Record<string, unknown> = {}
+    for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
+    jsCache = { key: publishedAt, js: interactionsScript(map) + formsRuntimeScript() + storefrontRuntimeScript() }
+  }
+  return new Response(jsCache.js, {
+    headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache', ETag: etag },
   })
 })
 
@@ -125,10 +133,44 @@ site.get('*', (c) => {
   const pages = (design.pages ?? []) as Page[]
   const styleClasses = (design.styleClasses ?? {}) as Record<string, StyleClass>
   const globalStyles = design.globalStyles as GlobalStyles
+  const settings = (design as { siteSettings?: SiteSettings }).siteSettings
+
+  // Redirects run before page matching (a redirect from an old URL wins even if
+  // a page still lives there). Match on a normalised path (leading slash, no
+  // trailing slash except root).
+  const normPath = (p: string) => {
+    let s = p.trim()
+    if (!s.startsWith('/')) s = '/' + s
+    return s.length > 1 && s.endsWith('/') ? s.slice(0, -1) : s
+  }
+  if (settings?.redirects?.length) {
+    const here = normPath(path)
+    const hit = settings.redirects.find((r) => r.to && normPath(r.from) === here)
+    if (hit) return c.redirect(hit.to, hit.type === '302' ? 302 : 301)
+  }
+
+  // Resolve a media id (or pass a literal URL/path through) for favicon/social.
+  const mediaHref = (v?: string) => (v ? (/^(https?:)?\/\//.test(v) || v.startsWith('/') ? v : `/media/${v}`) : undefined)
+  const siteChrome: SiteChrome = {
+    siteTitle: settings?.identity.title,
+    faviconUrl: mediaHref(settings?.identity.favicon),
+    seo: settings && {
+      titleFormat: settings.seo.titleFormat,
+      metaDescription: settings.seo.metaDescription,
+      socialImageUrl: mediaHref(settings.seo.socialImage),
+      robotsNoIndex: settings.seo.robotsNoIndex,
+      robotsNoFollow: settings.seo.robotsNoFollow,
+      googleAnalyticsId: settings.seo.googleAnalyticsId,
+      googleTagManagerId: settings.seo.googleTagManagerId,
+    },
+    customCode: settings?.customCode,
+  }
 
   const working = getWorkingDocument(proj.id)
   const collections = (working?.content.collections ?? []) as Collection[]
-  const published = ((working?.content.entries ?? []) as Entry[]).filter((e) => e.status === 'published')
+  // All entries — buildContext (via buildRenderContext, includeDrafts:false) applies
+  // the published filter for collection lists; the single-page lookup below does too.
+  const entries = (working?.content.entries ?? []) as Entry[]
 
   // Locale: ?lang wins (and is remembered in a cookie), else the cookie, else
   // the site default. Only codes the site actually has are accepted.
@@ -150,7 +192,7 @@ site.get('*', (c) => {
     renderDocument(body, styleClasses, globalStyles, ctx, head, {
       styleHref: STYLE_HREF,
       scriptSrc: SCRIPT_SRC,
-    })
+    }, siteChrome)
 
   const pageHead = (p: Page) => ({
     title: p.seo?.title || p.name,
@@ -163,7 +205,7 @@ site.get('*', (c) => {
   // Home
   if (segments.length === 0) {
     const home = pages.find((p) => p.slug === '/') ?? pages.find((p) => p.pageType === 'page')
-    if (home) return c.html(render(home.body, buildContext(published, collections, undefined, localeCtx), pageHead(home)))
+    if (home) return c.html(render(home.body, buildContext(entries, collections, undefined, localeCtx), pageHead(home)))
   }
 
   // Static page (single segment) — incl. store system pages by slug.
@@ -173,7 +215,7 @@ site.get('*', (c) => {
       // Customer-auth gating for the store's system pages.
       if (page.systemKey === 'account' && !currentCustomer(c)) return c.redirect('/login')
       if (page.systemKey === 'login' && currentCustomer(c)) return c.redirect('/account')
-      const ctx = buildContext(published, collections, undefined, localeCtx)
+      const ctx = buildContext(entries, collections, undefined, localeCtx)
       ctx.systemKey = page.systemKey
       return c.html(render(page.body, ctx, pageHead(page)))
     }
@@ -183,9 +225,9 @@ site.get('*', (c) => {
   if (segments.length === 2) {
     const col = collections.find((cl) => cl.basePath === segments[0])
     const template = col ? pages.find((p) => p.id === col.templatePageId) : undefined
-    const entry = col ? published.find((e) => e.collectionId === col.id && e.slug === segments[1]) : undefined
+    const entry = col ? entries.find((e) => e.collectionId === col.id && e.slug === segments[1] && e.status === 'published') : undefined
     if (col && template && entry) {
-      const ctx = buildContext(published, collections, entry, localeCtx)
+      const ctx = buildContext(entries, collections, entry, localeCtx)
       // Products-collection single → expose the entry id for add-to-cart.
       if ((col as Collection & { isProducts?: boolean }).isProducts) ctx.productEntryId = entry.id
       return c.html(render(template.body, ctx, { title: entry.title }))
@@ -195,7 +237,7 @@ site.get('*', (c) => {
   // 404
   const notFound = pages.find((p) => p.pageType === 'system' && p.slug === '404')
   const html = notFound
-    ? render(notFound.body, buildContext(published, collections, undefined, localeCtx), { title: '404' })
+    ? render(notFound.body, buildContext(entries, collections, undefined, localeCtx), { title: '404' })
     : placeholder('Page not found.')
   return c.html(html, 404)
 })

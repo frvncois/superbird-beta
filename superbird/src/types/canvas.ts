@@ -180,7 +180,7 @@ export interface CanvasNode {
   element?: PrebuiltElementKey
 }
 
-export type PrebuiltElementKey = 'login' | 'cart' | 'lang-switcher'
+export type PrebuiltElementKey = 'login' | 'cart' | 'lang-switcher' | 'add-to-cart'
 
 // --- Locales ---
 

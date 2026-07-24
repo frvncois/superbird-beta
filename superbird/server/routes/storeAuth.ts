@@ -23,7 +23,8 @@ storeAuth.get('/store/auth/session', (c) => {
 storeAuth.post('/store/auth/register', async (c) => {
   const proj = requireStore()
   if (!proj) return c.json({ error: 'Store unavailable.' }, 409)
-  if (!hit(`custreg:${clientIp(c)}`, 10, 15 * 60_000)) return c.json({ error: 'Too many attempts. Try again later.' }, 429)
+  const regLimit = hit(`custreg:${clientIp(c)}`, 10, 15 * 60_000)
+  if (!regLimit.ok) return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(regLimit.retryAfter) })
 
   const { email, name, password } = (await c.req.json().catch(() => ({}))) as { email?: string; name?: string; password?: string }
   const addr = email?.trim().toLowerCase()
@@ -44,8 +45,12 @@ storeAuth.post('/store/auth/login', async (c) => {
   const { email, password } = (await c.req.json().catch(() => ({}))) as { email?: string; password?: string }
   const addr = email?.trim().toLowerCase() ?? ''
   // Per-IP and per-account limits (mirrors the admin login).
-  if (!hit(`custlogin:ip:${ip}`, 30, 5 * 60_000)) return c.json({ error: 'Too many attempts. Try again later.' }, 429)
-  if (addr && !hit(`custlogin:acct:${addr}`, 10, 15 * 60_000)) return c.json({ error: 'Too many attempts. Try again later.' }, 429)
+  const ipLimit = hit(`custlogin:ip:${ip}`, 30, 5 * 60_000)
+  const acctLimit = addr ? hit(`custlogin:acct:${addr}`, 10, 15 * 60_000) : { ok: true, retryAfter: 0 }
+  if (!ipLimit.ok || !acctLimit.ok) {
+    const retry = Math.max(ipLimit.retryAfter, acctLimit.retryAfter)
+    return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(retry) })
+  }
 
   const row = verifyCustomer(proj.id, addr, password ?? '')
   if (!row) return c.json({ error: 'Invalid email or password.' }, 401)

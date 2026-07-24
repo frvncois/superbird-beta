@@ -18,7 +18,8 @@ const DEFAULT_SUCCESS = 'Thanks! Your submission was received.'
 // the stored form config, never from the request.
 publicForms.post('/public/forms', async (c) => {
   const ip = clientIp(c)
-  if (!hit(`form:${ip}`, 20, 60_000)) return c.json({ error: 'Too many submissions. Please try again shortly.' }, 429)
+  const limit = hit(`form:${ip}`, 20, 60_000)
+  if (!limit.ok) return c.json({ error: 'Too many submissions. Please try again shortly.' }, 429, { 'Retry-After': String(limit.retryAfter) })
 
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not available.' }, 409)

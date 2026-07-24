@@ -96,7 +96,7 @@ const currentFolderPrivate = computed(() => {
 
 const isDragOver = ref(false)
 
-async function handleFilesDrop(e: DragEvent) {
+async function onFilesDrop(e: DragEvent) {
   // Only OS file drops upload here; internal media drags are handled elsewhere.
   if (!e.dataTransfer?.files.length) return
   e.preventDefault()
@@ -117,7 +117,7 @@ function onItemClick(item: MediaItem) {
 // ── Uploads + context menus ──
 const uploadInput = ref<HTMLInputElement | null>(null)
 
-async function handleUploadInput(e: Event) {
+async function onUploadInput(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files) return
   for (const file of input.files) await store.addMediaItem(file, props.currentFolder)
@@ -239,7 +239,7 @@ async function deleteFolder(folder: MediaFolder) {
     :class="['flex-1 overflow-y-auto p-4', isDragOver && 'bg-primary/5']"
     @dragover="(e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); isDragOver = true } }"
     @dragleave.self="isDragOver = false"
-    @drop="handleFilesDrop"
+    @drop="onFilesDrop"
     @contextmenu.prevent="onEmptyContextMenu"
   >
     <EmptyStateUi v-if="isDragOver" class="h-full">
@@ -412,7 +412,7 @@ async function deleteFolder(folder: MediaFolder) {
       </EmptyStateUi>
     </template>
 
-    <input ref="uploadInput" type="file" multiple class="hidden" @change="handleUploadInput" />
+    <input ref="uploadInput" type="file" multiple class="hidden" @change="onUploadInput" />
 
     <ContextMenuUi
       v-if="ctx.visible.value"

@@ -65,6 +65,15 @@ function buildAttributes(
 
   // Prebuilt "Dynamic" element → the storefront runtime wires its action.
   if (node.element) out += attr('data-sb-el', node.element)
+  // Add-to-cart: emit the runtime's click hook, bound to the product being
+  // rendered (collection-list item → the current entry; product single →
+  // ctx.currentEntry/productEntryId). Emitted even with no id — the runtime then
+  // falls back to the nearest [data-sb-entry] host — so the attribute is bare
+  // rather than dropped (attr() would omit an empty value).
+  if (node.element === 'add-to-cart') {
+    const entryId = entry?.id ?? ctx.currentEntry?.id ?? ctx.productEntryId
+    out += entryId ? attr('data-sb-add-to-cart', entryId) : ' data-sb-add-to-cart'
+  }
 
   // Form controls. On a system page the form is wired by the storefront runtime
   // (login/etc.), and a prebuilt-element form (login) has its own marker — so

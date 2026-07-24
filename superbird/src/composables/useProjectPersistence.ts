@@ -105,13 +105,34 @@ async function autosave(): Promise<void> {
 function startAutosave(): void {
   if (watching) return
   watching = true
+  const canvas = useCanvasStore()
+  const styles = useGlobalStylesStore()
+  const components = useUserComponentsStore()
+  const settings = useSiteSettingsStore()
+  const locales = useLocalesStore()
+  const collections = useCollectionsStore()
+  // Deep-watch each source ref rather than `() => JSON.stringify(buildSnapshot())`,
+  // which serialized the entire multi-MB document synchronously on every reactive
+  // flush. The single serialization now happens once inside the debounced save.
   watch(
-    () => JSON.stringify(buildSnapshot()),
+    [
+      () => canvas.pages,
+      () => styles.styleClasses,
+      () => styles.globalStyles,
+      () => components.userComponents,
+      () => settings.siteSettings,
+      () => locales.locales,
+      () => locales.activeLocale,
+      () => locales.defaultLocale,
+      () => collections.collections,
+      () => collections.entries,
+    ],
     () => {
       if (suspend) return
       if (timer) clearTimeout(timer)
       timer = setTimeout(() => void autosave(), 800)
     },
+    { deep: true },
   )
 }
 

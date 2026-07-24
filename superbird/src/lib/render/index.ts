@@ -5,7 +5,8 @@ export { compilePageCss, compileSiteCss } from './css'
 export { interactionsScript } from './interactionsRuntime'
 export { formsRuntimeScript } from './formsRuntime'
 export { storefrontRuntimeScript } from './storefrontRuntime'
-export type { RenderContext } from './context'
+export { buildRenderContext, resolveNodeContent } from './context'
+export type { RenderContext, RenderContextInput, LocaleContext } from './context'
 
 import type { CanvasNode, GlobalStyles, StyleClass } from '@/types/canvas'
 import { renderNodeToHtml } from './html'
@@ -30,6 +31,62 @@ export interface RenderAssets {
   scriptSrc?: string
 }
 
+// Site-wide chrome from Site Settings (SEO defaults, analytics, custom code,
+// favicon). Only the SSR path passes this — the editor Preview omits it, so
+// analytics/custom code never fire inside the editor. Media ids are resolved to
+// URLs by the caller (it has ctx.mediaUrl); this stays a dumb string emitter.
+export interface SiteChrome {
+  siteTitle?: string
+  faviconUrl?: string
+  seo?: {
+    titleFormat?: string
+    metaDescription?: string
+    socialImageUrl?: string
+    robotsNoIndex?: boolean
+    robotsNoFollow?: boolean
+    googleAnalyticsId?: string
+    googleTagManagerId?: string
+  }
+  customCode?: {
+    headCode?: string
+    bodyStartCode?: string
+    bodyEndCode?: string
+    customCss?: string
+  }
+}
+
+// GA/GTM ids are admin-set but still constrained to their real charset so an id
+// can't break out of the surrounding <script>.
+function analyticsId(id: string | undefined): string {
+  return id ? id.replace(/[^A-Za-z0-9\-_]/g, '') : ''
+}
+
+// Resolve `%page_title%` / `%site_title%`, then trim any separator left dangling
+// when a token resolved empty (e.g. no site title set).
+function formatTitle(fmt: string | undefined, pageTitle: string, siteTitle: string): string {
+  const out = (fmt || '%page_title%').replace(/%page_title%/g, pageTitle).replace(/%site_title%/g, siteTitle)
+  return out.replace(/\s*[|\-–—]\s*$/, '').replace(/^\s*[|\-–—]\s*/, '').trim() || pageTitle
+}
+
+function analyticsHeadTags(seo: SiteChrome['seo']): string {
+  let out = ''
+  const ga = analyticsId(seo?.googleAnalyticsId)
+  if (ga) {
+    out +=
+      `<script async src="https://www.googletagmanager.com/gtag/js?id=${ga}"></script>` +
+      `<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga}');</script>`
+  }
+  const gtm = analyticsId(seo?.googleTagManagerId)
+  if (gtm) {
+    out +=
+      `<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});` +
+      `var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;` +
+      `j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})` +
+      `(window,document,'script','dataLayer','${gtm}');</script>`
+  }
+  return out
+}
+
 type IxMap = Record<string, NonNullable<CanvasNode['interactions']>>
 
 // Walk a body and collect each interactive node's interactions, keyed by node
@@ -52,6 +109,7 @@ export function renderDocument(
   ctx: RenderContext,
   head: DocumentHead = {},
   assets: RenderAssets = {},
+  site: SiteChrome = {},
 ): string {
   const html = renderNodeToHtml(body, ctx)
   const ixMap = collectInteractions(body)
@@ -61,9 +119,31 @@ export function renderDocument(
   const needsScript = hasIx || hasRuntimeNode(body) || !!ctx.systemKey
 
   let headTags = ''
-  if (head.title) headTags += `<title>${head.title.replace(/</g, '&lt;')}</title>`
-  if (head.description) headTags += `<meta name="description" content="${escapeAttr(head.description)}">`
-  if (head.noIndex) headTags += '<meta name="robots" content="noindex, nofollow">'
+  const title = head.title ? formatTitle(site.seo?.titleFormat, head.title, site.siteTitle ?? '') : undefined
+  if (title) headTags += `<title>${title.replace(/</g, '&lt;')}</title>`
+  // Description: page-level wins, else the site-wide SEO default.
+  const description = head.description || site.seo?.metaDescription
+  if (description) headTags += `<meta name="description" content="${escapeAttr(description)}">`
+  // Robots: combine the page's noIndex with the site-wide SEO toggles.
+  const noindex = head.noIndex || !!site.seo?.robotsNoIndex
+  const nofollow = head.noIndex || !!site.seo?.robotsNoFollow
+  if (noindex || nofollow) {
+    headTags += `<meta name="robots" content="${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}">`
+  }
+  if (site.faviconUrl) headTags += `<link rel="icon" href="${escapeAttr(site.faviconUrl)}">`
+  // Open Graph / Twitter card — enough for a link preview.
+  if (title) headTags += `<meta property="og:title" content="${escapeAttr(title)}">`
+  if (description) headTags += `<meta property="og:description" content="${escapeAttr(description)}">`
+  if (site.seo?.socialImageUrl) {
+    headTags += `<meta property="og:image" content="${escapeAttr(site.seo.socialImageUrl)}">`
+    headTags += '<meta name="twitter:card" content="summary_large_image">'
+  }
+  // Analytics (GA/gtag + GTM) and the author's custom head code / CSS. Custom
+  // head/body code is admin-authored and injected verbatim (like WordPress);
+  // custom CSS escapes `<` so it can't break out of the <style>.
+  headTags += analyticsHeadTags(site.seo)
+  if (site.customCode?.headCode) headTags += site.customCode.headCode
+  if (site.customCode?.customCss) headTags += `<style>${site.customCode.customCss.replace(/</g, '\\3c ')}</style>`
 
   // Styles: external <link> when a href is given, otherwise inline <style>
   // resolved exactly like the editor canvas (class order honored, custom +
@@ -87,12 +167,22 @@ export function renderDocument(
 
   let bodyAttrs = ctx.systemKey ? ` data-sb-system="${ctx.systemKey}"` : ''
   if (ctx.productEntryId) bodyAttrs += ` data-sb-entry="${escapeAttr(ctx.productEntryId)}"`
+
+  // GTM needs a <noscript> iframe right after <body>. Custom body-start/end code
+  // is admin-authored and injected verbatim.
+  const gtm = analyticsId(site.seo?.googleTagManagerId)
+  const gtmNoscript = gtm
+    ? `<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${gtm}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`
+    : ''
+  const bodyStart = gtmNoscript + (site.customCode?.bodyStartCode ?? '')
+  const bodyEnd = site.customCode?.bodyEndCode ?? ''
+
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
     headTags +
     styleTag +
-    `</head><body${bodyAttrs}>${html}${scriptTag}</body></html>`
+    `</head><body${bodyAttrs}>${bodyStart}${html}${scriptTag}${bodyEnd}</body></html>`
   )
 }
 

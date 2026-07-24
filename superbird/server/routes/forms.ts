@@ -43,7 +43,8 @@ forms.get('/forms/submissions', (c) => {
 forms.get('/forms/submissions/export', (c) => {
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
-  if (!hit(`export:${clientIp(c)}`, 10, 60_000)) return c.json({ error: 'Too many exports. Try again shortly.' }, 429)
+  const limit = hit(`export:${clientIp(c)}`, 10, 60_000)
+  if (!limit.ok) return c.json({ error: 'Too many exports. Try again shortly.' }, 429, { 'Retry-After': String(limit.retryAfter) })
 
   const rows = listSubmissions(proj.id, filtersFromQuery(c))
   const json = c.req.query('format') === 'json'

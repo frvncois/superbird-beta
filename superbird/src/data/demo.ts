@@ -805,7 +805,7 @@ const productsTemplate = page('demo-single-product', 'Products', 'products', 'co
         ]),
         txt('Desc', 'Lifetime access to every premium theme, with updates and support included.', ['text-body'], { dynamicField: 'product_description' }),
         box('Actions', ['flex-row'], [
-          btn('Add', 'Add to cart', ['btn', 'btn-primary'], { dynamicField: 'product_add_to_cart' }),
+          btn('Add', 'Add to cart', ['btn', 'btn-primary'], { element: 'add-to-cart', dynamicField: 'product_add_to_cart' }),
           btn('Wishlist', 'Save for later', ['btn', 'btn-outline']),
         ]),
         txt('SKU', 'SKU: SB-BUNDLE-001', ['text-small'], { dynamicField: 'product_sku' }),

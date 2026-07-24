@@ -4,15 +4,16 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
 import { useMediaStore } from '@/stores/media'
-import { renderDocument, type RenderContext } from '@/lib/render'
+import { useLocalesStore } from '@/stores/locales'
+import { renderDocument, buildRenderContext, type RenderContext } from '@/lib/render'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
-import type { CanvasNode, Entry } from '@/types/canvas'
 
 const canvas = useCanvasStore()
 const styles = useGlobalStylesStore()
 const collections = useCollectionsStore()
 const media = useMediaStore()
+const locales = useLocalesStore()
 
 // Viewport widths to exercise the compiled @media rules.
 const widths = [
@@ -23,30 +24,26 @@ const widths = [
 const viewport = ref<'desktop' | 'tablet' | 'mobile'>('desktop')
 const frameWidth = computed(() => widths.find((w) => w.key === viewport.value)?.width ?? 0)
 
-// Render context backed by the editor stores (the SSR runtime builds an
-// equivalent context from the DB in a later slice).
-const ctx: RenderContext = {
-  content: (node: CanvasNode, entry?: Entry) => {
-    if (entry && node.dynamicField) return entry.values[node.dynamicField] ?? node.content ?? ''
-    return canvas.getNodeContent(node)
-  },
-  mediaUrl: (id: string) => media.mediaItems.find((m) => m.id === id)?.url ?? '',
-  entriesFor: (source: string | undefined, limit: number): Entry[] => {
-    const col = collections.collectionById(source)
-    if (!col) return []
-    return collections.entriesByCollection(col.id).slice(0, limit)
-  },
-  entryUrl: (entry: Entry): string => {
-    const col = collections.collectionById(entry.collectionId)
-    return col ? `/${col.basePath}/${entry.slug}` : '#'
-  },
-  get currentEntry() {
-    return canvas.activeEntry ?? undefined
-  },
-}
+// Same render context factory as the SSR site, backed by the editor stores.
+// includeDrafts:true — Preview shows unpublished entries as an authoring aid
+// (the published site does not). Recomputed so entry/locale switches re-render.
+const ctx = computed<RenderContext>(() =>
+  buildRenderContext({
+    entries: collections.entries,
+    collections: collections.collections,
+    mediaUrl: (id) => media.mediaItems.find((m) => m.id === id)?.url ?? '',
+    activeEntry: canvas.activeEntry ?? undefined,
+    locale: {
+      locale: locales.activeLocale,
+      defaultLocale: locales.defaultLocale,
+      locales: locales.locales.map((l) => ({ code: l.code, label: l.label })),
+    },
+    includeDrafts: true,
+  }),
+)
 
 const srcdoc = computed(() =>
-  renderDocument(canvas.activePage.body, styles.styleClasses, styles.globalStyles, ctx),
+  renderDocument(canvas.activePage.body, styles.styleClasses, styles.globalStyles, ctx.value),
 )
 </script>
 

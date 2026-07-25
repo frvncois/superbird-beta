@@ -4,7 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
 import type { NodeLink, Page } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
@@ -103,7 +103,7 @@ function updateLink(partial: Partial<NodeLink>) {
   <PropertySectionUi v-if="node" title="Link" icon="settings" :default-open="false">
     <div class="space-y-1.5">
       <FieldRowUi label="Link to" label-width="sm">
-        <SelectUi :model-value="linkType" :options="typeOptions" @update:model-value="setLinkType($event as LinkType)" />
+        <DropdownUi class="w-full" :model-value="linkType" :options="typeOptions" @update:model-value="setLinkType($event as LinkType)" />
       </FieldRowUi>
 
       <FieldRowUi v-if="linkType === 'url'" label="URL" label-width="sm">
@@ -114,14 +114,16 @@ function updateLink(partial: Partial<NodeLink>) {
         />
       </FieldRowUi>
       <FieldRowUi v-else-if="linkType === 'page'" label="Page" label-width="sm">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.link?.url ?? ''"
           :options="pageOptions"
           @update:model-value="updateLink({ url: $event || undefined })"
         />
       </FieldRowUi>
       <FieldRowUi v-else-if="linkType === 'post'" label="Post" label-width="sm">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.link?.url ?? ''"
           :options="postOptions"
           @update:model-value="updateLink({ url: $event || undefined })"
@@ -132,7 +134,8 @@ function updateLink(partial: Partial<NodeLink>) {
       </FieldRowUi>
 
       <FieldRowUi label="Target" label-width="sm">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.link?.target ?? '_self'"
           :options="targetOptions"
           @update:model-value="updateLink({ target: $event as '_self' | '_blank' })"

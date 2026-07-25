@@ -434,13 +434,6 @@ const teamChildren = (name: string, role: string): CanvasNode[] => [
   span('Name', name, ['team-name']),
   txt('Role', role, ['team-role']),
 ]
-const blogCardChildren = (cat: string, title: string, excerpt: string, date: string): CanvasNode[] => [
-  img('Thumbnail', ['img-cover'], { styles: { 'margin-bottom': '20px' } }),
-  span('Category', cat, ['badge', 'mb-sm']),
-  h('h3', 'Title', title, ['heading-card']),
-  txt('Excerpt', excerpt, ['text-body']),
-  txt('Date', date, ['text-small'], { styles: { 'margin-top': '12px' } }),
-]
 const productChildren = (title: string, price: string): CanvasNode[] => [
   img('Image', ['img-square'], { styles: { 'margin-bottom': '16px' } }),
   h('h3', 'Title', title, ['heading-card']),
@@ -456,16 +449,6 @@ const faqItem = (q: string, a: string) =>
 // Interaction presets (fresh ids per call)
 // ============================================================================
 
-function fadeInUp(): Interaction {
-  return {
-    id: generateInteractionId(), name: 'Fade In Up', trigger: 'scroll-into-view',
-    steps: [{ id: generateStepId(), target: { type: 'self' }, delay: 0, duration: 600, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', actions: [
-      { property: 'opacity', from: '0', to: '1' },
-      { property: 'translateY', from: '30px', to: '0px' },
-    ] }],
-    options: {},
-  }
-}
 function heroEntrance(): Interaction {
   return {
     id: generateInteractionId(), name: 'Hero Entrance', trigger: 'page-load',

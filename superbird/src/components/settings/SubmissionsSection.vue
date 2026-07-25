@@ -4,7 +4,7 @@ import { useSubmissionsStore, type Submission } from '@/stores/submissions'
 import { useToast } from '@/composables/useToast'
 import { downloadSubmissions } from '@/lib/submissionsExport'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -159,8 +159,8 @@ async function runExport() {
         <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
         <InputUi v-model="search" placeholder="Search submissions..." class="pl-8" />
       </div>
-      <div class="w-44 shrink-0"><SelectUi v-model="formId" :options="formOptions" /></div>
-      <div class="w-32 shrink-0"><SelectUi v-model="status" :options="statusOptions" /></div>
+      <div class="w-44 shrink-0"><DropdownUi v-model="formId" :options="formOptions" class="w-full" /></div>
+      <div class="w-32 shrink-0"><DropdownUi v-model="status" :options="statusOptions" class="w-full" /></div>
       <InputUi v-model="from" type="date" class="w-36 shrink-0" />
       <InputUi v-model="to" type="date" class="w-36 shrink-0" />
     </div>
@@ -210,7 +210,7 @@ async function runExport() {
       <div class="space-y-3">
         <div class="space-y-1">
           <LabelUi size="xs">Form</LabelUi>
-          <SelectUi v-model="exFormId" :options="formOptions" />
+          <DropdownUi v-model="exFormId" :options="formOptions" class="w-full" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="space-y-1">

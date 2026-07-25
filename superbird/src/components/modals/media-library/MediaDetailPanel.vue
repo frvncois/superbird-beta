@@ -4,9 +4,10 @@ import { useMediaStore } from '@/stores/media'
 import { useCanvasStore } from '@/stores/canvas'
 import { useToast } from '@/composables/useToast'
 import { formatFileSize } from '@/lib/media'
+import { formatDate } from '@/lib/datetime'
 import type { CanvasNode, MediaItem } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
@@ -31,11 +32,7 @@ const folderOptions = computed(() => [
   ...store.mediaFolders.map((f) => ({ value: f.id, label: f.name })),
 ])
 
-function fmtDate(iso: string): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
+const fmtDate = (iso: string) => formatDate(iso, '—')
 
 // Where this media is used: image elements whose content references its id,
 // grouped by page (across every page's node tree).
@@ -105,7 +102,8 @@ function doDelete() {
         </div>
         <div class="space-y-0.5">
           <LabelUi size="xs">Folder</LabelUi>
-          <SelectUi
+          <DropdownUi
+            class="w-full"
             :model-value="item.folderId ?? ''"
             :options="folderOptions"
             @update:model-value="store.moveMediaToFolder(item.id, $event || undefined)"

@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import IconUi from './IconUi.vue'
 
-type ButtonVariant = 'default' | 'solid' | 'outline' | 'ghost' | 'danger'
+type ButtonVariant = 'default' | 'solid' | 'outline' | 'ghost' | 'danger' | 'bare'
 type ButtonSize = 'default' | 'sm' | 'xs'
 type ButtonAlign = 'center' | 'start'
 type ButtonTone = 'default' | 'primary'
@@ -55,11 +55,14 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: 'bg-transparent border text-foreground hover:bg-secondary/10',
   ghost: 'bg-transparent text-foreground hover:bg-secondary/10',
   danger: 'border border-red-border bg-red-bg text-red-fg hover:bg-red-bg/70',
+  // `bare` colours are resolved in colorClasses (no box).
+  bare: 'text-secondary hover:text-foreground',
 }
 
-// Colour treatment: `active` (selected) wins, then `tone=primary` accent,
-// otherwise the variant. Kept mutually exclusive so classes never conflict.
+// Colour treatment: `bare` = no bg, hover colour only (primary when active);
+// else `active` (selected) wins, then `tone=primary` accent, then the variant.
 const colorClasses = computed(() => {
+  if (props.variant === 'bare') return props.active ? 'text-primary' : 'text-secondary hover:text-foreground'
   if (props.active) return 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
   if (props.tone === 'primary' && props.variant === 'ghost') return 'text-primary hover:bg-primary/10'
   return variantClasses[props.variant]
@@ -68,7 +71,8 @@ const colorClasses = computed(() => {
 const classes = computed(() => [
   'inline-flex items-center font-medium cursor-pointer gap-1.5 transition-[background-color,color,border-color,opacity] duration-[250ms] ease',
   props.align === 'start' ? 'justify-start' : 'justify-center',
-  props.square ? squareClasses[props.size] : sizeClasses[props.size],
+  // `bare` has no box: no height/padding/rounded, just the content + colour.
+  props.variant === 'bare' ? '' : props.square ? squareClasses[props.size] : sizeClasses[props.size],
   colorClasses.value,
   props.disabled && 'pointer-events-none opacity-50',
 ])

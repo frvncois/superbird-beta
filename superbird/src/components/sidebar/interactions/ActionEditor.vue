@@ -5,7 +5,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { ACTION_PROPERTIES } from '@/constants/canvas'
 import type { AnimateAction, ClassAction, ClassOp, InteractionAction } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -78,13 +78,14 @@ function removeAction() {
   <!-- Class action -->
   <div v-if="isClass" class="flex items-center gap-1 rounded-lg bg-purple-bg/40 px-2 py-1.5">
     <div class="w-16 shrink-0">
-      <SelectUi
+      <DropdownUi
+        class="w-full"
         :model-value="asClass.op"
         :options="classOpOptions"
         @update:model-value="(v: string) => updateAction({ op: v as ClassOp })"
       />
     </div>
-    <SelectUi
+    <DropdownUi
       v-if="!custom"
       class="min-w-0 flex-1"
       :model-value="asClass.className"

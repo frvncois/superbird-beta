@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { apiGet } from '@/lib/api'
+import { formatDate as fmtDate } from '@/lib/datetime'
 import IconUi from '@/components/ui/IconUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 
@@ -24,7 +25,6 @@ const currency = ref('usd')
 const fmt = computed(() => (cents: number) => {
   try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.value.toUpperCase() }).format(cents / 100) } catch { return `$${(cents / 100).toFixed(2)}` }
 })
-function fmtDate(iso: string) { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { dateStyle: 'medium' }) }
 function initials(c: Customer) { return (c.name || c.email).split(/[\s@.]+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase() }
 
 async function load() {

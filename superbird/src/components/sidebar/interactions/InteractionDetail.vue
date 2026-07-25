@@ -3,7 +3,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { TRIGGER_TYPES } from '@/constants/canvas'
 import type { Interaction, TriggerType } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -59,7 +59,8 @@ function addStep() {
       <PropertySectionUi title="Trigger" icon="settings">
         <div class="space-y-1.5">
           <FieldRowUi label="Type" label-width="sm">
-            <SelectUi
+            <DropdownUi
+              class="w-full"
               :model-value="interaction.trigger"
               :options="triggerOptions"
               @update:model-value="(v: string) => updateInteraction({ trigger: v as TriggerType })"

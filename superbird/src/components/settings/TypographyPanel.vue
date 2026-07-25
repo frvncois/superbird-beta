@@ -12,7 +12,7 @@ import SettingsSection from './SettingsSection.vue'
 import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
@@ -135,8 +135,8 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
       <div class="space-y-2 bg-secondary/5 px-4 py-3">
         <div class="flex flex-wrap items-center gap-2">
           <InputUi v-model="uploadName" placeholder="Font name (optional)" class="w-44 shrink-0" />
-          <SelectUi v-model="uploadWeight" :options="weightOptions" class="w-20 shrink-0" />
-          <SelectUi v-model="uploadStyle" :options="styleOptions" class="w-24 shrink-0" />
+          <DropdownUi v-model="uploadWeight" :options="weightOptions" class="w-20 shrink-0" />
+          <DropdownUi v-model="uploadStyle" :options="styleOptions" class="w-24 shrink-0" />
           <input ref="uploadInput" type="file" accept=".woff2,.woff,.ttf,.otf" class="hidden" @change="onUploadFile" />
           <ButtonUi size="sm" :disabled="uploading" @click="uploadInput?.click()">
             {{ uploading ? 'Uploading…' : 'Upload font file' }}
@@ -151,7 +151,7 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
     <SettingsSection title="Font variables" description="Named fonts you reuse across the design (e.g. body, heading).">
       <div v-for="[name, value] in fontVars" :key="name" class="flex items-center gap-2 px-4 py-2.5">
         <span class="w-24 shrink-0 font-mono text-xs text-foreground">{{ name }}</span>
-        <SelectUi
+        <DropdownUi
           class="flex-1"
           :model-value="value"
           :options="fontValueOptions"
@@ -170,7 +170,7 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
       </div>
       <div class="flex items-center gap-2 bg-secondary/5 px-4 py-3">
         <InputUi v-model="newVarName" placeholder="Name (e.g. heading)" class="w-40 shrink-0" />
-        <SelectUi v-model="newVarValue" :options="fontValueOptions" placeholder="Pick a font" class="flex-1" />
+        <DropdownUi v-model="newVarValue" :options="fontValueOptions" placeholder="Pick a font" class="flex-1" />
         <ButtonUi size="sm" @click="addVar">Add</ButtonUi>
       </div>
     </SettingsSection>
@@ -213,7 +213,7 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
               placeholder="48"
               @update:model-value="store.updateHeadingStyle(typoBp, tag, { fontSize: $event })"
             />
-            <SelectUi
+            <DropdownUi
               class="w-24"
               :model-value="store.globalStyles.typography[typoBp].headings[tag].fontWeight"
               :options="headingWeightOptions"

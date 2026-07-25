@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 
 const store = useCanvasStore()
@@ -55,7 +55,8 @@ function updateTag(value: string) {
         placeholder="Label"
         @update:model-value="updateLabel"
       />
-      <SelectUi
+      <DropdownUi
+        class="w-full"
         v-if="tagOptions.length > 0"
         :model-value="node.tag"
         :options="tagOptions"

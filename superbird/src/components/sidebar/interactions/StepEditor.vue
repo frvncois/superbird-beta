@@ -4,7 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { TARGET_TYPES, EASING_OPTIONS, ACTION_PROPERTIES } from '@/constants/canvas'
 import type { InteractionStep, TargetType, ActionProperty, ClassOp } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -65,7 +65,8 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
     <div class="space-y-2">
       <!-- Target -->
       <FieldRowUi label="Target" label-width="sm">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="step.target.type"
           :options="targetOptions"
           @update:model-value="(v: string) => updateStep({ target: { type: v as TargetType, value: step.target.value } })"
@@ -101,7 +102,7 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
 
       <!-- Easing -->
       <FieldRowUi label="Easing" label-width="sm">
-        <SelectUi :model-value="step.easing" :options="easingOptions" @update:model-value="(v: string) => updateStep({ easing: v })" />
+        <DropdownUi class="w-full" :model-value="step.easing" :options="easingOptions" @update:model-value="(v: string) => updateStep({ easing: v })" />
       </FieldRowUi>
 
       <!-- Actions -->

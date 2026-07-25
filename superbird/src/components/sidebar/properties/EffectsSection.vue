@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import { cursorOptions } from '@/constants/propertyOptions'
@@ -21,7 +21,7 @@ const effectsKeys = ['opacity', 'box-shadow', 'cursor', 'transition', 'transform
         <InputUi v-bind="field('box-shadow')" placeholder="0 1px 3px rgba(0,0,0,.1)" />
       </FieldRowUi>
       <FieldRowUi label="Cursor">
-        <SelectUi v-bind="field('cursor')" :options="cursorOptions" />
+        <DropdownUi class="w-full" v-bind="field('cursor')" :options="cursorOptions" />
       </FieldRowUi>
       <FieldRowUi label="Transition">
         <InputUi v-bind="field('transition')" placeholder="all 0.2s ease" />

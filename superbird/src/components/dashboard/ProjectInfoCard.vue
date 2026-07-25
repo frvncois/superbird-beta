@@ -50,7 +50,7 @@ async function copyUrl() {
       <p class="truncate text-sm font-medium text-foreground">{{ name }}</p>
 
       <!-- Copyable deployment URL with slide swap + quick actions -->
-      <div class="flex items-center gap-0.5">
+      <div class="flex items-center gap-2">
         <div class="relative h-5 min-w-0 flex-1 overflow-hidden">
           <button
             type="button"
@@ -68,15 +68,15 @@ async function copyUrl() {
             Link copied!
           </span>
         </div>
-        <ButtonUi variant="ghost" size="sm" square icon="copy" title="Copy URL" @click="copyUrl" />
-        <ButtonUi variant="ghost" size="sm" square icon="settings" title="Deployment settings" to="/settings?tab=general" />
-        <!-- External link → real anchor (native new-tab / ⌘-click); ButtonUi has no external href. -->
+        <ButtonUi variant="bare" size="sm" icon="copy" title="Copy URL" @click="copyUrl" />
+        <ButtonUi variant="bare" size="sm" icon="settings" title="Deployment settings" to="/settings?tab=general" />
+        <!-- External link → real anchor (native new-tab / ⌘-click); ButtonUi has no external href. Styled to match `bare`. -->
         <a
           :href="fullUrl"
           target="_blank"
           rel="noopener"
           title="Open in new tab"
-          class="flex size-7 shrink-0 items-center justify-center rounded-lg text-secondary transition-colors duration-100 hover:bg-secondary/10 hover:text-foreground"
+          class="flex shrink-0 items-center text-secondary transition-colors duration-[250ms] hover:text-foreground"
         >
           <IconUi name="external-link" size="size-3.5" />
         </a>

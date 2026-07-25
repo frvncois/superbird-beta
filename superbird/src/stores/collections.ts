@@ -2,12 +2,9 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { generateCollectionId, generateEntryId } from '@/lib/ids'
 import { walkTree } from '@/lib/tree'
+import { slugify } from '@/lib/slug'
 import { demoCollections, demoEntries } from '@/data/demo'
 import type { CanvasNode, Collection, CollectionField, CollectionKind, Entry, FieldType } from '@/types/canvas'
-
-function slugify(value: string): string {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-}
 
 /**
  * User-defined content types (collections) and their entries — in-app only

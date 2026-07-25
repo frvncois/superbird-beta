@@ -49,16 +49,16 @@ export function timeAgoShort(value: string | number | Date | null | undefined, n
   return `${Math.floor(s / 604800)}w`
 }
 
-/** Readable absolute date: "Jan 5, 2026". */
-export function formatDate(value: string | number | Date | null | undefined): string {
+/** Readable absolute date: "Jan 5, 2026". `fallback` for a missing/invalid value. */
+export function formatDate(value: string | number | Date | null | undefined, fallback = ''): string {
   const d = toDate(value)
-  return d ? d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : ''
+  return d ? d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : fallback
 }
 
-/** Readable date + time: "Jan 5, 2026, 3:42 PM". */
-export function formatDateTime(value: string | number | Date | null | undefined): string {
+/** Readable date + time: "Jan 5, 2026, 3:42 PM". `fallback` for a missing/invalid value. */
+export function formatDateTime(value: string | number | Date | null | undefined, fallback = ''): string {
   const d = toDate(value)
   return d
     ? d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-    : ''
+    : fallback
 }

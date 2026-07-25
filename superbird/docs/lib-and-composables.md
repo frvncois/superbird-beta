@@ -17,7 +17,7 @@
 
 **`animations.ts`** — `runStep`, `runStepsReverse`, `runAllSteps` (Web Animations API keyframe builders; used by `useInteractionRunner`).
 
-**`media.ts`** — `getMediaTypeFromMime(mime)`, `formatFileSize(bytes)`. **`siteDefaults.ts`** — `createDefaultSiteSettings()`.
+**`media.ts`** — `getMediaTypeFromMime(mime)`, `formatFileSize(bytes)`. **`siteDefaults.ts`** — `createDefaultSiteSettings()`. **`datetime.ts`** — `timeAgo`/`timeAgoShort`, `formatDate(v, fallback?)`, `formatDateTime(v, fallback?)`. **`slug.ts`** — `slugify(value)`.
 
 ## `constants/`
 
@@ -34,7 +34,6 @@
 | `useContextMenu()` | → `{visible, x, y, items, open(e, items), close}` | position/open state only |
 | `useNodeContextMenu` | `buildNodeActions(node, 'canvas'\|'layers', callbacks?)`, `buildElementActions(type)`, `deleteNodeWithUndo(id)` | builds `ContextMenuItem[]`; `deleteNodeWithUndo` removes + shows an Undo toast (re-inserts via `store.restoreNode`) |
 | `useToast()` | → `{toasts, success(msg,opts?), error(...), info(...), dismiss, runAction}` | **module-scope singleton**; queue rendered by `ToastHost` (mounted in `App.vue`). `opts.action = {label, handler}` = e.g. Undo; `opts.duration = 0` keeps it until dismissed |
-| `useDragScrub(getValue, onUpdate)` | pointer scrub | ignores drags starting on input/select/button; skips `auto`/`token` |
 | `useInteractionRunner(elRef, interactions)` | attaches WAAPI animations | targets `[data-canvas-node]` / `[data-canvas-scroll]` — keep those attrs on canvas markup |
 
 **Feature-scoped composables** (co-located, not in `composables/`): `canvas/useNodeDnD.ts` (`useNodeDnD(node)` → drop handlers + `dropPosition`), `sidebar/properties/useNodeStyles.ts` (selected-node style editing surface), `sidebar/settings/useNodeSettings.ts` (node/type predicates + collection/field helpers).

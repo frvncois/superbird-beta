@@ -2,7 +2,7 @@
 import type { NodeVisibility } from '@/types/canvas'
 import { useNodeSettings } from './useNodeSettings'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
@@ -55,7 +55,8 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
       <!-- Conditional logic -->
       <div v-if="hasFields" class="space-y-1.5 pt-1">
         <span class="text-[10px] text-secondary">Conditional Logic</span>
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.visibility?.condition?.operator ?? ''"
           :options="conditionOperatorOptions"
           @update:model-value="(v: string) => updateVisibility({
@@ -63,7 +64,8 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
           })"
         />
         <template v-if="node.visibility?.condition?.operator">
-          <SelectUi
+          <DropdownUi
+            class="w-full"
             :model-value="node.visibility?.condition?.field ?? ''"
             :options="[
               { value: '', label: 'Select field...' },

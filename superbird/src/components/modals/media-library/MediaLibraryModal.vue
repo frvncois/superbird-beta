@@ -4,7 +4,7 @@ import { useMediaStore } from '@/stores/media'
 import type { MediaItem, MediaType } from '@/types/canvas'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -162,12 +162,12 @@ watch(
       </div>
 
       <div class="w-32 shrink-0">
-        <SelectUi v-model="filterTypeProxy" :options="typeFilterOptions" />
+        <DropdownUi v-model="filterTypeProxy" :options="typeFilterOptions" class="w-full" />
       </div>
 
       <div class="flex shrink-0 items-center gap-1">
         <div class="w-32">
-          <SelectUi v-model="sortByProxy" :options="sortOptions" />
+          <DropdownUi v-model="sortByProxy" :options="sortOptions" class="w-full" />
         </div>
         <IconButtonUi
           size="sm"

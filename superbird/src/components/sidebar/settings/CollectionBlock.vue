@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 
@@ -38,7 +38,8 @@ function updatePropValue(key: string, value: string) {
     <LabelUi>Collection</LabelUi>
     <div class="space-y-1.5">
       <FieldRowUi label="Source" label-width="md">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.props.source ?? ''"
           :options="collectionSourceOptions"
           @update:model-value="updatePropValue('source', $event)"
@@ -52,14 +53,16 @@ function updatePropValue(key: string, value: string) {
         />
       </FieldRowUi>
       <FieldRowUi label="Order by" label-width="md">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.props.orderBy ?? 'date'"
           :options="collectionOrderByOptions"
           @update:model-value="updatePropValue('orderBy', $event)"
         />
       </FieldRowUi>
       <FieldRowUi label="Order" label-width="md">
-        <SelectUi
+        <DropdownUi
+          class="w-full"
           :model-value="node.props.order ?? 'desc'"
           :options="collectionOrderOptions"
           @update:model-value="updatePropValue('order', $event)"

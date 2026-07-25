@@ -2,10 +2,6 @@
 import { ref } from 'vue'
 import { parseUnitValue } from '@/lib/unitValue'
 
-const props = defineProps<{
-  sensitivity?: number
-}>()
-
 const model = defineModel<string>({ default: '' })
 
 const isDragging = ref(false)
@@ -32,7 +28,7 @@ function onPointerMove(e: PointerEvent) {
   if (!isDragging.value) return
   const dx = e.clientX - startX
 
-  let step = props.sensitivity ?? 1
+  let step = 1
   if (e.shiftKey) step *= 10
   if (e.altKey) step *= 0.1
 

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import { useMediaStore } from '@/stores/media'
+import { slugify } from '@/lib/slug'
 import AuthShell from '@/layouts/AuthShell.vue'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -24,9 +25,6 @@ const password = ref('')
 const confirm = ref('')
 
 // The public handle is derived from the project name (no separate field).
-function slugify(v: string): string {
-  return v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-}
 
 const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))
 const passwordValid = computed(() => password.value.length >= 8)

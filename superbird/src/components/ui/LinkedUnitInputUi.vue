@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import SizeTokenInputUi from './SizeTokenInputUi.vue'
 import DragLabelUi from './DragLabelUi.vue'
-import ButtonUi from './ButtonUi.vue'
 
 withDefaults(
   defineProps<{
@@ -11,7 +10,7 @@ withDefaults(
     allowAuto?: boolean
   }>(),
   {
-    labels: () => ['T', 'R', 'B', 'L'] as [string, string, string, string],
+    labels: () => ['Top', 'Right', 'Bottom', 'Left'] as [string, string, string, string],
     units: () => ['px', '%', 'em', 'rem', 'vw', 'vh'],
     allowAuto: false,
   },
@@ -46,53 +45,37 @@ function toggleLinked() {
     model.value = [first, first, first, first]
   }
 }
+
+// The link/unlink toggle lives in the group's title — the parent renders it and
+// drives it via these. `linked` also picks single vs. 4-up layout below.
+defineExpose({ linked, toggleLinked })
 </script>
 
 <template>
-  <div class="space-y-1.5">
-    <div v-if="linked" class="flex items-center gap-1.5">
-      <SizeTokenInputUi
-        :model-value="model[0] ?? ''"
-        placeholder="0"
-        :units="units"
-        :allow-auto="allowAuto"
-        @update:model-value="updateValue(0, $event)"
-      />
-      <ButtonUi
-        variant="ghost"
-        size="sm"
-        icon="link"
-        title="Unlink sides"
-        @click="toggleLinked"
-      />
-    </div>
-    <template v-else>
-      <div class="grid grid-cols-2 gap-1.5">
-        <div v-for="(label, i) in labels" :key="label" class="space-y-0.5">
-          <DragLabelUi
-            class="block text-[9px] text-secondary/60"
-            :model-value="model[i] ?? ''"
-            @update:model-value="updateValue(i, $event)"
-          >{{ label }}</DragLabelUi>
-          <SizeTokenInputUi
-            :model-value="model[i] ?? ''"
-            placeholder="0"
-            :units="units"
-            :allow-auto="allowAuto"
-            @update:model-value="updateValue(i, $event)"
-          />
-        </div>
+  <div>
+    <SizeTokenInputUi
+      v-if="linked"
+      :model-value="model[0] ?? ''"
+      placeholder="0"
+      :units="units"
+      :allow-auto="allowAuto"
+      @update:model-value="updateValue(0, $event)"
+    />
+    <div v-else class="grid grid-cols-2 gap-1.5">
+      <div v-for="(label, i) in labels" :key="label" class="space-y-0.5">
+        <DragLabelUi
+          class="block text-[9px] text-secondary/60"
+          :model-value="model[i] ?? ''"
+          @update:model-value="updateValue(i, $event)"
+        >{{ label }}</DragLabelUi>
+        <SizeTokenInputUi
+          :model-value="model[i] ?? ''"
+          placeholder="0"
+          :units="units"
+          :allow-auto="allowAuto"
+          @update:model-value="updateValue(i, $event)"
+        />
       </div>
-      <ButtonUi
-        variant="ghost"
-        size="sm"
-        icon="link"
-        title="Link sides"
-        class="w-full !text-secondary"
-        @click="toggleLinked"
-      >
-        Link
-      </ButtonUi>
-    </template>
+    </div>
   </div>
 </template>

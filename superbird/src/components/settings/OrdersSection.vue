@@ -2,7 +2,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { apiGet, apiPatch } from '@/lib/api'
 import { useToast } from '@/composables/useToast'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import { formatDate as fmtDate } from '@/lib/datetime'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 
 interface OrderItem { title: string; unitPrice: number; qty: number }
@@ -40,7 +41,6 @@ const badge: Record<string, string> = {
 const fmt = computed(() => (cents: number) => {
   try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.value.toUpperCase() }).format(cents / 100) } catch { return `$${(cents / 100).toFixed(2)}` }
 })
-function fmtDate(iso: string) { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { dateStyle: 'medium' }) }
 function shortId(id: string) { return id.replace(/^order_/, '#').slice(0, 9) }
 function summary(o: Order) { return o.items.map((i) => `${i.title} × ${i.qty}`).join(', ') || '—' }
 
@@ -75,7 +75,7 @@ async function changeStatus(o: Order, next: string) {
   <div class="space-y-4">
     <div class="flex items-center justify-between gap-2">
       <p class="text-xs text-secondary">{{ orders.length }} order{{ orders.length === 1 ? '' : 's' }}</p>
-      <div class="w-40"><SelectUi v-model="status" :options="filterOptions" /></div>
+      <div class="w-40"><DropdownUi v-model="status" :options="filterOptions" class="w-full" /></div>
     </div>
 
     <EmptyStateUi v-if="!orders.length" compact :message="unavailable ? 'Activate the store to take orders.' : 'No orders yet.'" class="rounded-xl border border-border/70 py-12" />
@@ -91,7 +91,7 @@ async function changeStatus(o: Order, next: string) {
             <div class="truncate text-xs text-secondary">{{ summary(o) }}</div>
           </button>
           <span class="shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider" :class="badge[o.status]">{{ o.status }}</span>
-          <div class="w-32 shrink-0"><SelectUi :model-value="o.status" :options="statusOptions" @update:model-value="changeStatus(o, $event)" /></div>
+          <div class="w-32 shrink-0"><DropdownUi :model-value="o.status" :options="statusOptions" @update:model-value="changeStatus(o, $event)" class="w-full" /></div>
           <div class="text-right text-sm">
             <div class="font-medium">{{ fmt(o.total) }}</div>
             <div class="text-[10px] text-secondary">{{ fmtDate(o.createdAt) }}</div>

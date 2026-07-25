@@ -19,7 +19,7 @@ const widthClasses: Record<LabelWidth, string> = {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 items-center gap-2">
+  <div class="grid grid-cols-2 grid-cols-[0.5fr_1fr] items-center gap-2">
     <span :class="[widthClasses[props.labelWidth], 'shrink-0 text-[9px] text-secondary font-mono tracking-wider uppercase']">{{ label }}</span>
     <slot />
   </div>

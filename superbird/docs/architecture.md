@@ -39,7 +39,7 @@ layouts/              AppShell (AppHeader + body) · AuthShell (centered login/s
 stores/               canvas globalStyles media siteSettings locales userComponents collections
 lib/                  tree ids nodeFactory styles animations unitValue media siteDefaults
 constants/            canvas.ts propertyOptions.ts injectionKeys.ts
-composables/          useHistory useKeyboardShortcuts useContextMenu useNodeContextMenu useDragScrub useInteractionRunner
+composables/          useHistory useKeyboardShortcuts useContextMenu useNodeContextMenu useInteractionRunner
 types/                canvas.ts contextMenu.ts
 data/                 demo.ts (seed data only)
 ```

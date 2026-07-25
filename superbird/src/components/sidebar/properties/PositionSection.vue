@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import DragLabelUi from '@/components/ui/DragLabelUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -17,7 +17,7 @@ const positionKeys = ['position', 'top', 'right', 'bottom', 'left', 'z-index']
   <PropertySectionUi title="Position" icon="position" :states-with-values="statesWithValues(positionKeys)" :default-open="false">
     <div class="space-y-1.5">
       <FieldRowUi label="Position">
-        <SelectUi v-bind="field('position')" :options="positionOptions" />
+        <DropdownUi class="w-full" v-bind="field('position')" :options="positionOptions" />
       </FieldRowUi>
       <template v-if="activeStyles.position && activeStyles.position !== 'static' && activeStyles.position !== ''">
         <div class="grid grid-cols-2 gap-1.5">

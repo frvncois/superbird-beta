@@ -6,7 +6,6 @@ import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import { useToast } from '@/composables/useToast'
-import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import DropdownUi, { type DropdownItem } from '@/components/ui/DropdownUi.vue'
@@ -131,20 +130,22 @@ async function publish() {
 </script>
 
 <template>
-  <!-- Self-contained app bar: fixed height, sits above the canvas stacking context. -->
-  <header class="relative z-40 flex h-[var(--header-height)] shrink-0 items-center justify-between p-3.5">
-    <!-- Left: app menu -->
-    <div class="flex items-center gap-1.5">
-      <DropdownUi v-model:open="menuOpen" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
+  <!-- Self-contained app bar: fixed height, sits above the canvas stacking
+       context. Same 3-column grid as EditorLayout (left | canvas | right) so the
+       menu / context bar / actions align over the sidebars and canvas. -->
+  <header class="relative z-40 grid h-[var(--header-height)] shrink-0 grid-cols-[var(--sidebar-width)_1fr_var(--sidebar-width)] items-center">
+    <!-- Left: app menu (aligns with the left sidebar) -->
+    <div class="flex items-center gap-1.5 pl-3.5">
+      <DropdownUi v-model:open="menuOpen" class="w-49" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
     </div>
 
-    <!-- Center: context bar (editor only) -->
+    <!-- Center: context bar over the canvas (editor only) -->
     <div class="flex items-center gap-1.5">
       <HeaderContextBar v-if="mode === 'editor'" />
     </div>
 
-    <!-- Right: actions -->
-    <div class="flex items-center gap-2">
+    <!-- Right: actions (aligns with the right sidebar) -->
+    <div class="flex items-center justify-end gap-2 pr-3.5">
     <template v-if="mode === 'editor'">
       <ButtonUi variant="outline" size="sm" :disabled="saving" @click="save">
         {{ saving ? 'Saving…' : 'Save' }}

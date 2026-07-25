@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import LinkedUnitInputUi from '@/components/ui/LinkedUnitInputUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -11,6 +12,8 @@ import { borderStyleOptions } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
 
 const { field, linked, statesWithValues } = useNodeStyles()
+
+const radiusLink = ref<{ linked: boolean; toggleLinked: () => void } | null>(null)
 
 const borderKeys = ['border-width', 'border-style', 'border-color', 'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']
 
@@ -33,7 +36,7 @@ const activeBorderMode = ref('all')
             <UnitInputUi v-bind="field('border-width')" placeholder="0" :units="['px', 'em', 'rem']" />
           </FieldRowUi>
           <FieldRowUi label="Style">
-            <SelectUi v-bind="field('border-style')" :options="borderStyleOptions" />
+            <DropdownUi class="w-full" v-bind="field('border-style')" :options="borderStyleOptions" />
           </FieldRowUi>
           <FieldRowUi label="Color">
             <ColorInputUi v-bind="field('border-color')" placeholder="#e5e7eb" />
@@ -46,15 +49,26 @@ const activeBorderMode = ref('all')
           <span class="text-[10px] text-secondary capitalize">{{ side }}</span>
           <div class="grid grid-cols-3 gap-1">
             <UnitInputUi v-bind="field(`border-${side}-width`)" placeholder="0" :units="['px', 'em', 'rem']" />
-            <SelectUi v-bind="field(`border-${side}-style`)" :options="borderStyleOptions" />
+            <DropdownUi class="w-full" v-bind="field(`border-${side}-style`)" :options="borderStyleOptions" />
             <ColorInputUi v-bind="field(`border-${side}-color`)" placeholder="#e5e7eb" />
           </div>
         </div>
       </template>
 
       <div class="space-y-1 pt-1">
-        <span class="text-[10px] text-secondary">Radius</span>
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] text-secondary">Radius</span>
+          <ButtonUi
+            variant="bare"
+            size="sm"
+            icon="link"
+            :active="radiusLink?.linked"
+            :title="radiusLink?.linked ? 'Unlink corners' : 'Link corners'"
+            @click="radiusLink?.toggleLinked()"
+          />
+        </div>
         <LinkedUnitInputUi
+          ref="radiusLink"
           v-bind="linked(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
           :labels="['TL', 'TR', 'BR', 'BL']"
           :units="['px', '%', 'em', 'rem']"

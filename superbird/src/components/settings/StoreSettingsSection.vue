@@ -6,7 +6,7 @@ import { useToast } from '@/composables/useToast'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
 import InputUi from '@/components/ui/InputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
@@ -106,7 +106,7 @@ async function save() {
 
     <SettingsSection title="Payments (Stripe)" description="Payments are handled entirely by Stripe. Your secret key and webhook secret stay on your server and are never included in backups.">
       <SettingsRow label="Currency">
-        <SelectUi v-model="cfg.currency" :options="currencyOptions" />
+        <DropdownUi v-model="cfg.currency" :options="currencyOptions" class="w-full" />
       </SettingsRow>
       <SettingsRow label="Secret key" :description="hasSecretKey ? 'A key is saved. Leave blank to keep it.' : 'sk_live_… / sk_test_…'">
         <InputUi v-model="secretKey" type="password" :placeholder="hasSecretKey ? '••••••••' : 'sk_…'" />

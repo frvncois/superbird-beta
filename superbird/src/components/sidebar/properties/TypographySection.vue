@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import SizeTokenInputUi from '@/components/ui/SizeTokenInputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import FontFamilyControl from './FontFamilyControl.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import DragLabelUi from '@/components/ui/DragLabelUi.vue'
@@ -27,43 +27,37 @@ const typographyKeys = ['font-family', 'font-size', 'line-height', 'font-weight'
       <FieldRowUi label="Family">
         <FontFamilyControl v-bind="field('font-family')" />
       </FieldRowUi>
-      <div class="grid grid-cols-2 gap-1.5">
-        <div class="space-y-1">
+      <FieldRowUi label="Size">
           <DragLabelUi class="text-[10px] text-secondary" v-bind="field('font-size')">Size</DragLabelUi>
           <SizeTokenInputUi v-bind="field('font-size')" placeholder="16" :units="['px', 'em', 'rem', '%', 'vw']" />
-        </div>
-        <div class="space-y-1">
+      </FieldRowUi>
+      <FieldRowUi label="Height">
           <DragLabelUi class="text-[10px] text-secondary" v-bind="field('line-height')">Line Height</DragLabelUi>
           <SizeTokenInputUi v-bind="field('line-height')" placeholder="1.5" :units="['px', 'em', 'rem', '%']" />
-        </div>
-      </div>
+      </FieldRowUi>
       <FieldRowUi label="Weight">
-        <SelectUi v-bind="field('font-weight')" :options="fontWeightOptions" />
+        <DropdownUi class="w-full" v-bind="field('font-weight')" :options="fontWeightOptions" />
       </FieldRowUi>
       <FieldRowUi label="Style">
-        <SelectUi v-bind="field('font-style')" :options="fontStyleOptions" />
+        <DropdownUi class="w-full" v-bind="field('font-style')" :options="fontStyleOptions" />
       </FieldRowUi>
       <FieldRowUi label="Align">
-        <SelectUi v-bind="field('text-align')" :options="textAlignOptions" />
+        <DropdownUi class="w-full" v-bind="field('text-align')" :options="textAlignOptions" />
       </FieldRowUi>
       <FieldRowUi label="Decor">
-        <SelectUi v-bind="field('text-decoration')" :options="textDecorationOptions" />
+        <DropdownUi class="w-full" v-bind="field('text-decoration')" :options="textDecorationOptions" />
       </FieldRowUi>
       <FieldRowUi label="Transform">
-        <SelectUi v-bind="field('text-transform')" :options="textTransformOptions" />
+        <DropdownUi class="w-full" v-bind="field('text-transform')" :options="textTransformOptions" />
       </FieldRowUi>
-      <div class="grid grid-cols-2 gap-1.5">
-        <div class="space-y-1">
-          <span class="text-[10px] text-secondary">Spacing</span>
+      <FieldRowUi label="Spacing">
           <SizeTokenInputUi v-bind="field('letter-spacing')" placeholder="0" :units="['px', 'em', 'rem']" />
-        </div>
-        <div class="space-y-1">
-          <span class="text-[10px] text-secondary">Word Spacing</span>
+      </FieldRowUi>
+      <FieldRowUi label="Word Spacing">
           <SizeTokenInputUi v-bind="field('word-spacing')" placeholder="0" :units="['px', 'em', 'rem']" />
-        </div>
-      </div>
+      </FieldRowUi>
       <FieldRowUi label="Wrap">
-        <SelectUi v-bind="field('white-space')" :options="whiteSpaceOptions" />
+        <DropdownUi class="w-full" v-bind="field('white-space')" :options="whiteSpaceOptions" />
       </FieldRowUi>
       <FieldRowUi label="Color">
         <ColorInputUi v-bind="field('color')" placeholder="#000" />

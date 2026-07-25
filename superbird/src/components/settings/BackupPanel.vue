@@ -2,6 +2,8 @@
 import { reactive, ref, computed, onMounted } from 'vue'
 import { listBackups, createBackup, restoreBackup, deleteBackup, downloadExport, importBackup } from '@/lib/backupApi'
 import { useToast } from '@/composables/useToast'
+import { formatDateTime as fmtDate } from '@/lib/datetime'
+import { formatFileSize as fmtSize } from '@/lib/media'
 import type { BackupMeta } from '@shared/types'
 import SettingsPanel from './SettingsPanel.vue'
 import SettingsSection from './SettingsSection.vue'
@@ -100,14 +102,6 @@ async function load() {
 }
 onMounted(load)
 
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-}
-function fmtSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-}
 
 async function onCreate() {
   busy.value = true

@@ -4,6 +4,7 @@ import { useMediaStore } from '@/stores/media'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useToast } from '@/composables/useToast'
 import { formatFileSize } from '@/lib/media'
+import { formatDate as fmtDate } from '@/lib/datetime'
 import { separator, type ContextMenuItem } from '@/types/contextMenu'
 import type { MediaFolder, MediaItem } from '@/types/canvas'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
@@ -24,11 +25,6 @@ const props = withDefaults(
   { viewMode: 'grid' },
 )
 
-function fmtDate(iso: string): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
 
 const selectedId = defineModel<string | null>('selectedId', { required: true })
 

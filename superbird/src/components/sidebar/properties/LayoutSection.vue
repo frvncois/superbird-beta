@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import InputUi from '@/components/ui/InputUi.vue'
 import SizeTokenInputUi from '@/components/ui/SizeTokenInputUi.vue'
-import SelectUi from '@/components/ui/SelectUi.vue'
+import DropdownUi from '@/components/ui/DropdownUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import {
@@ -23,20 +23,20 @@ const layoutKeys = ['display', 'flex-direction', 'flex-wrap', 'align-items', 'ju
   <PropertySectionUi title="Layout" icon="layout" :states-with-values="statesWithValues(layoutKeys)">
     <div class="space-y-1.5">
       <FieldRowUi label="Display">
-        <SelectUi v-bind="field('display')" :options="displayOptions" />
+        <DropdownUi class="w-full" v-bind="field('display')" :options="displayOptions" />
       </FieldRowUi>
       <template v-if="isFlex">
         <FieldRowUi label="Direction">
-          <SelectUi v-bind="field('flex-direction')" :options="flexDirectionOptions" />
+          <DropdownUi class="w-full" v-bind="field('flex-direction')" :options="flexDirectionOptions" />
         </FieldRowUi>
         <FieldRowUi label="Wrap">
-          <SelectUi v-bind="field('flex-wrap')" :options="flexWrapOptions" />
+          <DropdownUi class="w-full" v-bind="field('flex-wrap')" :options="flexWrapOptions" />
         </FieldRowUi>
         <FieldRowUi label="Align">
-          <SelectUi v-bind="field('align-items')" :options="alignOptions" />
+          <DropdownUi class="w-full" v-bind="field('align-items')" :options="alignOptions" />
         </FieldRowUi>
         <FieldRowUi label="Justify">
-          <SelectUi v-bind="field('justify-content')" :options="justifyOptions" />
+          <DropdownUi class="w-full" v-bind="field('justify-content')" :options="justifyOptions" />
         </FieldRowUi>
         <FieldRowUi label="Gap">
           <SizeTokenInputUi v-bind="field('gap')" placeholder="0" />
@@ -54,7 +54,7 @@ const layoutKeys = ['display', 'flex-direction', 'flex-wrap', 'align-items', 'ju
         </FieldRowUi>
       </template>
       <FieldRowUi label="Overflow">
-        <SelectUi v-bind="field('overflow')" :options="overflowOptions" />
+        <DropdownUi class="w-full" v-bind="field('overflow')" :options="overflowOptions" />
       </FieldRowUi>
     </div>
   </PropertySectionUi>

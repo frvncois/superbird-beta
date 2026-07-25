@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { useContextMenu } from '@/composables/useContextMenu'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { formatFileSize } from '@/lib/media'
 import { separator, type ContextMenuItem } from '@/types/contextMenu'
@@ -10,6 +9,9 @@ import type { MediaFolder, MediaItem } from '@/types/canvas'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
+import InputUi from '@/components/ui/InputUi.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -37,7 +39,6 @@ const emit = defineEmits<{
 
 const store = useMediaStore()
 const ctx = useContextMenu()
-const dialog = useDialog()
 const toast = useToast()
 
 // Custom MIME so internal media drags are distinguishable from OS file drops.
@@ -180,10 +181,32 @@ function onEmptyContextMenu(e: MouseEvent) {
   ctx.open(e, items)
 }
 
+// ── Rename (file or folder) — one dialog, discriminated payload ──
+const renameTarget = ref<{ kind: 'file' | 'folder'; id: string; original: string } | null>(null)
+const renameValue = ref('')
+const renameInput = ref<HTMLElement | null>(null)
+
+watch(renameTarget, async (t) => {
+  if (!t) return
+  await nextTick()
+  renameInput.value?.querySelector('input')?.focus()
+})
+
+function doRename() {
+  const t = renameTarget.value
+  if (!t) return
+  const name = renameValue.value.trim()
+  if (name && name !== t.original) {
+    if (t.kind === 'file') store.updateMediaItem(t.id, { name })
+    else store.renameMediaFolder(t.id, name)
+  }
+  renameTarget.value = null
+}
+
 // ── Item actions ──
-async function renameItem(item: MediaItem) {
-  const name = await dialog.prompt({ title: 'Rename file', placeholder: 'File name', initialValue: item.name, confirmLabel: 'Rename' })
-  if (name && name !== item.name) store.updateMediaItem(item.id, { name })
+function renameItem(item: MediaItem) {
+  renameTarget.value = { kind: 'file', id: item.id, original: item.name }
+  renameValue.value = item.name
 }
 async function toggleItemPrivate(item: MediaItem) {
   const next = !item.private
@@ -198,39 +221,39 @@ async function copyUrl(item: MediaItem) {
     toast.error('Could not copy URL')
   }
 }
-async function deleteItem(item: MediaItem) {
-  const ok = await dialog.confirm({
-    title: 'Delete media',
-    message: `Delete “${item.name}”? Any element using it will lose its image. This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
+const pendingDeleteItem = ref<MediaItem | null>(null)
+function deleteItem(item: MediaItem) {
+  pendingDeleteItem.value = item
+}
+function doDeleteItem() {
+  const item = pendingDeleteItem.value
+  if (!item) return
   if (selectedId.value === item.id) selectedId.value = null
   store.removeMediaItem(item.id)
   toast.success('Media deleted')
+  pendingDeleteItem.value = null
 }
 
 // ── Folder actions ──
-async function renameFolder(folder: MediaFolder) {
-  const name = await dialog.prompt({ title: 'Rename folder', placeholder: 'Folder name', initialValue: folder.name, confirmLabel: 'Rename' })
-  if (name && name !== folder.name) store.renameMediaFolder(folder.id, name)
+function renameFolder(folder: MediaFolder) {
+  renameTarget.value = { kind: 'folder', id: folder.id, original: folder.name }
+  renameValue.value = folder.name
 }
 async function toggleFolderPrivate(folder: MediaFolder) {
   const next = !folder.private
   await store.setMediaFolderPrivate(folder.id, next)
   toast.success(next ? 'Folder is now private' : 'Folder is now public')
 }
-async function deleteFolder(folder: MediaFolder) {
-  const ok = await dialog.confirm({
-    title: 'Delete folder',
-    message: `Delete the folder “${folder.name}”? Media inside it won’t be deleted — it moves to the parent. This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
+const pendingDeleteFolder = ref<MediaFolder | null>(null)
+function deleteFolder(folder: MediaFolder) {
+  pendingDeleteFolder.value = folder
+}
+function doDeleteFolder() {
+  const folder = pendingDeleteFolder.value
+  if (!folder) return
   store.removeMediaFolder(folder.id)
   toast.success('Folder deleted')
+  pendingDeleteFolder.value = null
 }
 </script>
 
@@ -421,5 +444,66 @@ async function deleteFolder(folder: MediaFolder) {
       :y="ctx.y.value"
       @close="ctx.close"
     />
+
+    <!-- Rename file / folder -->
+    <ModalUi
+      :open="!!renameTarget"
+      variant="dialog"
+      :title="renameTarget?.kind === 'folder' ? 'Rename folder' : 'Rename file'"
+      @update:open="renameTarget = null"
+    >
+      <div ref="renameInput">
+        <InputUi
+          v-model="renameValue"
+          :placeholder="renameTarget?.kind === 'folder' ? 'Folder name' : 'File name'"
+          size="default"
+          @keydown.enter="doRename"
+        />
+      </div>
+      <template #actions>
+        <ButtonUi variant="ghost" @click="renameTarget = null">Cancel</ButtonUi>
+        <ButtonUi variant="default" @click="doRename">Rename</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Delete media -->
+    <ModalUi
+      :open="!!pendingDeleteItem"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete media"
+      :description="
+        pendingDeleteItem
+          ? `Delete “${pendingDeleteItem.name}”? Any element using it will lose its image. This can’t be undone.`
+          : ''
+      "
+      @update:open="pendingDeleteItem = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDeleteItem = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDeleteItem">Delete</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Delete folder -->
+    <ModalUi
+      :open="!!pendingDeleteFolder"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete folder"
+      :description="
+        pendingDeleteFolder
+          ? `Delete the folder “${pendingDeleteFolder.name}”? Media inside it won’t be deleted — it moves to the parent. This can’t be undone.`
+          : ''
+      "
+      @update:open="pendingDeleteFolder = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDeleteFolder = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDeleteFolder">Delete</ButtonUi>
+      </template>
+    </ModalUi>
   </div>
 </template>

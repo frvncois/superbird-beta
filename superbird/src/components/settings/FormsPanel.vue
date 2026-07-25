@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import type { CanvasNode, FormConfig } from '@/types/canvas'
+import SettingsPanel from './SettingsPanel.vue'
+import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
 import SmtpSection from './SmtpSection.vue'
 import SubmissionsSection from './SubmissionsSection.vue'
@@ -60,7 +62,7 @@ function update(formId: string, patch: Partial<FormConfig>) {
 </script>
 
 <template>
-  <div class="space-y-8">
+  <SettingsPanel title="Forms">
     <SegmentedControlUi v-model="tabProxy" :options="tabOptions" />
 
     <SubmissionsSection v-if="tab === 'submissions'" />
@@ -68,14 +70,11 @@ function update(formId: string, patch: Partial<FormConfig>) {
     <template v-else>
       <SmtpSection />
 
-      <section class="space-y-3">
-      <div class="space-y-1">
-        <h3 class="text-sm font-semibold text-foreground">Form settings</h3>
-        <p class="text-xs leading-relaxed text-secondary">
-          Decide what happens to each form's submissions. Saved submissions appear in the Submissions list.
-        </p>
-      </div>
-
+      <SettingsSection
+        bare
+        title="Form settings"
+        description="Decide what happens to each form's submissions. Saved submissions appear in the Submissions list."
+      >
       <EmptyStateUi
         v-if="!forms.length"
         compact
@@ -141,7 +140,7 @@ function update(formId: string, patch: Partial<FormConfig>) {
           </SettingsRow>
         </div>
       </div>
-      </section>
+      </SettingsSection>
     </template>
-  </div>
+  </SettingsPanel>
 </template>

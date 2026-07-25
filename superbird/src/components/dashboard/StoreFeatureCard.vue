@@ -4,7 +4,7 @@ import IconUi from '@/components/ui/IconUi.vue'
 </script>
 
 <template>
-  <section class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-muted-bg p-4 text-center">
+  <section class="flex flex-1 flex-col items-center justify-center gap-3.5 rounded-xl border px-8 text-center">
     <span class="flex size-9 items-center justify-center rounded-xl bg-foreground text-background">
       <IconUi name="store" size="size-4" />
     </span>
@@ -18,3 +18,4 @@ import IconUi from '@/components/ui/IconUi.vue'
     </ButtonUi>
   </section>
 </template>
+

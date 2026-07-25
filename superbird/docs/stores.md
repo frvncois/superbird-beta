@@ -37,13 +37,13 @@ Node settings edits (`visibility`, `link`, `accessibility`, `advanced`, `htmlId`
 `mediaItems`, `mediaFolders`, `mediaLibraryOpen`, `openLibrary`, `closeLibrary`, `addMediaItem(file)`, `removeMediaItem`, `updateMediaItem`, `moveMediaToFolder`, `add/remove/renameMediaFolder`
 
 ## `useSiteSettingsStore`
-`siteSettings`, `updateSiteIdentity`, `updateSeo`, `updateCustomCode`, `add/removeRedirect`, `updateIntegrations`, `add/removeCustomFont`
+`siteSettings`, `updateSiteIdentity`, `updateDeployment` (public base URL / custom domain — shown on the dashboard InfoCard + trusted by the server origin guard), `updateSeo`, `updateCustomCode`, `add/removeRedirect`, `updateIntegrations`, `add/removeCustomFont`
 
 ## `useLocalesStore`
 `locales`, `activeLocale`, `defaultLocale`, `isDefaultLocale`, `addLocale`, `removeLocale`, `setActiveLocale`
 
 ## `useCollectionsStore` — user-defined content types (in-app CMS)
-`collections`, `entries`; reads `collectionById`, `collectionByTemplatePage`, `entryById`, `entriesByCollection`, `schemaFor(body)` (derives a collection's fields from its template body — the placed dynamic-field nodes); CRUD `addCollection`/`renameCollection`/`removeCollection`, `addEntry`/`updateEntry`/`setEntryValue`/`removeEntry`. Standalone (imports no other store); collection *creation* is orchestrated in the UI (`canvas.addPage('collection')` + `addCollection`). Canvas reads it for entry-aware content: a collection's template is a Page (`pageType:'collection'`); `canvas.activeEntry` supplies field values, and `getNodeContent`/`setNodeContent` route a field-bound node's content to `entry.values[node.dynamicField]`. See `docs/cms-architecture.md`.
+`collections`, `entries`; reads `collectionById`, `collectionByTemplatePage`, `entryById`, `entriesByCollection`, `schemaFor(body)` (derives a collection's fields from its template body — the placed dynamic-field nodes); CRUD `addCollection`(`{name, templatePageId, kind?, isProducts?}` — `kind` = `blog`\|`products`\|`categories`\|`content`, drives its icon via `COLLECTION_KIND_CONFIGS`/`collectionKindIcon` in `constants/canvas`)/`renameCollection`/`removeCollection`, `addEntry`/`updateEntry`/`setEntryValue`/`removeEntry`. Standalone (imports no other store); collection *creation* is orchestrated in the UI (`canvas.addPage('collection')` + `addCollection`). Canvas reads it for entry-aware content: a collection's template is a Page (`pageType:'collection'`); `canvas.activeEntry` supplies field values, and `getNodeContent`/`setNodeContent` route a field-bound node's content to `entry.values[node.dynamicField]`. See `docs/cms-architecture.md`.
 
 ## `useUserComponentsStore`
 `userComponents`, `createComponentFromNode`, `instantiateComponent`, `addComponentToPage`, `updateComponentDefinition`, `detachComponentInstance`, `deleteComponent`, `getComponentInstanceCount` (sync/detach walk `canvas.pages` via `lib/tree`)
@@ -55,7 +55,7 @@ API-backed. `items`, `forms`, `loading`, `loaded`, `load`, `loadForms`, `markSee
 `project`, `publishedAt`, `installing`, `error`, `isInstalled`, `isPublished`, `hydrate`, `markPublished`, `install`. Hydrated from `fetchSessionState()` in `main.ts` before routing.
 
 ## `useAuthStore` — admin session
-`currentUser`, `authenticating`, `error`, `isAuthenticated`, `hydrate`, `login`, `logout`. Admin identity only — customer auth is a fully separate space (server-side `customers`/`sb_customer`).
+`currentUser` (incl. `twoFactorEnabled`), `authenticating`, `error`, `isAuthenticated`, `canDesign` (role `admin` → may edit design vs. content only), `hydrate`, `login(email, password, remember?)` → `LoginResult` (`{user}` or `{twoFactorRequired, challenge}`), `verifyTwoFactor(challenge, code)`, `logout`, `logoutAll` (revoke every session), `setupTwoFactor`/`enableTwoFactor(code)`/`disableTwoFactor(code)` (Settings › Security). Admin identity only — customer auth is a fully separate space (server-side `customers`/`sb_customer`).
 
 ## `useMcpStore` — headless MCP bridge status
 `connected`, `active`, `paused`, `lastAction`, `actionCount`, `setConnected`, `noteTool`, `release`, `pause`, `resume`. Surfaces live MCP-editor activity in the UI.

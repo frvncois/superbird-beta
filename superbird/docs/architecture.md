@@ -35,6 +35,7 @@ components/
   modals/
     global-styles/    GlobalStylesPanel + 6 *Tab.vue
     media-library/    MediaLibraryModal (title bar + search/type/sort/view controls) + Breadcrumb/Grid/DetailPanel (unified in-area folders+files, grid+list, DnD, context menu, private flag)
+layouts/              AppShell (AppHeader + body) · AuthShell (centered login/setup) · DashboardLayout / EditorLayout / SettingsLayout (body-only grids inside AppShell)
 stores/               canvas globalStyles media siteSettings locales userComponents collections
 lib/                  tree ids nodeFactory styles animations unitValue media siteDefaults
 constants/            canvas.ts propertyOptions.ts injectionKeys.ts

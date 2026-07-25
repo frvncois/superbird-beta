@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, toRef } from 'vue'
+import { ref, computed, toRef, inject } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
@@ -14,6 +14,7 @@ import { useNodeDnD } from '@/components/canvas/useNodeDnD'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { buildNodeActions } from '@/composables/useNodeContextMenu'
 import { useInteractionRunner } from '@/composables/useInteractionRunner'
+import { CreateComponentPromptKey } from '@/constants/injectionKeys'
 
 const props = defineProps<{
   node: CanvasNode
@@ -29,6 +30,7 @@ const store = useCanvasStore()
 const collectionsStore = useCollectionsStore()
 const globalStylesStore = useGlobalStylesStore()
 const mediaStore = useMediaStore()
+const promptCreateComponent = inject(CreateComponentPromptKey)
 const isEditing = ref(false)
 const isHovered = ref(false)
 const editableRef = ref<HTMLElement | null>(null)
@@ -116,7 +118,9 @@ function onContextMenu(e: MouseEvent) {
   if (props.preview) return
   e.stopPropagation()
   store.selectNode(props.node.id)
-  ctx.open(e, buildNodeActions(props.node, 'canvas'))
+  ctx.open(e, buildNodeActions(props.node, 'canvas', {
+    onCreateComponent: () => promptCreateComponent?.(props.node.id),
+  }))
 }
 
 function onDoubleClick(e: MouseEvent) {

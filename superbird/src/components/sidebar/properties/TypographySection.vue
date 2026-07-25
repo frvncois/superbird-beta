@@ -16,7 +16,7 @@ import {
 } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
 
-const { activeStyles, updateStyle, statesWithValues } = useNodeStyles()
+const { field, statesWithValues } = useNodeStyles()
 
 const typographyKeys = ['font-family', 'font-size', 'line-height', 'font-weight', 'font-style', 'text-align', 'text-decoration', 'text-transform', 'letter-spacing', 'word-spacing', 'white-space', 'color']
 </script>
@@ -25,48 +25,48 @@ const typographyKeys = ['font-family', 'font-size', 'line-height', 'font-weight'
   <PropertySectionUi title="Typography" icon="typography" :states-with-values="statesWithValues(typographyKeys)">
     <div class="space-y-1.5">
       <FieldRowUi label="Family">
-        <FontFamilyControl :model-value="activeStyles['font-family'] ?? ''" @update:model-value="updateStyle('font-family', $event)" />
+        <FontFamilyControl v-bind="field('font-family')" />
       </FieldRowUi>
       <div class="grid grid-cols-2 gap-1.5">
         <div class="space-y-1">
-          <DragLabelUi class="text-[10px] text-secondary" :model-value="activeStyles['font-size'] ?? ''" @update:model-value="updateStyle('font-size', $event)">Size</DragLabelUi>
-          <SizeTokenInputUi :model-value="activeStyles['font-size'] ?? ''" placeholder="16" :units="['px', 'em', 'rem', '%', 'vw']" @update:model-value="updateStyle('font-size', $event)" />
+          <DragLabelUi class="text-[10px] text-secondary" v-bind="field('font-size')">Size</DragLabelUi>
+          <SizeTokenInputUi v-bind="field('font-size')" placeholder="16" :units="['px', 'em', 'rem', '%', 'vw']" />
         </div>
         <div class="space-y-1">
-          <DragLabelUi class="text-[10px] text-secondary" :model-value="activeStyles['line-height'] ?? ''" @update:model-value="updateStyle('line-height', $event)">Line Height</DragLabelUi>
-          <SizeTokenInputUi :model-value="activeStyles['line-height'] ?? ''" placeholder="1.5" :units="['px', 'em', 'rem', '%']" @update:model-value="updateStyle('line-height', $event)" />
+          <DragLabelUi class="text-[10px] text-secondary" v-bind="field('line-height')">Line Height</DragLabelUi>
+          <SizeTokenInputUi v-bind="field('line-height')" placeholder="1.5" :units="['px', 'em', 'rem', '%']" />
         </div>
       </div>
       <FieldRowUi label="Weight">
-        <SelectUi :model-value="activeStyles['font-weight'] ?? ''" :options="fontWeightOptions" @update:model-value="updateStyle('font-weight', $event)" />
+        <SelectUi v-bind="field('font-weight')" :options="fontWeightOptions" />
       </FieldRowUi>
       <FieldRowUi label="Style">
-        <SelectUi :model-value="activeStyles['font-style'] ?? ''" :options="fontStyleOptions" @update:model-value="updateStyle('font-style', $event)" />
+        <SelectUi v-bind="field('font-style')" :options="fontStyleOptions" />
       </FieldRowUi>
       <FieldRowUi label="Align">
-        <SelectUi :model-value="activeStyles['text-align'] ?? ''" :options="textAlignOptions" @update:model-value="updateStyle('text-align', $event)" />
+        <SelectUi v-bind="field('text-align')" :options="textAlignOptions" />
       </FieldRowUi>
       <FieldRowUi label="Decor">
-        <SelectUi :model-value="activeStyles['text-decoration'] ?? ''" :options="textDecorationOptions" @update:model-value="updateStyle('text-decoration', $event)" />
+        <SelectUi v-bind="field('text-decoration')" :options="textDecorationOptions" />
       </FieldRowUi>
       <FieldRowUi label="Transform">
-        <SelectUi :model-value="activeStyles['text-transform'] ?? ''" :options="textTransformOptions" @update:model-value="updateStyle('text-transform', $event)" />
+        <SelectUi v-bind="field('text-transform')" :options="textTransformOptions" />
       </FieldRowUi>
       <div class="grid grid-cols-2 gap-1.5">
         <div class="space-y-1">
           <span class="text-[10px] text-secondary">Spacing</span>
-          <SizeTokenInputUi :model-value="activeStyles['letter-spacing'] ?? ''" placeholder="0" :units="['px', 'em', 'rem']" @update:model-value="updateStyle('letter-spacing', $event)" />
+          <SizeTokenInputUi v-bind="field('letter-spacing')" placeholder="0" :units="['px', 'em', 'rem']" />
         </div>
         <div class="space-y-1">
           <span class="text-[10px] text-secondary">Word Spacing</span>
-          <SizeTokenInputUi :model-value="activeStyles['word-spacing'] ?? ''" placeholder="0" :units="['px', 'em', 'rem']" @update:model-value="updateStyle('word-spacing', $event)" />
+          <SizeTokenInputUi v-bind="field('word-spacing')" placeholder="0" :units="['px', 'em', 'rem']" />
         </div>
       </div>
       <FieldRowUi label="Wrap">
-        <SelectUi :model-value="activeStyles['white-space'] ?? ''" :options="whiteSpaceOptions" @update:model-value="updateStyle('white-space', $event)" />
+        <SelectUi v-bind="field('white-space')" :options="whiteSpaceOptions" />
       </FieldRowUi>
       <FieldRowUi label="Color">
-        <ColorInputUi :model-value="activeStyles.color ?? ''" placeholder="#000" @update:model-value="updateStyle('color', $event)" />
+        <ColorInputUi v-bind="field('color')" placeholder="#000" />
       </FieldRowUi>
     </div>
   </PropertySectionUi>

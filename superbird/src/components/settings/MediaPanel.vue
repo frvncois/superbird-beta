@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 
@@ -22,7 +23,7 @@ function setNum(key: 'maxWidth' | 'maxHeight' | 'quality', value: string, min: n
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Media">
     <SettingsSection
       title="Image compression"
       description="Uploaded images are converted to WebP and resized to fit within the max dimensions (aspect ratio preserved, never enlarged). SVGs and GIFs are left untouched."
@@ -55,5 +56,5 @@ function setNum(key: 'maxWidth' | 'maxHeight' | 'quality', value: string, min: n
         </SettingsRow>
       </template>
     </SettingsSection>
-  </div>
+  </SettingsPanel>
 </template>

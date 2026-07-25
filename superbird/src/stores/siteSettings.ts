@@ -26,6 +26,10 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     Object.assign(siteSettings.value.identity, updates)
   }
 
+  function updateDeployment(updates: Partial<SiteSettings['deployment']>) {
+    Object.assign(siteSettings.value.deployment, updates)
+  }
+
   function updateSeo(updates: Partial<SiteSettings['seo']>) {
     Object.assign(siteSettings.value.seo, updates)
   }
@@ -52,6 +56,7 @@ export const useSiteSettingsStore = defineStore('siteSettings', () => {
     hydrate,
     updateImageCompression,
     updateSiteIdentity,
+    updateDeployment,
     updateSeo,
     updateCustomCode,
     addRedirect,

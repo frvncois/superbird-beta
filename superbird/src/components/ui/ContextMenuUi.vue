@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { isSeparator, type ContextMenuItem } from '@/types/contextMenu'
-import MenuItemUi from '@/components/ui/MenuItemUi.vue'
+import IconUi from '@/components/ui/IconUi.vue'
 
 // Menu icon names that differ from their registry key
 const ICON_ALIASES: Record<string, string> = {
@@ -78,20 +78,27 @@ function handleAction(item: ContextMenuItem) {
         <!-- Separator -->
         <div v-if="isSeparator(item)" class="my-1 border-t border-foreground/8" />
 
-        <!-- Action -->
-        <MenuItemUi
+        <!-- Action row (icon box reserved so labels align across the list) -->
+        <button
           v-else
-          reserve-icon
-          :icon="item.icon ? resolveIcon(item.icon) : undefined"
-          :danger="item.danger"
+          type="button"
           :disabled="item.disabled"
+          :class="[
+            'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors duration-100',
+            item.disabled
+              ? 'text-secondary/40 cursor-default'
+              : item.danger
+                ? 'text-red-fg hover:bg-red-bg cursor-pointer'
+                : 'text-foreground hover:bg-secondary/10 cursor-pointer',
+          ]"
           @click="handleAction(item)"
         >
-          {{ item.label }}
-          <template #trailing>
-            <span v-if="item.shortcut" class="text-[10px] text-secondary/50 font-mono">{{ item.shortcut }}</span>
-          </template>
-        </MenuItemUi>
+          <span class="flex size-4 shrink-0 items-center justify-center">
+            <IconUi v-if="item.icon" :name="resolveIcon(item.icon)" size="size-3.5" />
+          </span>
+          <span class="min-w-0 flex-1 truncate">{{ item.label }}</span>
+          <span v-if="item.shortcut" class="text-[10px] text-secondary/50 font-mono">{{ item.shortcut }}</span>
+        </button>
       </template>
     </div>
   </Teleport>

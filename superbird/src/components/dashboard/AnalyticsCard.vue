@@ -9,7 +9,7 @@ const emit = defineEmits<{ view: [] }>()
 </script>
 
 <template>
-  <CardUi icon="analytics" title="Analytics">
+  <CardUi size="sm" icon="analytics" title="Analytics">
     <div class="flex flex-col gap-3">
       <ChartUi :data="analytics.series" :height="80" />
 

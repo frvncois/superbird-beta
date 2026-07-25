@@ -17,6 +17,7 @@ repo as the Vue client; shares TypeScript types via `@shared`.
 - **SQLite via better-sqlite3 + Drizzle ORM** — one file per project at `data/superbird.db` (git-ignored). "Move the folder, it runs."
 - **Node `scrypt`** for password hashing (no native/3rd-party crypto dep).
 - **Cookie sessions** — opaque token in a `sb_session` httpOnly cookie, rows in the `sessions` table.
+- **Trusted-origin guard** (`lib/originGuard.ts`, mounted `app.use('/api/*', …)`) — CSRF hardening on the admin API. Acts only on state-changing methods that carry `sb_session`; the request `Origin`/`Referer` must be in the allowlist (server's own origin + dev localhost + the configured deployment URL from `siteSettings.deployment.url`). Missing Origin+Referer passes (non-browser: webhook, MCP token bridge). The admin's own origin always stays allowed, so the setting is additive and can't lock the user out.
 
 ## Layout
 
@@ -43,8 +44,10 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 |---|---|---|
 | `GET /api/session` | — | Boot state: `{ installed, project, user }` in one call |
 | `POST /api/install` | — | First-run: create project + admin user, open session (409 if already installed) |
-| `POST /api/login` | — | Verify credentials, open session |
-| `POST /api/logout` | — | Destroy session |
+| `POST /api/login` | — | Verify credentials → open session, or return a 2FA `{ challenge }` |
+| `POST /api/login/2fa` | — | Complete a 2FA challenge with a TOTP/recovery code → open session |
+| `POST /api/logout` · `/logout-all` | session | Destroy this session · revoke all of the user's sessions |
+| `POST /api/2fa/{setup,enable,disable}` | session | TOTP enrollment: mint secret · confirm + return recovery codes · turn off |
 | `GET /api/project` | ✓ | Load the project document (`{ design, content }`); `design:null` on a fresh project |
 | `PUT /api/project` | ✓ | Upsert the project document |
 | `POST /api/publish` | ✓ | Snapshot the working design as the live/published design |
@@ -148,6 +151,22 @@ editor SPA stays on Vite (`5173`). In production they're different domains.
   dashboard's published badge.
 - Media resolves via `/media/:id` (see **Media** below), so published-site
   images render.
+
+## Security & hardening
+
+Layers on the admin surface (public storefront/forms/webhook/SSR are deliberately untouched):
+
+- **Sessions** — `sb_session` httpOnly + `SameSite=Lax` (+ `Secure` in prod). TTL is **1 day** by default, **30 days** with login "remember me". `startSession` **rotates** (drops the incoming cookie's session first, killing fixation). `POST /api/logout-all` revokes **every** session for the user ("Log out all devices" in the app menu).
+- **Two-factor (TOTP)** — opt-in per user (Settings › Security). `lib/totp.ts` implements RFC 6238 (SHA-1, 6 digits, 30s, ±1 window) over `node:crypto` — no dependency; the base32 secret is entered manually into an authenticator. Login becomes two-step: `/api/login` returns `{ twoFactorRequired, challenge }` (short-lived in-memory token, ≤5 tries) and `/api/login/2fa` completes it. Enrollment (`/api/2fa/setup|enable|disable`) issues **8 single-use recovery codes** (SHA-256-hashed at rest, shown once); disabling requires a current code. `users.totp_secret/enabled/recovery`; `User.twoFactorEnabled` flows to the client.
+- **Rate limits** (`lib/rateLimit.ts`, in-memory fixed-window, keyed by `clientIp`): login (per-IP + per-account), install, backup import/restore, user create/delete, and a generic **1000/min per-IP `/api` ceiling** as a DoS backstop (well above autosave/boot traffic).
+- **Trusted-origin guard** (`lib/originGuard.ts`) — CSRF hardening (see Stack). Belt-and-suspenders with `SameSite=Lax`.
+- **Network lockdown** (`lib/ipAllow.ts`) — set `SUPERBIRD_ADMIN_ALLOW_IPS` to a comma list of exact IPs / IPv4 CIDRs (e.g. `127.0.0.1,10.0.0.0/8`). Enforced on `requireAuth` + login/install only. Unset = off. Env-based so a bad entry is never a permanent UI lockout.
+
+**Deployment hardening (the real network boundary is the proxy, not the app):**
+1. Bind Hono to loopback (`HOST=127.0.0.1` if wired, or firewall `:3001`) and put **nginx/Caddy** in front terminating **HTTPS** (sets `NODE_ENV=production` so cookies are `Secure`).
+2. Have the proxy set `X-Forwarded-For` so `clientIp` (rate limits + `SUPERBIRD_ADMIN_ALLOW_IPS`) sees the real client.
+3. For a private admin, restrict `/admin` + `/api` at the proxy (IP allow, VPN, basic-auth or mTLS) and/or set `SUPERBIRD_ADMIN_ALLOW_IPS` as a second in-app layer.
+4. Set `siteSettings.deployment.url` (Settings › General) to your public URL so the origin guard trusts it and the dashboard shows it.
 
 ## Next slices
 

@@ -1,30 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
 
 const store = useCanvasStore()
 const componentsStore = useUserComponentsStore()
 const ctx = useContextMenu()
-const dialog = useDialog()
 const toast = useToast()
 
-async function confirmDeleteComponent(compId: string, name: string) {
-  const ok = await dialog.confirm({
-    title: 'Delete component',
-    message: `Delete “${name}”? Instances placed on your pages will be detached. This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
-  componentsStore.deleteComponent(compId)
-  toast.success(`Component “${name}” deleted`)
+const pendingDelete = ref<{ id: string; name: string } | null>(null)
+
+function confirmDeleteComponent(compId: string, name: string) {
+  pendingDelete.value = { id: compId, name }
+}
+
+function doDeleteComponent() {
+  const target = pendingDelete.value
+  if (!target) return
+  componentsStore.deleteComponent(target.id)
+  toast.success(`Component “${target.name}” deleted`)
+  pendingDelete.value = null
 }
 
 const userComponentsList = computed(() => Object.values(componentsStore.userComponents))
@@ -110,5 +112,24 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       :y="ctx.y.value"
       @close="ctx.close"
     />
+
+    <ModalUi
+      :open="!!pendingDelete"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete component"
+      :description="
+        pendingDelete
+          ? `Delete “${pendingDelete.name}”? Instances placed on your pages will be detached. This can’t be undone.`
+          : ''
+      "
+      @update:open="pendingDelete = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDeleteComponent">Delete</ButtonUi>
+      </template>
+    </ModalUi>
   </div>
 </template>

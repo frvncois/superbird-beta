@@ -34,7 +34,10 @@ export function ensureSchema(): void {
       email TEXT NOT NULL UNIQUE,
       role TEXT NOT NULL DEFAULT 'admin',
       password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      totp_secret TEXT,
+      totp_enabled INTEGER NOT NULL DEFAULT 0,
+      totp_recovery TEXT
     );
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
@@ -186,6 +189,9 @@ export function ensureSchema(): void {
     ['project_state', 'published_at TEXT'],
     ['media', 'private INTEGER NOT NULL DEFAULT 0'],
     ['media_folders', 'private INTEGER NOT NULL DEFAULT 0'],
+    ['users', 'totp_secret TEXT'],
+    ['users', 'totp_enabled INTEGER NOT NULL DEFAULT 0'],
+    ['users', 'totp_recovery TEXT'],
   ]
   for (const [table, col] of migrations) {
     try {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import StoreSettingsSection from './StoreSettingsSection.vue'
 import ProductsSection from './ProductsSection.vue'
 import OrdersSection from './OrdersSection.vue'
@@ -18,12 +19,12 @@ const tabOptions = [
 </script>
 
 <template>
-  <div class="space-y-8">
+  <SettingsPanel title="Store">
     <SegmentedControlUi v-model="tabProxy" :options="tabOptions" />
 
     <StoreSettingsSection v-if="tab === 'settings'" />
     <ProductsSection v-else-if="tab === 'products'" />
     <OrdersSection v-else-if="tab === 'orders'" />
     <CustomersSection v-else-if="tab === 'customers'" />
-  </div>
+  </SettingsPanel>
 </template>

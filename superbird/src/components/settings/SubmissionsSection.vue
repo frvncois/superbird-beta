@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useSubmissionsStore, type Submission } from '@/stores/submissions'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { downloadSubmissions } from '@/lib/submissionsExport'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -18,7 +17,6 @@ import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 defineProps<{ embedded?: boolean }>()
 
 const store = useSubmissionsStore()
-const dialog = useDialog()
 const toast = useToast()
 
 const search = ref('')
@@ -90,17 +88,17 @@ function onRow(s: Submission) {
   store.markSeen(s.id)
 }
 
-async function remove(s: Submission) {
-  const ok = await dialog.confirm({
-    title: 'Delete submission',
-    message: `Delete this submission from “${s.formName}”? This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
-  if (expandedId.value === s.id) expandedId.value = null
-  store.remove(s.id)
+const pendingDelete = ref<Submission | null>(null)
+function remove(s: Submission) {
+  pendingDelete.value = s
+}
+function doRemove() {
+  const target = pendingDelete.value
+  if (!target) return
+  if (expandedId.value === target.id) expandedId.value = null
+  store.remove(target.id)
   toast.success('Submission deleted')
+  pendingDelete.value = null
 }
 
 // ── Export ──
@@ -203,37 +201,53 @@ async function runExport() {
     </div>
 
     <!-- Export scope modal -->
-    <ModalUi v-model:open="exportOpen" panel-class="w-full max-w-md">
-      <div class="space-y-4 p-6">
+    <ModalUi
+      v-model:open="exportOpen"
+      variant="dialog"
+      title="Export submissions"
+      description="Choose what to include, then download."
+    >
+      <div class="space-y-3">
         <div class="space-y-1">
-          <h2 class="text-base font-semibold text-foreground">Export submissions</h2>
-          <p class="text-xs text-secondary">Choose what to include, then download.</p>
+          <LabelUi size="xs">Form</LabelUi>
+          <SelectUi v-model="exFormId" :options="formOptions" />
         </div>
-        <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
           <div class="space-y-1">
-            <LabelUi size="xs">Form</LabelUi>
-            <SelectUi v-model="exFormId" :options="formOptions" />
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <LabelUi size="xs">From</LabelUi>
-              <InputUi v-model="exFrom" type="date" />
-            </div>
-            <div class="space-y-1">
-              <LabelUi size="xs">To</LabelUi>
-              <InputUi v-model="exTo" type="date" />
-            </div>
+            <LabelUi size="xs">From</LabelUi>
+            <InputUi v-model="exFrom" type="date" />
           </div>
           <div class="space-y-1">
-            <LabelUi size="xs">Format</LabelUi>
-            <SegmentedControlUi v-model="exFormat" :options="formatOptions" />
+            <LabelUi size="xs">To</LabelUi>
+            <InputUi v-model="exTo" type="date" />
           </div>
         </div>
-        <div class="flex justify-end gap-2">
-          <ButtonUi variant="ghost" size="sm" @click="exportOpen = false">Cancel</ButtonUi>
-          <ButtonUi size="sm" :disabled="exporting" @click="runExport">{{ exporting ? 'Exporting…' : 'Export' }}</ButtonUi>
+        <div class="space-y-1">
+          <LabelUi size="xs">Format</LabelUi>
+          <SegmentedControlUi v-model="exFormat" :options="formatOptions" />
         </div>
       </div>
+
+      <template #actions>
+        <ButtonUi variant="ghost" size="sm" @click="exportOpen = false">Cancel</ButtonUi>
+        <ButtonUi size="sm" :disabled="exporting" @click="runExport">{{ exporting ? 'Exporting…' : 'Export' }}</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Delete confirm dialog -->
+    <ModalUi
+      :open="!!pendingDelete"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete submission"
+      :description="pendingDelete ? `Delete this submission from “${pendingDelete.formName}”? This can’t be undone.` : ''"
+      @update:open="pendingDelete = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doRemove">Delete</ButtonUi>
+      </template>
     </ModalUi>
   </section>
 </template>

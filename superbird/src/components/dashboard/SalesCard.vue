@@ -38,7 +38,7 @@ function summary(o: Order) { return o.items.map((i) => `${i.title} × ${i.qty}`)
 </script>
 
 <template>
-  <CardUi icon="sales" title="Recent sales">
+  <CardUi size="sm" icon="sales" title="Recent sales">
     <template #header-action>
       <BadgeUi v-if="orders.length" variant="neutral" size="xs">{{ orders.length }}</BadgeUi>
     </template>

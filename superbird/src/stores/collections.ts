@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { generateCollectionId, generateEntryId } from '@/lib/ids'
 import { walkTree } from '@/lib/tree'
 import { demoCollections, demoEntries } from '@/data/demo'
-import type { CanvasNode, Collection, CollectionField, Entry, FieldType } from '@/types/canvas'
+import type { CanvasNode, Collection, CollectionField, CollectionKind, Entry, FieldType } from '@/types/canvas'
 
 function slugify(value: string): string {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -64,7 +64,12 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   // --- Collections CRUD ---
 
-  function addCollection(input: { name: string; templatePageId: string; isProducts?: boolean }): Collection {
+  function addCollection(input: {
+    name: string
+    templatePageId: string
+    isProducts?: boolean
+    kind?: CollectionKind
+  }): Collection {
     const singular = input.name.replace(/s$/, '')
     const collection: Collection = {
       id: generateCollectionId(),
@@ -72,6 +77,7 @@ export const useCollectionsStore = defineStore('collections', () => {
       singular,
       plural: input.name,
       basePath: slugify(input.name),
+      kind: input.kind ?? (input.isProducts ? 'products' : 'content'),
       templatePageId: input.templatePageId,
       ...(input.isProducts ? { isProducts: true } : {}),
     }
@@ -103,15 +109,15 @@ export const useCollectionsStore = defineStore('collections', () => {
 
   // --- Entries CRUD ---
 
-  function addEntry(collectionId: string): Entry {
+  function addEntry(collectionId: string, title?: string): Entry {
     const collection = collectionById(collectionId)
     const count = entriesByCollection(collectionId).length + 1
-    const title = `${collection?.singular ?? 'Item'} ${count}`
+    const resolvedTitle = title?.trim() || `${collection?.singular ?? 'Item'} ${count}`
     const entry: Entry = {
       id: generateEntryId(),
       collectionId,
-      title,
-      slug: slugify(title),
+      title: resolvedTitle,
+      slug: slugify(resolvedTitle),
       status: 'draft',
       values: {},
     }

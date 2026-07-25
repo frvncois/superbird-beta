@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { useCanvasStore } from '@/stores/canvas'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { formatFileSize } from '@/lib/media'
 import type { CanvasNode, MediaItem } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
@@ -24,7 +24,6 @@ const emit = defineEmits<{
 
 const store = useMediaStore()
 const canvas = useCanvasStore()
-const dialog = useDialog()
 const toast = useToast()
 
 const folderOptions = computed(() => [
@@ -60,16 +59,16 @@ function detach(pageId: string, pageName: string) {
   if (n) toast.success(`Removed from ${pageName}`)
 }
 
-async function deleteItem() {
-  const ok = await dialog.confirm({
-    title: 'Delete media',
-    message: `Delete “${props.item.name}”? Any element using it will lose its image. This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
-  store.removeMediaItem(props.item.id)
+const pendingDelete = ref<MediaItem | null>(null)
+function deleteItem() {
+  pendingDelete.value = props.item
+}
+function doDelete() {
+  const target = pendingDelete.value
+  if (!target) return
+  store.removeMediaItem(target.id)
   emit('deleted')
+  pendingDelete.value = null
 }
 </script>
 
@@ -178,5 +177,20 @@ async function deleteItem() {
         Delete
       </ButtonUi>
     </div>
+
+    <ModalUi
+      :open="!!pendingDelete"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete media"
+      :description="pendingDelete ? `Delete “${pendingDelete.name}”? Any element using it will lose its image. This can’t be undone.` : ''"
+      @update:open="pendingDelete = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
+      </template>
+    </ModalUi>
   </div>
 </template>

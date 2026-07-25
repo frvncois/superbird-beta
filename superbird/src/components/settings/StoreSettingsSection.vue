@@ -2,7 +2,6 @@
 import { reactive, ref, onMounted } from 'vue'
 import { apiGet, apiPut } from '@/lib/api'
 import { useCanvasStore } from '@/stores/canvas'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
@@ -10,6 +9,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 
 interface StoreConfig {
   enabled: boolean
@@ -20,7 +20,6 @@ interface StoreConfig {
 }
 
 const canvas = useCanvasStore()
-const dialog = useDialog()
 const toast = useToast()
 
 const cfg = reactive({ enabled: false, currency: 'usd', stripePublishableKey: '' })
@@ -58,13 +57,12 @@ async function toggleEnabled(v: boolean) {
   }
 
   // Deactivating removes the store system pages — confirm first.
-  const ok = await dialog.confirm({
-    title: 'Deactivate store',
-    message: 'This turns off the storefront and removes its Login, Account, Cart, and Order-confirmation pages. Your products, orders, and customers are kept.',
-    confirmLabel: 'Deactivate',
-    danger: true,
-  })
-  if (!ok) return
+  pendingDeactivate.value = true
+}
+
+const pendingDeactivate = ref(false)
+async function doDeactivate() {
+  pendingDeactivate.value = false
   busy.value = true
   try {
     const removed = canvas.removeStoreSystemPages()
@@ -123,5 +121,20 @@ async function save() {
         <ButtonUi size="sm" :disabled="saving" @click="save">{{ saving ? 'Saving…' : 'Save' }}</ButtonUi>
       </div>
     </SettingsSection>
+
+    <ModalUi
+      :open="pendingDeactivate"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Deactivate store"
+      description="This turns off the storefront and removes its Login, Account, Cart, and Order-confirmation pages. Your products, orders, and customers are kept."
+      @update:open="pendingDeactivate = false"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDeactivate = false">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDeactivate">Deactivate</ButtonUi>
+      </template>
+    </ModalUi>
   </div>
 </template>

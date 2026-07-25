@@ -3,10 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCollectionsStore } from '@/stores/collections'
 import { useCanvasStore } from '@/stores/canvas'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { apiGet, apiPut, apiPost, apiDelete } from '@/lib/api'
 import InputUi from '@/components/ui/InputUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
@@ -28,7 +28,6 @@ interface ProductDTO {
 const router = useRouter()
 const collections = useCollectionsStore()
 const canvas = useCanvasStore()
-const dialog = useDialog()
 const toast = useToast()
 
 const currency = ref('usd')
@@ -128,37 +127,36 @@ function onActive(row: { entryId: string; title: string }, active: boolean) {
   saveField(row.entryId, row.title, { active })
 }
 
-async function removeProduct(row: { entryId: string; title: string; hasOrders: boolean }) {
-  const ok = await dialog.confirm({
-    title: 'Remove product',
-    message: row.hasOrders
-      ? `“${row.title}” has orders, so it will be taken offline (not deleted) to keep order history intact.`
-      : `Delete “${row.title}” permanently? This can’t be undone.`,
-    confirmLabel: row.hasOrders ? 'Take offline' : 'Delete',
-    danger: true,
-  })
-  if (!ok) return
-  const { mode } = await apiDelete<{ mode: string }>(`/api/store/products/${row.entryId}`)
+const pendingRemove = ref<{ entryId: string; title: string; hasOrders: boolean } | null>(null)
+function removeProduct(row: { entryId: string; title: string; hasOrders: boolean }) {
+  pendingRemove.value = row
+}
+async function doRemove() {
+  const target = pendingRemove.value
+  if (!target) return
+  const { mode } = await apiDelete<{ mode: string }>(`/api/store/products/${target.entryId}`)
   if (mode === 'deleted') {
-    collections.removeEntry(row.entryId)
-    commerce.value = commerce.value.filter((p) => p.entryId !== row.entryId)
+    collections.removeEntry(target.entryId)
+    commerce.value = commerce.value.filter((p) => p.entryId !== target.entryId)
     toast.success('Product deleted')
   } else {
     await loadCommerce()
     toast.success('Product taken offline')
   }
+  pendingRemove.value = null
 }
 
-async function archiveProduct(row: { entryId: string; title: string }) {
-  const ok = await dialog.confirm({
-    title: 'Archive product',
-    message: `Hide “${row.title}” from the store? It stays available for existing orders and can’t be bought.`,
-    confirmLabel: 'Archive',
-  })
-  if (!ok) return
-  await apiPost(`/api/store/products/${row.entryId}/archive`, { title: row.title })
+const pendingArchive = ref<{ entryId: string; title: string } | null>(null)
+function archiveProduct(row: { entryId: string; title: string }) {
+  pendingArchive.value = row
+}
+async function doArchive() {
+  const target = pendingArchive.value
+  if (!target) return
+  await apiPost(`/api/store/products/${target.entryId}/archive`, { title: target.title })
   await loadCommerce()
   toast.success('Product archived')
+  pendingArchive.value = null
 }
 </script>
 
@@ -207,5 +205,33 @@ async function archiveProduct(row: { entryId: string; title: string }) {
         </div>
       </div>
     </template>
+
+    <ModalUi
+      :open="!!pendingRemove"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Remove product"
+      :description="pendingRemove ? (pendingRemove.hasOrders ? `“${pendingRemove.title}” has orders, so it will be taken offline (not deleted) to keep order history intact.` : `Delete “${pendingRemove.title}” permanently? This can’t be undone.`) : ''"
+      @update:open="pendingRemove = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingRemove = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doRemove">{{ pendingRemove?.hasOrders ? 'Take offline' : 'Delete' }}</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <ModalUi
+      :open="!!pendingArchive"
+      variant="dialog"
+      title="Archive product"
+      :description="pendingArchive ? `Hide “${pendingArchive.title}” from the store? It stays available for existing orders and can’t be bought.` : ''"
+      @update:open="pendingArchive = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingArchive = null">Cancel</ButtonUi>
+        <ButtonUi variant="default" @click="doArchive">Archive</ButtonUi>
+      </template>
+    </ModalUi>
   </div>
 </template>

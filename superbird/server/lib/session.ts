@@ -4,10 +4,13 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import type { Context, Next } from 'hono'
 import { db } from '../db/client'
 import { sessions, users } from '../db/schema'
+import { adminIpAllowed } from './ipAllow'
 import type { User } from '../../shared/types'
 
 export const SESSION_COOKIE = 'sb_session'
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
+// Short by default; "remember me" opts into the long-lived session.
+export const SESSION_TTL_SHORT_MS = 1000 * 60 * 60 * 24 // 1 day
+export const SESSION_TTL_LONG_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
 // Send the cookie only over HTTPS in production (localhost dev stays HTTP).
 const SECURE_COOKIE = process.env.NODE_ENV === 'production'
 
@@ -20,6 +23,7 @@ export function toUser(row: typeof users.$inferSelect): User {
     email: row.email,
     role: 'admin',
     createdAt: row.createdAt,
+    twoFactorEnabled: row.totpEnabled === 1,
   }
 }
 
@@ -27,12 +31,19 @@ export function toUser(row: typeof users.$inferSelect): User {
 // Apply as `router.use('*', requireAuth)` — covers every path incl. the bare
 // mount point.
 export async function requireAuth(c: Context, next: Next): Promise<Response | void> {
+  // Network lockdown (SUPERBIRD_ADMIN_ALLOW_IPS) — hide the surface from
+  // off-network callers before any session work. No-op when unset.
+  if (!adminIpAllowed(c)) return c.json({ error: 'Forbidden' }, 403)
   if (!currentUser(c)) return c.json({ error: 'Unauthorized' }, 401)
   await next()
 }
 
-/** Create a session for a user and set the cookie. */
-export function startSession(c: Context, userId: string): void {
+/** Create a session for a user and set the cookie. Rotates: any session tied to
+ *  the incoming cookie is dropped first, so re-login never leaves orphans and a
+ *  pre-auth cookie can't be fixated. */
+export function startSession(c: Context, userId: string, ttlMs: number = SESSION_TTL_SHORT_MS): void {
+  const prior = getCookie(c, SESSION_COOKIE)
+  if (prior) db.delete(sessions).where(eq(sessions.id, prior)).run()
   const token = randomBytes(32).toString('hex')
   const now = Date.now()
   db.insert(sessions)
@@ -40,7 +51,7 @@ export function startSession(c: Context, userId: string): void {
       id: token,
       userId,
       createdAt: new Date(now).toISOString(),
-      expiresAt: now + SESSION_TTL_MS,
+      expiresAt: now + ttlMs,
     })
     .run()
   setCookie(c, SESSION_COOKIE, token, {
@@ -48,7 +59,7 @@ export function startSession(c: Context, userId: string): void {
     secure: SECURE_COOKIE,
     sameSite: 'Lax',
     path: '/',
-    maxAge: SESSION_TTL_MS / 1000,
+    maxAge: ttlMs / 1000,
   })
 }
 
@@ -70,5 +81,11 @@ export function currentUser(c: Context): User | null {
 export function endSession(c: Context): void {
   const token = getCookie(c, SESSION_COOKIE)
   if (token) db.delete(sessions).where(eq(sessions.id, token)).run()
+  deleteCookie(c, SESSION_COOKIE, { path: '/', secure: SECURE_COOKIE })
+}
+
+/** Sign out everywhere: destroy every session for the user + clear this cookie. */
+export function endAllSessions(c: Context, userId: string): void {
+  db.delete(sessions).where(eq(sessions.userId, userId)).run()
   deleteCookie(c, SESSION_COOKIE, { path: '/', secure: SECURE_COOKIE })
 }

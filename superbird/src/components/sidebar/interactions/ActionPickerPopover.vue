@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { ACTION_PROPERTIES } from '@/constants/canvas'
 import type { ActionProperty, ClassOp } from '@/types/canvas'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 defineProps<{
   position: { x: number; y: number }
@@ -41,26 +42,32 @@ const classOps: { op: ClassOp; label: string }[] = [
     >
       <template v-for="(items, group) in actionGroups" :key="group">
         <div class="px-2 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-secondary/50">{{ group }}</div>
-        <button
+        <ButtonUi
           v-for="prop in items"
           :key="prop.key"
-          class="flex w-full items-center rounded-lg px-2 py-1 text-[10px] cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+          variant="ghost"
+          align="start"
+          size="sm"
+          class="w-full rounded-lg px-2 text-[10px]"
           @click="emit('select', { kind: 'animate', property: prop.key })"
         >
           {{ prop.label }}
-        </button>
+        </ButtonUi>
       </template>
 
       <!-- Class operations (purple, like other class affordances) -->
       <div class="px-2 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-purple-fg/70">Class</div>
-      <button
+      <ButtonUi
         v-for="c in classOps"
         :key="c.op"
-        class="flex w-full items-center rounded-lg px-2 py-1 text-[10px] text-purple-fg cursor-pointer hover:bg-purple-bg/40 transition-colors duration-100"
+        variant="ghost"
+        align="start"
+        size="sm"
+        class="w-full rounded-lg px-2 text-[10px] text-purple-fg hover:bg-purple-bg/40"
         @click="emit('select', { kind: 'class', op: c.op })"
       >
         {{ c.label }}
-      </button>
+      </ButtonUi>
     </div>
   </Teleport>
 </template>

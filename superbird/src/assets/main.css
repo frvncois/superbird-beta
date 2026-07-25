@@ -8,11 +8,15 @@
   --font-sans: "Geist", sans-serif;
   --font-mono: "Geist Mono", monospace;
 
+  /* App chrome sizing — one source of truth for the shell */
+  --header-height: 55px;
+  --sidebar-width: 280px;
+
   /* Core palette (light mode defaults) */
   --color-background: #ffffff;
   --color-foreground: #0a0a0a;
-  --color-secondary: #a0a3a6;
-  --color-card: #f3f4f6;
+  --color-secondary: #848484;
+  --color-card: #fbfbfb;
   --color-border: #e5e7eb;
   --color-icon-bg: #000000;
   --color-icon-txt: #fafafa;
@@ -21,7 +25,7 @@
   --color-input: #ffffff;
   /* Input borders — tuned per mode (not derived from foreground opacity). */
   --color-input-border: #dfdfdf;
-  --color-input-border-focus: #9ca3af;
+  --color-input-border-focus: #e1e1e1;
 
   /* Semantic color pairs */
   --color-green-bg: #dcfce7;
@@ -156,7 +160,8 @@
 .dark {
   --color-background: #161616;
   --color-foreground: #c5c5c5;
-  --color-border: #313131;
+  --color-border: #2b2b2b;
+  --color-card: #191919;
   --color-secondary: #6a6a6e;
   --color-icon-bg: #1a1a1a;
   --color-input: #131313;

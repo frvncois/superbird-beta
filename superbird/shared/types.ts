@@ -16,6 +16,23 @@ export interface User {
   email: string
   role: UserRole
   createdAt: string
+  twoFactorEnabled: boolean
+}
+
+// ── Two-factor (TOTP) ──
+
+// Login step 1 returns either a session (no 2FA) or a challenge to complete.
+export type LoginResult =
+  | { user: User }
+  | { twoFactorRequired: true; challenge: string }
+
+export interface TwoFactorSetup {
+  secret: string
+  otpauthUri: string
+}
+
+export interface TwoFactorEnableResult {
+  recoveryCodes: string[]
 }
 
 // ── Request payloads ──
@@ -35,6 +52,8 @@ export interface SetupPayload {
 export interface LoginPayload {
   email: string
   password: string
+  // Opt into a long-lived (30-day) session; otherwise short-lived (1 day).
+  remember?: boolean
 }
 
 // ── Responses ──

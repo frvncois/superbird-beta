@@ -11,7 +11,7 @@ import {
 } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
 
-const { activeStyles, updateStyle, statesWithValues } = useNodeStyles()
+const { field, statesWithValues } = useNodeStyles()
 
 const backgroundKeys = ['background-color', 'background-image', 'background-size', 'background-position', 'background-repeat']
 </script>
@@ -20,19 +20,19 @@ const backgroundKeys = ['background-color', 'background-image', 'background-size
   <PropertySectionUi title="Background" icon="background" :states-with-values="statesWithValues(backgroundKeys)">
     <div class="space-y-1.5">
       <FieldRowUi label="Color">
-        <ColorInputUi :model-value="activeStyles['background-color'] ?? ''" placeholder="#fff" @update:model-value="updateStyle('background-color', $event)" />
+        <ColorInputUi v-bind="field('background-color')" placeholder="#fff" />
       </FieldRowUi>
       <FieldRowUi label="Image">
-        <InputUi :model-value="activeStyles['background-image'] ?? ''" placeholder="url(...)" @update:model-value="updateStyle('background-image', $event)" />
+        <InputUi v-bind="field('background-image')" placeholder="url(...)" />
       </FieldRowUi>
       <FieldRowUi label="Size">
-        <SelectUi :model-value="activeStyles['background-size'] ?? ''" :options="backgroundSizeOptions" @update:model-value="updateStyle('background-size', $event)" />
+        <SelectUi v-bind="field('background-size')" :options="backgroundSizeOptions" />
       </FieldRowUi>
       <FieldRowUi label="Position">
-        <SelectUi :model-value="activeStyles['background-position'] ?? ''" :options="backgroundPositionOptions" @update:model-value="updateStyle('background-position', $event)" />
+        <SelectUi v-bind="field('background-position')" :options="backgroundPositionOptions" />
       </FieldRowUi>
       <FieldRowUi label="Repeat">
-        <SelectUi :model-value="activeStyles['background-repeat'] ?? ''" :options="backgroundRepeatOptions" @update:model-value="updateStyle('background-repeat', $event)" />
+        <SelectUi v-bind="field('background-repeat')" :options="backgroundRepeatOptions" />
       </FieldRowUi>
     </div>
   </PropertySectionUi>

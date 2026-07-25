@@ -10,7 +10,7 @@ import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import { borderStyleOptions } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
 
-const { activeStyles, updateStyle, updateLinkedStyles, getLinkedValues, statesWithValues } = useNodeStyles()
+const { field, linked, statesWithValues } = useNodeStyles()
 
 const borderKeys = ['border-width', 'border-style', 'border-color', 'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']
 
@@ -30,13 +30,13 @@ const activeBorderMode = ref('all')
       <template v-if="activeBorderMode === 'all'">
         <div class="space-y-1.5">
           <FieldRowUi label="Width">
-            <UnitInputUi :model-value="activeStyles['border-width'] ?? ''" placeholder="0" :units="['px', 'em', 'rem']" @update:model-value="updateStyle('border-width', $event)" />
+            <UnitInputUi v-bind="field('border-width')" placeholder="0" :units="['px', 'em', 'rem']" />
           </FieldRowUi>
           <FieldRowUi label="Style">
-            <SelectUi :model-value="activeStyles['border-style'] ?? ''" :options="borderStyleOptions" @update:model-value="updateStyle('border-style', $event)" />
+            <SelectUi v-bind="field('border-style')" :options="borderStyleOptions" />
           </FieldRowUi>
           <FieldRowUi label="Color">
-            <ColorInputUi :model-value="activeStyles['border-color'] ?? ''" placeholder="#e5e7eb" @update:model-value="updateStyle('border-color', $event)" />
+            <ColorInputUi v-bind="field('border-color')" placeholder="#e5e7eb" />
           </FieldRowUi>
         </div>
       </template>
@@ -45,9 +45,9 @@ const activeBorderMode = ref('all')
         <div v-for="side in ['top', 'right', 'bottom', 'left']" :key="side" class="space-y-1">
           <span class="text-[10px] text-secondary capitalize">{{ side }}</span>
           <div class="grid grid-cols-3 gap-1">
-            <UnitInputUi :model-value="activeStyles[`border-${side}-width`] ?? ''" placeholder="0" :units="['px', 'em', 'rem']" @update:model-value="updateStyle(`border-${side}-width`, $event)" />
-            <SelectUi :model-value="activeStyles[`border-${side}-style`] ?? ''" :options="borderStyleOptions" @update:model-value="updateStyle(`border-${side}-style`, $event)" />
-            <ColorInputUi :model-value="activeStyles[`border-${side}-color`] ?? ''" placeholder="#e5e7eb" @update:model-value="updateStyle(`border-${side}-color`, $event)" />
+            <UnitInputUi v-bind="field(`border-${side}-width`)" placeholder="0" :units="['px', 'em', 'rem']" />
+            <SelectUi v-bind="field(`border-${side}-style`)" :options="borderStyleOptions" />
+            <ColorInputUi v-bind="field(`border-${side}-color`)" placeholder="#e5e7eb" />
           </div>
         </div>
       </template>
@@ -55,10 +55,9 @@ const activeBorderMode = ref('all')
       <div class="space-y-1 pt-1">
         <span class="text-[10px] text-secondary">Radius</span>
         <LinkedUnitInputUi
-          :model-value="getLinkedValues(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
+          v-bind="linked(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
           :labels="['TL', 'TR', 'BR', 'BL']"
           :units="['px', '%', 'em', 'rem']"
-          @update:model-value="updateLinkedStyles(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'], $event)"
         />
       </div>
     </div>

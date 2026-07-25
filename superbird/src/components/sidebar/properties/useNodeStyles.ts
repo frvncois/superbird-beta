@@ -81,6 +81,23 @@ export function useNodeStyles() {
     return keys.map((k) => activeStyles.value[k] ?? '') as [string, string, string, string]
   }
 
+  // Two-way binding helpers so sections bind a control with `v-bind="field('key')"`
+  // (or `v-bind="linked([...])"` for a 4-way linked input) instead of repeating
+  // `:model-value` + `@update:model-value` — and the property key — per control.
+  function field(key: string) {
+    return {
+      modelValue: activeStyles.value[key] ?? '',
+      'onUpdate:modelValue': (value: string) => updateStyle(key, value),
+    }
+  }
+
+  function linked(keys: [string, string, string, string]) {
+    return {
+      modelValue: getLinkedValues(keys),
+      'onUpdate:modelValue': (values: [string, string, string, string]) => updateLinkedStyles(keys, values),
+    }
+  }
+
   function statesWithValues(keys: string[]): StyleState[] {
     if (!activeClass.value) return []
     const bpStyles = activeClass.value.styles[globalStylesStore.activeBreakpoint]
@@ -107,6 +124,8 @@ export function useNodeStyles() {
     updateStyle,
     updateLinkedStyles,
     getLinkedValues,
+    field,
+    linked,
     statesWithValues,
   }
 }

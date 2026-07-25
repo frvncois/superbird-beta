@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMcpStore } from '@/stores/mcp'
 import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 // Locks the editor while the MCP assistant is actively editing, so the user
 // can't fight its changes. "Take over" pauses the assistant (it's told to stop);
@@ -35,12 +36,9 @@ const mcp = useMcpStore()
           <div class="text-sm font-medium text-foreground">Assistant is editing…</div>
           <div class="truncate text-xs text-secondary">{{ mcp.lastAction || 'Working' }} · {{ mcp.actionCount }} actions</div>
         </div>
-        <button
-          class="ml-2 shrink-0 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
-          @click="mcp.pause()"
-        >
+        <ButtonUi variant="outline" size="sm" class="ml-2 shrink-0" @click="mcp.pause()">
           Take over
-        </button>
+        </ButtonUi>
       </div>
     </div>
   </Transition>
@@ -60,12 +58,9 @@ const mcp = useMcpStore()
     >
       <span class="size-2 shrink-0 rounded-full bg-amber-fg" />
       <span class="text-xs text-foreground">You're in control — the assistant is paused.</span>
-      <button
-        class="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-primary cursor-pointer hover:bg-primary/10 transition-colors duration-100"
-        @click="mcp.resume()"
-      >
+      <ButtonUi variant="ghost" size="sm" class="shrink-0" @click="mcp.resume()">
         Resume assistant
-      </button>
+      </ButtonUi>
     </div>
   </Transition>
 </template>

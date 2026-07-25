@@ -252,12 +252,19 @@ export interface CollectionField {
   type: FieldType
 }
 
+// The broad shape of a collection — drives its icon and grouping. 'content' is
+// the flexible catch-all (services, albums, team, portfolios, single structured
+// pages, …). Optional for docs saved before kinds existed (defaults to 'content',
+// or 'products' for the store's Products collection).
+export type CollectionKind = 'blog' | 'products' | 'categories' | 'content'
+
 export interface Collection {
   id: string
   name: string
   singular: string
   plural: string
   basePath: string        // URL segment, e.g. "blog"
+  kind?: CollectionKind
   status?: 'draft' | 'published'
   templatePageId: string  // the Page (pageType 'collection') this collection edits
   isProducts?: boolean    // the store's Products collection (entries = products)
@@ -361,8 +368,17 @@ export interface ImageCompression {
   quality: number // 1–100
 }
 
+// Where the site is deployed. `url` is the canonical public base URL — a custom
+// domain (https://example.com) or a host:port (http://localhost:3001). Empty =
+// unset: the app falls back to the runtime origin and the server does not
+// enforce an origin allowlist.
+export interface DeploymentSettings {
+  url: string
+}
+
 export interface SiteSettings {
   identity: SiteIdentity
+  deployment: DeploymentSettings
   seo: SeoDefaults
   customCode: CustomCode
   redirects: Redirect[]

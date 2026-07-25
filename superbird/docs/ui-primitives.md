@@ -22,7 +22,7 @@ Everything in `components/ui/`. All v-model via `defineModel()`. None import sto
 
 | Component | Props | Notes |
 |---|---|---|
-| `ButtonUi` | `variant` `default`\|`solid`\|`outline`\|`ghost`\|`danger`, `size` `default`(h-9)\|`sm`(h-7), `to?`, `disabled?` | `default`=dark (`bg-foreground text-background`), `solid`=`bg-primary`, `danger`=red; `to` renders `RouterLink` |
+| `ButtonUi` | `variant` `default`\|`solid`\|`outline`\|`ghost`\|`danger`, `size` `default`(h-9)\|`sm`(h-7), `icon?`, `align` `center`\|`start`, `to?`, `disabled?` | `default`=dark (`bg-foreground text-background`), `solid`=`bg-primary`, `danger`=red; `to` renders `RouterLink`; `icon` renders a leading `IconUi`; `align="start"` left-aligns content (full-width menu rows) |
 | `IconButtonUi` | `size` `default`(size-7)\|`sm`(size-5)\|`xs`(size-4), `variant` `default`\|`danger`, `title?`, `disabled?` | slot = an `IconUi` |
 | `IconUi` | `name` (registry key), `size`=`size-3.5` (a class) | see icon list in design-tokens.md; add glyphs to `icons.ts` |
 
@@ -31,9 +31,9 @@ Everything in `components/ui/`. All v-model via `defineModel()`. None import sto
 | Component | Model | Props | Notes |
 |---|---|---|---|
 | `PopoverUi` | `open` (`v-model:open`) | `align` `left`\|`right`\|`full`, `panelClass`='p-1' | anchored — put in a `relative` parent; owns backdrop + slide-fade transition. Replaces all hand-rolled dropdowns |
-| `ModalUi` | `open` (`v-model:open`) | `position` `center`\|`right`, `panelClass` | teleports to body; blur backdrop; `right`=full-height drawer. Content via default slot |
+| `ModalUi` | `open` (`v-model:open`) | `variant` `modal`\|`dialog`, `title`, `description`, `icon`, `danger`, `position` `center`\|`right`, `size` `sm`\|`md`\|`lg`\|`xl`, `closable`, `dismissible`, `panelClass`, `bodyClass` | teleports to body; blur backdrop; `right`=full-height drawer. `dialog` variant = compact centered confirm/prompt (icon chip + `#actions` footer, red chip when `danger`); `modal` = titled panel with close (X). Slots: default (body), `#header`, `#header-action`, `#icon`, `#actions`. **This is the only modal/dialog primitive** — confirm/prompt/process flows are inline `<ModalUi variant="dialog">` driven by local `ref` state (there is no imperative dialog service) |
 | `ContextMenuUi` | — | `items: ContextMenuItem[]`, `x`, `y`; emits `close` | teleported right-click menu; build items via `useNodeContextMenu` |
-| `ConfirmDialogUi` | — (state-driven) | none | mounted **once** in `App.vue`. Renders the single active dialog from `useDialog()` — confirm / prompt / process (spinner + progress + result). Never used directly; drive it via `useDialog()` |
+| `DropdownUi` | `open` (`v-model:open`) | `label`, `icon` (built-in trigger), `items: DropdownItem[]` (`{label, icon?, danger?, separator?, handler?}`), `width` (Tailwind width utility, default `w-49`), `panelClass` | self-contained trigger + unfolding panel (trigger + panel share one border, so both use `width`). Renders `items` as `ButtonUi` rows; closes itself after a handler. Override the trigger via `#trigger` and add richer content via the default slot (`{ close }`). The box is `overflow-hidden` — content that must escape (submenu flyouts) has to `Teleport` out |
 | `ToastHost` | — (queue-driven) | none | mounted **once** in `App.vue`. Bottom-right transient notifications from `useToast()`; supports an action button (e.g. Undo). Never used directly |
 
 ## Layout & feedback

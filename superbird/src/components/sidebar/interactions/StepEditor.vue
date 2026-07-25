@@ -7,7 +7,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
-import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import ActionEditor from './ActionEditor.vue'
 import ActionPickerPopover from './ActionPickerPopover.vue'
@@ -108,12 +108,15 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
       <div class="space-y-1.5 pt-1">
         <div class="flex items-center justify-between">
           <LabelUi size="xs">Actions</LabelUi>
-          <button
-            class="flex items-center gap-0.5 text-[10px] text-secondary cursor-pointer hover:text-foreground transition-colors duration-100"
+          <ButtonUi
+            variant="ghost"
+            size="sm"
+            icon="add"
+            class="gap-0.5 text-[10px] text-secondary hover:text-foreground"
             @click.stop="openActionPicker"
           >
-            <IconUi name="add" size="size-3" /> Add
-          </button>
+            Add
+          </ButtonUi>
         </div>
         <ActionEditor
           v-for="(action, aIdx) in step.actions"
@@ -127,12 +130,7 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
       </div>
 
       <!-- Remove step -->
-      <button
-        class="flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] text-red-fg cursor-pointer hover:bg-red-bg/50 transition-colors duration-100"
-        @click="removeStep"
-      >
-        <IconUi name="delete" size="size-3" /> Remove step
-      </button>
+      <ButtonUi variant="danger" size="sm" icon="delete" class="w-full" @click="removeStep">Remove step</ButtonUi>
     </div>
 
     <ActionPickerPopover

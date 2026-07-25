@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import TextareaUi from '@/components/ui/TextareaUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
@@ -24,7 +25,7 @@ function addRedirect() {
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="SEO">
     <SettingsSection title="SEO defaults" description="Fallback metadata for pages that don't set their own.">
       <SettingsRow label="Title format" description="Use %page_title% and %site_title%.">
         <InputUi
@@ -104,5 +105,5 @@ function addRedirect() {
         <ButtonUi size="sm" @click="addRedirect">Add</ButtonUi>
       </div>
     </SettingsSection>
-  </div>
+  </SettingsPanel>
 </template>

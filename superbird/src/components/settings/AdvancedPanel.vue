@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useSiteSettingsStore } from '@/stores/siteSettings'
+import SettingsPanel from './SettingsPanel.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
 import TextareaUi from '@/components/ui/TextareaUi.vue'
@@ -8,7 +9,7 @@ const site = useSiteSettingsStore()
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Advanced">
     <SettingsSection title="Custom code" description="Injected into every published page.">
       <SettingsRow label="Head" description="Inside <head> — analytics, fonts, meta tags." stacked>
         <TextareaUi
@@ -48,5 +49,5 @@ const site = useSiteSettingsStore()
       </SettingsRow>
     </SettingsSection>
 
-  </div>
+    </SettingsPanel>
 </template>

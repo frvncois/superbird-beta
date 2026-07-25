@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import SettingsSection from './SettingsSection.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
@@ -34,7 +35,7 @@ function addSize() {
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Design">
     <!-- Colors -->
     <SettingsSection title="Color palette" description="Reusable colors available across the editor.">
       <div
@@ -84,5 +85,5 @@ function addSize() {
       </div>
     </SettingsSection>
 
-  </div>
+    </SettingsPanel>
 </template>

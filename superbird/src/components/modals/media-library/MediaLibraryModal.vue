@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useMediaStore } from '@/stores/media'
-import { useDialog } from '@/composables/useDialog'
 import type { MediaItem, MediaType } from '@/types/canvas'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -15,7 +14,6 @@ import MediaGrid from './MediaGrid.vue'
 import MediaDetailPanel from './MediaDetailPanel.vue'
 
 const store = useMediaStore()
-const dialog = useDialog()
 
 const searchQuery = ref('')
 const currentFolder = ref<string | undefined>(undefined)
@@ -115,13 +113,24 @@ function navigate(folderId: string | undefined) {
   selectedItem.value = null
 }
 
-async function createFolder() {
-  const name = await dialog.prompt({
-    title: 'Create folder',
-    placeholder: 'Folder name',
-    confirmLabel: 'Create',
-  })
+const createFolderOpen = ref(false)
+const createFolderName = ref('')
+const createFolderInput = ref<HTMLElement | null>(null)
+
+watch(createFolderOpen, async (open) => {
+  if (!open) return
+  createFolderName.value = ''
+  await nextTick()
+  createFolderInput.value?.querySelector('input')?.focus()
+})
+
+function createFolder() {
+  createFolderOpen.value = true
+}
+function doCreateFolder() {
+  const name = createFolderName.value.trim()
   if (name) store.addMediaFolder(name, currentFolder.value)
+  createFolderOpen.value = false
 }
 
 // If the current folder disappears (deleted, or reset), fall back to root.
@@ -137,86 +146,91 @@ watch(
 </script>
 
 <template>
-  <ModalUi v-model:open="libraryOpen" panel-class="w-full max-w-5xl h-full max-h-[80vh]">
-    <div class="flex min-h-0 flex-1 flex-col">
-      <!-- Row 1: title bar -->
-      <div class="flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <div class="flex items-center gap-2">
-          <IconUi name="image" size="size-4" class="text-secondary" />
-          <span class="text-sm font-semibold">Media Library</span>
+  <ModalUi
+    v-model:open="libraryOpen"
+    title="Media Library"
+    icon="image"
+    size="xl"
+    panel-class="h-full max-h-[80vh]"
+    body-class="flex min-h-0 flex-1 flex-col"
+  >
+    <!-- Toolbar: search · type · order by · grid/list · create/upload -->
+    <div class="flex shrink-0 items-center gap-2 border-b p-3.5">
+      <div class="relative min-w-0 flex-1">
+        <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
+        <InputUi v-model="searchQuery" placeholder="Search files..." class="pl-8" />
+      </div>
+
+      <div class="w-32 shrink-0">
+        <SelectUi v-model="filterTypeProxy" :options="typeFilterOptions" />
+      </div>
+
+      <div class="flex shrink-0 items-center gap-1">
+        <div class="w-32">
+          <SelectUi v-model="sortByProxy" :options="sortOptions" />
         </div>
-        <IconButtonUi title="Close" @click="libraryOpen = false">
-          <IconUi name="close" size="size-4" />
+        <IconButtonUi
+          size="sm"
+          :title="sortDir === 'asc' ? 'Ascending' : 'Descending'"
+          @click="sortDir = sortDir === 'asc' ? 'desc' : 'asc'"
+        >
+          <IconUi :name="sortDir === 'asc' ? 'move-up' : 'move-down'" size="size-3.5" />
         </IconButtonUi>
       </div>
 
-      <!-- Row 2: search · type · order by · grid/list -->
-      <div class="flex shrink-0 items-center gap-2 border-b px-4 py-2.5">
-        <div class="relative min-w-0 flex-1">
-          <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
-          <InputUi v-model="searchQuery" placeholder="Search files..." class="pl-8" />
-        </div>
+      <SegmentedControlUi v-model="viewModeProxy" :options="viewOptions" size="xs" class="shrink-0">
+        <template #option="{ option, active }">
+          <IconUi :name="option.value === 'grid' ? 'elements' : 'list'" size="size-3.5" :class="active ? 'text-foreground' : 'text-secondary'" />
+        </template>
+      </SegmentedControlUi>
 
-        <div class="w-32 shrink-0">
-          <SelectUi v-model="filterTypeProxy" :options="typeFilterOptions" />
-        </div>
+      <div class="mx-1 h-5 w-px shrink-0 bg-border" />
 
-        <div class="flex shrink-0 items-center gap-1">
-          <div class="w-32">
-            <SelectUi v-model="sortByProxy" :options="sortOptions" />
-          </div>
-          <IconButtonUi
-            size="sm"
-            :title="sortDir === 'asc' ? 'Ascending' : 'Descending'"
-            @click="sortDir = sortDir === 'asc' ? 'desc' : 'asc'"
-          >
-            <IconUi :name="sortDir === 'asc' ? 'move-up' : 'move-down'" size="size-3.5" />
-          </IconButtonUi>
-        </div>
+      <ButtonUi size="sm" variant="outline" class="shrink-0 text-[10px]" @click="createFolder">
+        <IconUi name="folder" size="size-3.5" />
+        Create folder
+      </ButtonUi>
+      <ButtonUi size="sm" class="shrink-0 text-[10px]" @click="uploadInput?.click()">
+        <IconUi name="upload" size="size-3.5" />
+        Upload file
+      </ButtonUi>
+      <input ref="uploadInput" type="file" multiple class="hidden" @change="onUploadFiles" />
+    </div>
 
-        <SegmentedControlUi v-model="viewModeProxy" :options="viewOptions" size="xs" class="shrink-0">
-          <template #option="{ option, active }">
-            <IconUi :name="option.value === 'grid' ? 'elements' : 'list'" size="size-3.5" :class="active ? 'text-foreground' : 'text-secondary'" />
-          </template>
-        </SegmentedControlUi>
+    <!-- Files (breadcrumb + grid), detail panel beside it -->
+    <div class="flex min-h-0 flex-1">
+      <div class="flex min-w-0 flex-1 flex-col">
+        <MediaBreadcrumb :current-folder="currentFolder" @navigate="navigate" />
 
-        <div class="mx-1 h-5 w-px shrink-0 bg-border" />
-
-        <ButtonUi size="sm" variant="outline" class="shrink-0 text-[10px]" @click="createFolder">
-          <IconUi name="folder" size="size-3.5" />
-          Create folder
-        </ButtonUi>
-        <ButtonUi size="sm" class="shrink-0 text-[10px]" @click="uploadInput?.click()">
-          <IconUi name="upload" size="size-3.5" />
-          Upload file
-        </ButtonUi>
-        <input ref="uploadInput" type="file" multiple class="hidden" @change="onUploadFiles" />
-      </div>
-
-      <!-- Row 3: content (breadcrumb + files), detail panel beside it -->
-      <div class="flex min-h-0 flex-1">
-        <div class="flex min-w-0 flex-1 flex-col">
-          <MediaBreadcrumb :current-folder="currentFolder" @navigate="navigate" />
-
-          <MediaGrid
-            v-model:selected-id="selectedItem"
-            :items="itemsInView"
-            :folders="foldersInView"
-            :current-folder="currentFolder"
-            :searching="isSearching"
-            :view-mode="viewMode"
-            @open-folder="openFolder"
-            @create-folder="createFolder"
-          />
-        </div>
-
-        <!-- Detail panel (when item selected) -->
-        <MediaDetailPanel
-          v-if="selectedMedia"
-          :item="selectedMedia"
-          @deleted="selectedItem = null"
+        <MediaGrid
+          v-model:selected-id="selectedItem"
+          :items="itemsInView"
+          :folders="foldersInView"
+          :current-folder="currentFolder"
+          :searching="isSearching"
+          :view-mode="viewMode"
+          @open-folder="openFolder"
+          @create-folder="createFolder"
         />
       </div>
+
+      <!-- Detail panel (when item selected) -->
+      <MediaDetailPanel
+        v-if="selectedMedia"
+        :item="selectedMedia"
+        @deleted="selectedItem = null"
+      />
     </div>
+  </ModalUi>
+
+  <!-- Create folder -->
+  <ModalUi v-model:open="createFolderOpen" variant="dialog" title="Create folder">
+    <div ref="createFolderInput">
+      <InputUi v-model="createFolderName" placeholder="Folder name" size="default" @keydown.enter="doCreateFolder" />
+    </div>
+    <template #actions>
+      <ButtonUi variant="ghost" @click="createFolderOpen = false">Cancel</ButtonUi>
+      <ButtonUi variant="default" @click="doCreateFolder">Create</ButtonUi>
+    </template>
   </ModalUi>
 </template>

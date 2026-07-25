@@ -5,8 +5,6 @@ withDefaults(
     size?: 'xs' | 'sm'
     dot?: boolean
     pulse?: boolean
-    // Mono uppercase "tag" style (category/status labels) instead of the default
-    // medium-weight pill.
     mono?: boolean
   }>(),
   {

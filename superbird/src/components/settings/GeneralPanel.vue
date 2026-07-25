@@ -2,13 +2,14 @@
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 
 const site = useSiteSettingsStore()
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="General">
     <SettingsSection title="Site identity" description="Basic information about your project.">
       <SettingsRow label="Title">
         <InputUi
@@ -37,5 +38,18 @@ const site = useSiteSettingsStore()
         />
       </SettingsRow>
     </SettingsSection>
-  </div>
+
+    <SettingsSection
+      title="Deployment"
+      description="Where your site is served. Set this to your custom domain, your server, or the local address — it's the URL shown on your dashboard and the origin the API trusts."
+    >
+      <SettingsRow label="Site URL" description="Full URL including scheme, e.g. https://example.com or http://localhost:3001">
+        <InputUi
+          :model-value="site.siteSettings.deployment.url"
+          placeholder="https://example.com"
+          @update:model-value="site.updateDeployment({ url: $event.trim() })"
+        />
+      </SettingsRow>
+    </SettingsSection>
+    </SettingsPanel>
 </template>

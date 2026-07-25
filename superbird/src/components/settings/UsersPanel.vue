@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { listUsers, createUser, deleteUser } from '@/lib/users'
 import type { User } from '@shared/types'
 import SettingsSection from './SettingsSection.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 
 const auth = useAuthStore()
-const dialog = useDialog()
 const toast = useToast()
 
 const users = ref<User[]>([])
@@ -64,14 +64,14 @@ async function add() {
 
 // Remove
 const removingId = ref<string | null>(null)
-async function remove(user: User) {
-  const ok = await dialog.confirm({
-    title: 'Remove user',
-    message: `Remove ${user.name} (${user.email})? They will lose access to this site.`,
-    confirmLabel: 'Remove',
-    danger: true,
-  })
-  if (!ok) return
+const pendingRemove = ref<User | null>(null)
+function remove(user: User) {
+  pendingRemove.value = user
+}
+async function doRemove() {
+  const user = pendingRemove.value
+  if (!user) return
+  pendingRemove.value = null
   removingId.value = user.id
   try {
     await deleteUser(user.id)
@@ -90,7 +90,7 @@ function initials(u: User): string {
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Users">
     <SettingsSection title="Team" description="People who can sign in and manage this site.">
       <p v-if="loading" class="px-4 py-3 text-xs text-secondary">Loading…</p>
       <p v-else-if="listError" class="px-4 py-3 text-xs text-red-fg">{{ listError }}</p>
@@ -133,5 +133,20 @@ function initials(u: User): string {
         <p v-if="addError" class="text-xs text-red-fg">{{ addError }}</p>
       </div>
     </SettingsSection>
-  </div>
+
+    <ModalUi
+      :open="!!pendingRemove"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Remove user"
+      :description="pendingRemove ? `Remove ${pendingRemove.name} (${pendingRemove.email})? They will lose access to this site.` : ''"
+      @update:open="pendingRemove = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingRemove = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doRemove">Remove</ButtonUi>
+      </template>
+    </ModalUi>
+  </SettingsPanel>
 </template>

@@ -7,6 +7,7 @@ import SelectUi from '@/components/ui/SelectUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import StepEditor from './StepEditor.vue'
 
@@ -32,13 +33,15 @@ function addStep() {
   <div>
     <!-- Header: back + interaction name (like the Settings/Properties top block) -->
     <div class="space-y-3 p-4">
-      <button
-        class="flex items-center gap-1 text-xs font-medium text-secondary cursor-pointer transition-colors duration-100 hover:text-foreground"
+      <ButtonUi
+        variant="ghost"
+        size="sm"
+        class="gap-1 text-secondary hover:text-foreground"
         @click="$emit('back')"
       >
         <IconUi name="chevron-down" size="size-3" class="rotate-90" />
         Interactions
-      </button>
+      </ButtonUi>
       <div class="flex items-center gap-2">
         <span class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-bg text-amber-fg">
           <IconUi name="interactions" size="size-3.5" />
@@ -94,12 +97,15 @@ function addStep() {
 
     <!-- Add step -->
     <div class="p-4">
-      <button
-        class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-foreground/15 py-2.5 text-xs text-secondary cursor-pointer hover:border-foreground/30 hover:text-foreground transition-colors duration-150"
+      <ButtonUi
+        variant="outline"
+        size="sm"
+        icon="add"
+        class="w-full rounded-xl border-dashed border-foreground/15 py-2.5 text-secondary hover:border-foreground/30 hover:text-foreground"
         @click="addStep"
       >
-        <IconUi name="add" size="size-3.5" /> Add step
-      </button>
+        Add step
+      </ButtonUi>
     </div>
   </div>
 </template>

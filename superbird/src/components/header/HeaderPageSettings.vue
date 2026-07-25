@@ -9,7 +9,7 @@ import TextareaUi from '@/components/ui/TextareaUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
-import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -78,16 +78,15 @@ function updateSeo(patch: Partial<PageSeo>) {
 
 <template>
   <div class="relative">
-    <button
+    <ButtonUi
+      variant="ghost"
+      size="sm"
+      icon="settings"
       title="Page settings"
-      :class="[
-        'flex size-7 items-center justify-center rounded-lg cursor-pointer transition-colors duration-150',
-        open ? 'bg-secondary/10 text-foreground' : 'text-secondary hover:bg-secondary/10 hover:text-foreground',
-      ]"
+      class="size-7 px-0"
+      :class="open ? 'bg-secondary/10' : 'text-secondary'"
       @click="open = !open"
-    >
-      <IconUi name="settings" size="size-4" />
-    </button>
+    />
 
     <PopoverUi v-model:open="open" align="left" panel-class="w-72 rounded-2xl p-3">
       <div class="space-y-3">

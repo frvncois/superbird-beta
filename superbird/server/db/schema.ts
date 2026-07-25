@@ -17,6 +17,11 @@ export const users = sqliteTable('users', {
   role: text('role').notNull().default('admin'),
   passwordHash: text('password_hash').notNull(),
   createdAt: text('created_at').notNull(),
+  // TOTP 2FA: base32 secret, enabled flag, and JSON array of SHA-256-hashed
+  // single-use recovery codes. Null/0 until the user enrolls.
+  totpSecret: text('totp_secret'),
+  totpEnabled: integer('totp_enabled').notNull().default(0),
+  totpRecovery: text('totp_recovery'),
 })
 
 export const sessions = sqliteTable('sessions', {

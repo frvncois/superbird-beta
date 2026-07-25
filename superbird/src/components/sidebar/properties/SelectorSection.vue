@@ -2,13 +2,13 @@
 import { ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
-import { useDialog } from '@/composables/useDialog'
 import ClassInputUi from '@/components/ui/ClassInputUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
-const dialog = useDialog()
 const { node } = useNodeStyles()
 
 // After Duplicate, ask the input to open the new class in inline-rename mode.
@@ -31,14 +31,15 @@ function selectClass(name: string) {
 }
 
 // Delete entirely — from the registry and every element that uses it.
-async function deleteClass(name: string) {
-  const ok = await dialog.confirm({
-    title: 'Delete class',
-    message: `Delete “.${name}” from every element that uses it? This can’t be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (ok) store.deleteStyleClass(name)
+const pendingDelete = ref<string | null>(null)
+function deleteClass(name: string) {
+  pendingDelete.value = name
+}
+function doDelete() {
+  const target = pendingDelete.value
+  if (!target) return
+  store.deleteStyleClass(target)
+  pendingDelete.value = null
 }
 
 // Duplicate into a new class (styles copied), swapped in on this element, then
@@ -76,5 +77,20 @@ function renameClass(oldName: string, newName: string) {
       @rename="renameClass"
       @update:active-state="globalStylesStore.setActiveState"
     />
+
+    <ModalUi
+      :open="!!pendingDelete"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete class"
+      :description="pendingDelete ? `Delete “.${pendingDelete}” from every element that uses it? This can’t be undone.` : ''"
+      @update:open="pendingDelete = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
+      </template>
+    </ModalUi>
   </section>
 </template>

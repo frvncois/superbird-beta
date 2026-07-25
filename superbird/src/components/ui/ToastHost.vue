@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useToast, type ToastType } from '@/composables/useToast'
 import IconUi from './IconUi.vue'
+import ButtonUi from './ButtonUi.vue'
 
 const { toasts, dismiss, runAction } = useToast()
 
@@ -36,21 +37,11 @@ const STYLES: Record<ToastType, { icon: string; chip: string }> = {
 
         <p class="min-w-0 flex-1 pt-0.5 text-sm text-foreground">{{ t.message }}</p>
 
-        <button
-          v-if="t.action"
-          class="shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium text-primary hover:bg-secondary/10 cursor-pointer"
-          @click="runAction(t)"
-        >
+        <ButtonUi v-if="t.action" variant="ghost" size="sm" tone="primary" class="shrink-0" @click="runAction(t)">
           {{ t.action.label }}
-        </button>
+        </ButtonUi>
 
-        <button
-          class="shrink-0 rounded-lg p-0.5 text-secondary hover:text-foreground cursor-pointer"
-          aria-label="Dismiss"
-          @click="dismiss(t.id)"
-        >
-          <IconUi name="close" size="size-4" />
-        </button>
+        <ButtonUi variant="ghost" size="sm" square icon="close" aria-label="Dismiss" class="shrink-0" @click="dismiss(t.id)" />
       </div>
     </TransitionGroup>
   </Teleport>

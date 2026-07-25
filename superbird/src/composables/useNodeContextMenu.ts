@@ -1,6 +1,5 @@
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { separator, type ContextMenuItem } from '@/types/contextMenu'
 import { CONTAINER_TYPES } from '@/constants/canvas'
@@ -21,22 +20,9 @@ export type NodeMenuContext = 'canvas' | 'layers'
 
 export interface NodeMenuCallbacks {
   onRename?: () => void
+  // Opens the create-component name prompt for this node. Provided by the
+  // editor root (via CreateComponentPromptKey) so the prompt is declarative.
   onCreateComponent?: () => void
-}
-
-async function promptCreateComponent(nodeId: string) {
-  const componentsStore = useUserComponentsStore()
-  const { prompt } = useDialog()
-  const name = await prompt({
-    title: 'Create component',
-    message: 'Save this element as a reusable component.',
-    placeholder: 'Component name',
-    confirmLabel: 'Create',
-  })
-  if (name) {
-    componentsStore.createComponentFromNode(nodeId, name)
-    useToast().success(`Component “${name}” created`)
-  }
 }
 
 /**
@@ -168,13 +154,7 @@ export function buildNodeActions(
       id: 'create-component',
       label: 'Create Component',
       icon: 'component',
-      handler: () => {
-        if (callbacks?.onCreateComponent) {
-          callbacks.onCreateComponent()
-        } else {
-          promptCreateComponent(node.id)
-        }
-      },
+      handler: () => callbacks?.onCreateComponent?.(),
       hidden: isBody || isComponent,
     },
     {

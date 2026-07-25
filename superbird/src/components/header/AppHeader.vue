@@ -1,45 +1,129 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useCanvasStore } from '@/stores/canvas'
+import { useMediaStore } from '@/stores/media'
+import { useAuthStore } from '@/stores/auth'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
-import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 import SuperbirdIcon from '@/components/header/SuperbirdIcon.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
-import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
-import HeaderMenu from './HeaderMenu.vue'
+import DropdownUi, { type DropdownItem } from '@/components/ui/DropdownUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 import HeaderContextBar from './HeaderContextBar.vue'
-
-defineProps<{
-  mode: 'dashboard' | 'editor' | 'settings'
-}>()
 
 const router = useRouter()
 const canvasStore = useCanvasStore()
-const dialog = useDialog()
+const media = useMediaStore()
+const auth = useAuthStore()
+const route = useRoute()
+const toast = useToast()
 
-const editorModeOptions = [
-  { value: 'design', label: 'Design' },
-  { value: 'content', label: 'Content' },
-]
+// ── App menu ──
+const menuOpen = ref(false)
+// Trigger + right-side actions follow the current route (names map 1:1 to modes),
+// so the header is self-configuring — no `mode` prop to keep in sync.
+const ROUTE_INFO = {
+  dashboard: { label: 'Dashboard', icon: 'home' },
+  editor: { label: 'Editor', icon: 'layout' },
+  settings: { label: 'Settings', icon: 'settings' },
+} as const
+type Mode = keyof typeof ROUTE_INFO
+const mode = computed<Mode>(() => (String(route.name ?? '') as Mode) in ROUTE_INFO ? (route.name as Mode) : 'dashboard')
+const routeInfo = computed(() => ROUTE_INFO[mode.value])
+function goDashboard() {
+  router.push('/')
+}
+function openSettings() {
+  router.push('/settings')
+}
+function openMediaLibrary() {
+  media.openLibrary()
+}
+async function logout() {
+  await auth.logout()
+  router.push('/login')
+}
 
-// Dashboard: open the editor toggled to the chosen mode.
-function openEditor(mode: 'design' | 'content') {
-  canvasStore.setEditorMode(mode)
+// Open the editor in design mode when the user may design, otherwise content.
+function openEditor() {
+  canvasStore.setEditorMode(auth.canDesign ? 'design' : 'content')
   router.push('/editor')
 }
 
+// App-menu rows (DropdownUi closes itself after a handler runs).
+const menuItems = computed<DropdownItem[]>(() => [
+  { label: 'Dashboard', icon: 'home', handler: goDashboard },
+  { label: 'Media Library', icon: 'image', handler: openMediaLibrary },
+  { label: 'Settings', icon: 'settings', handler: openSettings },
+  { label: 'Open Editor', icon: 'layout', handler: openEditor },
+  { separator: true },
+  { label: 'Logout', icon: 'logout', handler: logout },
+])
+
+// ── Publish status modal (busy → success/error), driven locally ──
+// Save the working draft now (changes also autosave in the background). Publish
+// = save + promote the draft to the live site.
+const saving = ref(false)
+async function save() {
+  if (saving.value) return
+  saving.value = true
+  try {
+    await useProjectPersistence().save()
+    toast.success('Changes saved')
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Couldn’t save. Please try again.')
+  } finally {
+    saving.value = false
+  }
+}
+
 const publishing = ref(false)
+const pub = reactive({
+  open: false,
+  title: '',
+  message: '',
+  phase: 'busy' as 'busy' | 'success' | 'error',
+  link: null as string | null,
+  confirmLabel: 'Done',
+})
+const pubBusy = computed(() => pub.open && pub.phase === 'busy')
+const pubChip = computed(() =>
+  pub.phase === 'success'
+    ? { icon: 'check-circle', class: 'bg-green-bg text-green-fg' }
+    : pub.phase === 'error'
+      ? { icon: 'alert', class: 'bg-red-bg text-red-fg' }
+      : null,
+)
+
 async function publish() {
   if (publishing.value) return
   publishing.value = true
-  const p = dialog.process({ title: 'Publishing site', message: 'Saving and building your live site…' })
+  Object.assign(pub, {
+    open: true,
+    title: 'Publishing site',
+    message: 'Saving and building your live site…',
+    phase: 'busy',
+    link: null,
+    confirmLabel: 'Done',
+  })
   try {
     await useProjectPersistence().publish()
-    p.succeed({ title: 'Site published', message: 'Your changes are now live.', link: `${window.location.origin}/`, closeLabel: 'Done' })
+    Object.assign(pub, {
+      phase: 'success',
+      title: 'Site published',
+      message: 'Your changes are now live.',
+      link: `${window.location.origin}/`,
+      confirmLabel: 'Done',
+    })
   } catch (e) {
-    p.fail(e instanceof Error ? e.message : 'Publish failed. Please try again.')
+    Object.assign(pub, {
+      phase: 'error',
+      message: e instanceof Error ? e.message : 'Publish failed. Please try again.',
+      link: null,
+      confirmLabel: 'Close',
+    })
   } finally {
     publishing.value = false
   }
@@ -47,35 +131,24 @@ async function publish() {
 </script>
 
 <template>
-  <!-- Left: logo + app menu (all modes) -->
-  <div class="flex items-center gap-4">
-    <div class="size-6 text-foreground">
-      <SuperbirdIcon />
+  <!-- Self-contained app bar: fixed height, sits above the canvas stacking context. -->
+  <header class="relative z-40 flex h-[var(--header-height)] shrink-0 items-center justify-between p-3.5">
+    <!-- Left: app menu -->
+    <div class="flex items-center gap-1.5">
+      <DropdownUi v-model:open="menuOpen" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
     </div>
-    <div class="h-4 w-px bg-border" />
-    <HeaderMenu :mode="mode" />
-  </div>
 
-  <!-- Center: context bar (editor only) -->
-  <div class="flex items-center gap-1.5">
-    <HeaderContextBar v-if="mode === 'editor'" />
-  </div>
+    <!-- Center: context bar (editor only) -->
+    <div class="flex items-center gap-1.5">
+      <HeaderContextBar v-if="mode === 'editor'" />
+    </div>
 
-  <!-- Right: actions -->
-  <div class="flex items-center gap-2">
+    <!-- Right: actions -->
+    <div class="flex items-center gap-2">
     <template v-if="mode === 'editor'">
-      <!-- Design / Content mode -->
-      <SegmentedControlUi
-        :model-value="canvasStore.editorMode"
-        :options="editorModeOptions"
-        @update:model-value="canvasStore.setEditorMode($event as 'design' | 'content')"
-      />
-      <ButtonUi variant="outline" size="sm" @click="canvasStore.openPreview()">
-        <IconUi name="eye" size="size-4" />
-        Preview
+      <ButtonUi variant="outline" size="sm" :disabled="saving" @click="save">
+        {{ saving ? 'Saving…' : 'Save' }}
       </ButtonUi>
-      <div class="h-4 w-px bg-border mx-2" />
-      <ButtonUi variant="outline" size="sm" @click="router.push('/')">Close</ButtonUi>
       <ButtonUi variant="solid" size="sm" :disabled="publishing" @click="publish">
         {{ publishing ? 'Publishing…' : 'Publish' }}
       </ButtonUi>
@@ -90,8 +163,50 @@ async function publish() {
       <span class="flex items-center gap-1.5 rounded-lg bg-secondary/5 px-2.5 py-1 text-[11px] text-secondary">
         <span class="size-1.5 rounded-full bg-green-fg" /> Published
       </span>
-      <ButtonUi variant="outline" size="sm" @click="openEditor('content')">Edit content</ButtonUi>
-      <ButtonUi variant="solid" size="sm" @click="openEditor('design')">Edit design</ButtonUi>
+      <ButtonUi variant="solid" size="sm" @click="openEditor">Open Editor</ButtonUi>
     </template>
-  </div>
+    </div>
+  </header>
+
+  <!-- Publish status modal (busy → success/error) -->
+  <ModalUi
+    :open="pub.open"
+    variant="dialog"
+    :closable="false"
+    :dismissible="!pubBusy"
+    @update:open="pub.open = false"
+  >
+    <template #header>
+      <span
+        v-if="pubBusy"
+        class="size-9 shrink-0 animate-spin rounded-full border-2 border-secondary/25 border-t-primary"
+      />
+      <span
+        v-else-if="pubChip"
+        :class="['flex size-9 shrink-0 items-center justify-center rounded-full', pubChip.class]"
+      >
+        <IconUi :name="pubChip.icon" size="size-4" />
+      </span>
+      <div class="min-w-0 flex-1">
+        <h2 class="text-base font-semibold text-foreground">{{ pub.title }}</h2>
+      </div>
+    </template>
+
+    <div class="space-y-3">
+      <p v-if="pub.message" class="whitespace-pre-line text-sm leading-relaxed text-secondary">{{ pub.message }}</p>
+      <a
+        v-if="pub.phase === 'success' && pub.link"
+        :href="pub.link"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+      >
+        <IconUi name="external-link" size="size-4" /> {{ pub.link }}
+      </a>
+    </div>
+
+    <template v-if="!pubBusy" #actions>
+      <ButtonUi @click="pub.open = false">{{ pub.confirmLabel }}</ButtonUi>
+    </template>
+  </ModalUi>
 </template>

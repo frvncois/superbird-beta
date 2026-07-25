@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import LinkedUnitInputUi from '@/components/ui/LinkedUnitInputUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import { useNodeStyles } from './useNodeStyles'
 
-const { getLinkedValues, updateLinkedStyles, statesWithValues } = useNodeStyles()
+const { linked, statesWithValues } = useNodeStyles()
 
 const spacingKeys = ['padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left']
 </script>
@@ -12,19 +13,12 @@ const spacingKeys = ['padding-top', 'padding-right', 'padding-bottom', 'padding-
   <PropertySectionUi title="Spacing" icon="spacing" :states-with-values="statesWithValues(spacingKeys)">
     <div class="space-y-3">
       <div class="space-y-1">
-        <span class="text-[9px] uppercase tracking-wider text-secondary">Padding</span>
-        <LinkedUnitInputUi
-          :model-value="getLinkedValues(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'])"
-          @update:model-value="updateLinkedStyles(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'], $event)"
-        />
+        <LabelUi size="xs" class="block text-secondary">Padding</LabelUi>
+        <LinkedUnitInputUi v-bind="linked(['padding-top', 'padding-right', 'padding-bottom', 'padding-left'])" />
       </div>
       <div class="space-y-1">
-        <span class="text-[9px] uppercase tracking-wider text-secondary">Margin</span>
-        <LinkedUnitInputUi
-          :model-value="getLinkedValues(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'])"
-          :allow-auto="true"
-          @update:model-value="updateLinkedStyles(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'], $event)"
-        />
+        <LabelUi size="xs" class="block text-secondary">Margin</LabelUi>
+        <LinkedUnitInputUi v-bind="linked(['margin-top', 'margin-right', 'margin-bottom', 'margin-left'])" :allow-auto="true" />
       </div>
     </div>
   </PropertySectionUi>

@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { listBackups, createBackup, restoreBackup, deleteBackup, downloadExport, importBackup } from '@/lib/backupApi'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import type { BackupMeta } from '@shared/types'
+import SettingsPanel from './SettingsPanel.vue'
 import SettingsSection from './SettingsSection.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 
-const dialog = useDialog()
 const toast = useToast()
 
 const backups = ref<BackupMeta[]>([])
@@ -20,6 +20,72 @@ const error = ref('')
 const busy = ref(false)
 const label = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
+
+// ── Confirm dialogs ──
+const pendingRestore = ref<BackupMeta | null>(null)
+const pendingDelete = ref<BackupMeta | null>(null)
+const pendingImport = ref<File | null>(null)
+
+// ── Status process modal (busy → success/error), driven locally ──
+interface ProcState {
+  open: boolean
+  title: string
+  message: string
+  phase: 'busy' | 'success' | 'error'
+  progress: { loaded: number; total: number } | null
+  confirmLabel: string
+}
+const proc = reactive<ProcState>({
+  open: false,
+  title: '',
+  message: '',
+  phase: 'busy',
+  progress: null,
+  confirmLabel: 'Done',
+})
+const procBusy = computed(() => proc.open && proc.phase === 'busy')
+const procPct = computed(() =>
+  proc.progress && proc.progress.total ? Math.round((proc.progress.loaded / proc.progress.total) * 100) : 0,
+)
+const procChip = computed(() =>
+  proc.phase === 'success'
+    ? { icon: 'check-circle', class: 'bg-green-bg text-green-fg' }
+    : proc.phase === 'error'
+      ? { icon: 'alert', class: 'bg-red-bg text-red-fg' }
+      : null,
+)
+
+function startProcess(opts: { title: string; message?: string; progress?: { loaded: number; total: number } }) {
+  Object.assign(proc, {
+    open: true,
+    title: opts.title,
+    message: opts.message ?? '',
+    phase: 'busy',
+    progress: opts.progress ?? null,
+    confirmLabel: 'Done',
+  })
+  return {
+    progress(loaded: number, total: number) {
+      proc.progress = { loaded, total }
+    },
+    update(message: string) {
+      proc.message = message
+    },
+    succeed(result?: { title?: string; message?: string }) {
+      proc.phase = 'success'
+      proc.progress = null
+      if (result?.title) proc.title = result.title
+      proc.message = result?.message ?? ''
+      proc.confirmLabel = 'Done'
+    },
+    fail(message: string) {
+      proc.phase = 'error'
+      proc.progress = null
+      proc.message = message
+      proc.confirmLabel = 'Close'
+    },
+  }
+}
 
 async function load() {
   loading.value = true
@@ -58,15 +124,14 @@ async function onCreate() {
   }
 }
 
-async function onRestore(b: BackupMeta) {
-  const ok = await dialog.confirm({
-    title: 'Restore backup',
-    message: `Restore "${b.label}" from ${fmtDate(b.createdAt)}?\n\nThis replaces the current project. A safety backup is taken first, then the editor reloads.`,
-    confirmLabel: 'Restore',
-    danger: true,
-  })
-  if (!ok) return
-  const p = dialog.process({ title: 'Restoring backup', message: 'Replacing the current project…' })
+function onRestore(b: BackupMeta) {
+  pendingRestore.value = b
+}
+async function doRestore() {
+  const b = pendingRestore.value
+  pendingRestore.value = null
+  if (!b) return
+  const p = startProcess({ title: 'Restoring backup', message: 'Replacing the current project…' })
   try {
     await restoreBackup(b.id)
     p.succeed({ title: 'Backup restored', message: 'Reloading the editor…' })
@@ -76,14 +141,13 @@ async function onRestore(b: BackupMeta) {
   }
 }
 
-async function onDelete(b: BackupMeta) {
-  const ok = await dialog.confirm({
-    title: 'Delete backup',
-    message: `Delete backup "${b.label}"? This can't be undone.`,
-    confirmLabel: 'Delete',
-    danger: true,
-  })
-  if (!ok) return
+function onDelete(b: BackupMeta) {
+  pendingDelete.value = b
+}
+async function doDelete() {
+  const b = pendingDelete.value
+  pendingDelete.value = null
+  if (!b) return
   try {
     await deleteBackup(b.id)
     await load()
@@ -96,7 +160,7 @@ async function onDelete(b: BackupMeta) {
 async function onExport() {
   busy.value = true
   error.value = ''
-  const p = dialog.process({ title: 'Exporting site', message: 'Preparing your download…', progress: { loaded: 0, total: 0 } })
+  const p = startProcess({ title: 'Exporting site', message: 'Preparing your download…', progress: { loaded: 0, total: 0 } })
   try {
     await downloadExport((loaded, total) => p.progress(loaded, total))
     p.succeed({ title: 'Export ready', message: 'Your .sbbackup download has started.' })
@@ -107,20 +171,19 @@ async function onExport() {
   }
 }
 
-async function onImportFile(e: Event) {
+function onImportFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (importInput.value) importInput.value.value = ''
   if (!file) return
-  const ok = await dialog.confirm({
-    title: 'Import site',
-    message: `Import "${file.name}"?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first, then the editor reloads.`,
-    confirmLabel: 'Import',
-    danger: true,
-  })
-  if (!ok) return
+  pendingImport.value = file
+}
+async function doImport() {
+  const file = pendingImport.value
+  pendingImport.value = null
+  if (!file) return
   busy.value = true
   error.value = ''
-  const p = dialog.process({ title: 'Importing site', message: 'Uploading…', progress: { loaded: 0, total: file.size } })
+  const p = startProcess({ title: 'Importing site', message: 'Uploading…', progress: { loaded: 0, total: file.size } })
   try {
     await importBackup(file, (loaded, total) => {
       // Once the upload finishes the server is applying — switch the message.
@@ -137,7 +200,7 @@ async function onImportFile(e: Event) {
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Backup">
     <SettingsSection title="Backups" description="Point-in-time snapshots of your project. An automatic backup is kept daily; make one anytime.">
       <div class="flex items-center gap-2 bg-secondary/5 px-4 py-3">
         <InputUi v-model="label" placeholder="Label (optional)" class="flex-1" @keydown.enter="onCreate" />
@@ -181,5 +244,110 @@ async function onImportFile(e: Event) {
         Importing <span class="font-medium text-foreground">replaces</span> the current project — a safety backup is taken first.
       </p>
     </SettingsSection>
-  </div>
+
+    <!-- Restore confirm -->
+    <ModalUi
+      :open="!!pendingRestore"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Restore backup"
+      :description="
+        pendingRestore
+          ? `Restore “${pendingRestore.label}” from ${fmtDate(pendingRestore.createdAt)}?\n\nThis replaces the current project. A safety backup is taken first, then the editor reloads.`
+          : ''
+      "
+      @update:open="pendingRestore = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingRestore = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doRestore">Restore</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Delete confirm -->
+    <ModalUi
+      :open="!!pendingDelete"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Delete backup"
+      :description="pendingDelete ? `Delete backup “${pendingDelete.label}”? This can't be undone.` : ''"
+      @update:open="pendingDelete = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Import confirm -->
+    <ModalUi
+      :open="!!pendingImport"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Import site"
+      :description="
+        pendingImport
+          ? `Import “${pendingImport.name}”?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first, then the editor reloads.`
+          : ''
+      "
+      @update:open="pendingImport = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingImport = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doImport">Import</ButtonUi>
+      </template>
+    </ModalUi>
+
+    <!-- Status process modal (busy → success/error) -->
+    <ModalUi
+      :open="proc.open"
+      variant="dialog"
+      :closable="false"
+      :dismissible="!procBusy"
+      @update:open="proc.open = false"
+    >
+      <template #header>
+        <span
+          v-if="procBusy"
+          class="size-9 shrink-0 animate-spin rounded-full border-2 border-secondary/25 border-t-primary"
+        />
+        <span
+          v-else-if="procChip"
+          :class="['flex size-9 shrink-0 items-center justify-center rounded-full', procChip.class]"
+        >
+          <IconUi :name="procChip.icon" size="size-4" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <h2 class="text-base font-semibold text-foreground">{{ proc.title }}</h2>
+        </div>
+      </template>
+
+      <div class="space-y-3">
+        <p v-if="proc.message" class="whitespace-pre-line text-sm leading-relaxed text-secondary">{{ proc.message }}</p>
+
+        <div v-if="procBusy && proc.progress">
+          <div class="mb-1 flex items-center justify-between text-xs text-secondary">
+            <span class="font-mono">
+              {{ fmtSize(proc.progress.loaded) }}<template v-if="proc.progress.total"> / {{ fmtSize(proc.progress.total) }}</template>
+            </span>
+            <span v-if="proc.progress.total" class="font-mono">{{ procPct }}%</span>
+          </div>
+          <div class="h-1.5 overflow-hidden rounded-full bg-secondary/15">
+            <div
+              class="h-full rounded-full bg-primary transition-all duration-150"
+              :class="!proc.progress.total && 'animate-pulse'"
+              :style="{ width: proc.progress.total ? `${procPct}%` : '100%' }"
+            />
+          </div>
+        </div>
+      </div>
+
+      <template v-if="!procBusy" #actions>
+        <ButtonUi @click="proc.open = false">{{ proc.confirmLabel }}</ButtonUi>
+      </template>
+    </ModalUi>
+    </SettingsPanel>
 </template>

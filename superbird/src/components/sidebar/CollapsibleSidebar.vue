@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 export interface SidebarTab {
   key: string
@@ -62,20 +62,17 @@ function closeFloating() {
     <!-- COLLAPSED: icon strip only -->
     <template v-else>
       <div class="flex w-full flex-col items-center pt-1">
-        <button
+        <ButtonUi
           v-for="tab in tabs"
           :key="tab.key"
-          :class="[
-            'flex size-10 items-center justify-center rounded-lg mx-0.5 cursor-pointer transition-colors duration-100',
-            floatingTab === tab.key
-              ? 'text-foreground bg-primary/10'
-              : 'text-secondary hover:text-foreground hover:bg-secondary/8',
-          ]"
+          variant="ghost"
+          square
+          :active="floatingTab === tab.key"
+          :icon="tab.icon"
           :title="tab.label"
+          class="mx-0.5"
           @click="handleIconClick(tab.key)"
-        >
-          <IconUi :name="tab.icon" size="size-4" />
-        </button>
+        />
       </div>
 
       <!-- Border handle to expand -->

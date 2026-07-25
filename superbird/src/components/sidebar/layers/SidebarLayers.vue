@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref, provide } from 'vue'
+import { ref, provide, inject } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import LayerTreeItem from './LayerTreeItem.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { buildNodeActions } from '@/composables/useNodeContextMenu'
+import { CreateComponentPromptKey } from '@/constants/injectionKeys'
 
 const store = useCanvasStore()
 const dropTarget = ref<{ id: string; position: 'before' | 'after' | 'inside' } | null>(null)
 const ctx = useContextMenu()
+const promptCreateComponent = inject(CreateComponentPromptKey)
 
 provide('layerDropTarget', dropTarget)
 
@@ -20,7 +22,9 @@ function handleSelect(id: string, e: MouseEvent) {
 
 function handleContextMenu(e: MouseEvent, node: CanvasNode) {
   store.selectNode(node.id)
-  ctx.open(e, buildNodeActions(node, 'layers'))
+  ctx.open(e, buildNodeActions(node, 'layers', {
+    onCreateComponent: () => promptCreateComponent?.(node.id),
+  }))
 }
 
 function handleDragStart(e: DragEvent, node: CanvasNode) {

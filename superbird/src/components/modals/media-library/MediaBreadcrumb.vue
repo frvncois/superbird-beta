@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 const props = defineProps<{
   currentFolder?: string
@@ -51,34 +52,38 @@ const trail = computed(() => {
 
 <template>
   <nav class="flex items-center gap-1 overflow-x-auto px-4 py-2 text-xs text-secondary">
-    <button
+    <ButtonUi
+      variant="ghost"
+      size="sm"
       :class="[
-        'shrink-0 rounded-md px-1.5 py-0.5 cursor-pointer transition-colors duration-100',
-        dropTarget === 'root' ? 'bg-primary/15 text-primary ring-1 ring-primary/40' : 'hover:bg-secondary/10',
-        !currentFolder ? 'font-medium text-foreground' : 'hover:text-foreground',
+        'shrink-0',
+        dropTarget === 'root' ? 'bg-primary/15 text-primary ring-1 ring-primary/40' : '',
+        !currentFolder ? 'font-medium text-foreground' : '',
       ]"
       @click="emit('navigate', undefined)"
-      @dragover="(e) => onCrumbDragOver(e, 'root')"
+      @dragover="(e: DragEvent) => onCrumbDragOver(e, 'root')"
       @dragleave="dropTarget = null"
-      @drop="(e) => onCrumbDrop(e, undefined)"
+      @drop="(e: DragEvent) => onCrumbDrop(e, undefined)"
     >
       Media
-    </button>
+    </ButtonUi>
     <template v-for="(crumb, i) in trail" :key="crumb.id">
       <IconUi name="chevron-right" size="size-3" class="shrink-0 text-secondary/50" />
-      <button
+      <ButtonUi
+        variant="ghost"
+        size="sm"
         :class="[
-          'shrink-0 truncate rounded-md px-1.5 py-0.5 cursor-pointer transition-colors duration-100',
-          dropTarget === crumb.id ? 'bg-primary/15 text-primary ring-1 ring-primary/40' : 'hover:bg-secondary/10',
-          i === trail.length - 1 ? 'font-medium text-foreground' : 'hover:text-foreground',
+          'shrink-0 truncate',
+          dropTarget === crumb.id ? 'bg-primary/15 text-primary ring-1 ring-primary/40' : '',
+          i === trail.length - 1 ? 'font-medium text-foreground' : '',
         ]"
         @click="emit('navigate', crumb.id)"
-        @dragover="(e) => onCrumbDragOver(e, crumb.id)"
+        @dragover="(e: DragEvent) => onCrumbDragOver(e, crumb.id)"
         @dragleave="dropTarget = null"
-        @drop="(e) => onCrumbDrop(e, crumb.id)"
+        @drop="(e: DragEvent) => onCrumbDrop(e, crumb.id)"
       >
         {{ crumb.name }}
-      </button>
+      </ButtonUi>
     </template>
   </nav>
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { apiGet } from '@/lib/api'
+import AppShell from '@/layouts/AppShell.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import AppHeader from '@/components/header/AppHeader.vue'
 import SitePreview from '@/components/canvas/SitePreview.vue'
 import ProjectInfoCard from '@/components/dashboard/ProjectInfoCard.vue'
 import AnalyticsCard from '@/components/dashboard/AnalyticsCard.vue'
@@ -34,19 +34,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DashboardLayout :wide="detail !== null">
-    <template #header>
-      <AppHeader mode="dashboard" />
-    </template>
-
-    <template #sidebar>
+  <AppShell>
+    <DashboardLayout :wide="detail !== null">
+      <template #sidebar>
       <!-- Card stack -->
-      <div v-if="!detail" class="flex flex-col gap-3 p-3">
-        <ProjectInfoCard class="animate-fade-in-up" />
-        <AnalyticsCard class="animate-fade-in-up" style="animation-delay: 60ms" @view="open('analytics')" />
-        <FormSubmissionsCard class="animate-fade-in-up" style="animation-delay: 120ms" @view="open('submissions')" />
-        <SalesCard v-if="storeEnabled === true" class="animate-fade-in-up" style="animation-delay: 180ms" @view="open('sales')" />
-        <StoreFeatureCard v-else-if="storeEnabled === false" class="animate-fade-in-up" style="animation-delay: 180ms" />
+      <div v-if="!detail" class="flex h-full flex-col gap-3.5 px-3.5 pb-3.5">
+        <ProjectInfoCard />
+        <AnalyticsCard style="animation-delay: 60ms" @view="open('analytics')" />
+        <FormSubmissionsCard style="animation-delay: 120ms" @view="open('submissions')" />
+        <SalesCard v-if="storeEnabled === true" style="animation-delay: 180ms" @view="open('sales')" />
+        <StoreFeatureCard v-else-if="storeEnabled === false" style="animation-delay: 180ms" />
       </div>
 
       <!-- Detail -->
@@ -69,8 +66,9 @@ onMounted(async () => {
       </DashboardDetailPanel>
     </template>
 
-    <template #canvas>
-      <SitePreview />
-    </template>
-  </DashboardLayout>
+      <template #canvas>
+        <SitePreview />
+      </template>
+    </DashboardLayout>
+  </AppShell>
 </template>

@@ -1,9 +1,21 @@
 import { Hono } from 'hono'
+import { randomBytes } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projects, users } from '../db/schema'
+import { verifyTotp, consumeRecoveryCode } from '../lib/totp'
 import { hashPassword, verifyPassword, validatePassword, DUMMY_HASH } from '../lib/password'
-import { startSession, endSession, currentUser, toUser } from '../lib/session'
+import {
+  startSession,
+  endSession,
+  endAllSessions,
+  currentUser,
+  toUser,
+  requireAuth,
+  SESSION_TTL_SHORT_MS,
+  SESSION_TTL_LONG_MS,
+} from '../lib/session'
+import { adminIpAllowed } from '../lib/ipAllow'
 import { getPublishedAt } from '../lib/project'
 import { randomId } from '../lib/ids'
 import { hit, clientIp } from '../lib/rateLimit'
@@ -13,9 +25,32 @@ import type {
   InstallResult,
   SessionState,
   Project,
+  LoginResult,
 } from '../../shared/types'
 
 const auth = new Hono()
+
+// Short-lived pending 2FA logins: password verified, awaiting the TOTP/recovery
+// code. In-memory (single process); the opaque token is the only handle.
+interface TwoFactorChallenge {
+  userId: string
+  remember: boolean
+  attempts: number
+  expiresAt: number
+}
+const challenges = new Map<string, TwoFactorChallenge>()
+const CHALLENGE_TTL_MS = 5 * 60_000
+
+function newChallenge(userId: string, remember: boolean): string {
+  const token = randomBytes(32).toString('hex')
+  challenges.set(token, { userId, remember, attempts: 0, expiresAt: Date.now() + CHALLENGE_TTL_MS })
+  return token
+}
+// Evict expired challenges so the map can't grow unbounded.
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, ch] of challenges) if (ch.expiresAt <= now) challenges.delete(k)
+}, 60_000).unref?.()
 
 function getProject(): Project | null {
   const row = db.select().from(projects).limit(1).get()
@@ -36,6 +71,10 @@ auth.get('/session', (c) => {
 
 // First-run install: create the project + admin user, open a session.
 auth.post('/install', async (c) => {
+  if (!adminIpAllowed(c)) return c.json({ error: 'Forbidden' }, 403)
+  // Blunt the one-shot install endpoint against automated hammering pre-setup.
+  const installLimit = hit(`install:${clientIp(c)}`, 5, 60_000)
+  if (!installLimit.ok) return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(installLimit.retryAfter) })
   if (getProject()) return c.json({ error: 'Already installed.' }, 409)
 
   const body = (await c.req.json()) as SetupPayload
@@ -68,13 +107,14 @@ auth.post('/install', async (c) => {
 
   const result: InstallResult = {
     project,
-    user: { id: userId, name: admin.name.trim(), email: admin.email.trim().toLowerCase(), role: 'admin', createdAt: now },
+    user: { id: userId, name: admin.name.trim(), email: admin.email.trim().toLowerCase(), role: 'admin', createdAt: now, twoFactorEnabled: false },
   }
   return c.json(result, 201)
 })
 
 // Sign in.
 auth.post('/login', async (c) => {
+  if (!adminIpAllowed(c)) return c.json({ error: 'Forbidden' }, 403)
   const body = (await c.req.json()) as LoginPayload
   const email = body.email?.trim().toLowerCase()
   const password = body.password
@@ -97,13 +137,67 @@ auth.post('/login', async (c) => {
     return c.json({ error: 'Incorrect email or password.' }, 401)
   }
 
-  startSession(c, row.id)
-  return c.json({ user: toUser(row) })
+  // 2FA gate: don't open a session yet — hand back a challenge to complete.
+  if (row.totpEnabled === 1) {
+    const challenge = newChallenge(row.id, !!body.remember)
+    return c.json({ twoFactorRequired: true, challenge } satisfies LoginResult)
+  }
+
+  startSession(c, row.id, body.remember ? SESSION_TTL_LONG_MS : SESSION_TTL_SHORT_MS)
+  return c.json({ user: toUser(row) } satisfies LoginResult)
 })
 
-// Sign out.
+// Login step 2 — complete a 2FA challenge with a TOTP or recovery code.
+auth.post('/login/2fa', async (c) => {
+  if (!adminIpAllowed(c)) return c.json({ error: 'Forbidden' }, 403)
+  const body = (await c.req.json()) as { challenge?: string; code?: string }
+  const token = body.challenge ?? ''
+  const ch = token ? challenges.get(token) : undefined
+  if (!ch || ch.expiresAt < Date.now()) {
+    if (ch) challenges.delete(token)
+    return c.json({ error: 'Your sign-in expired. Please start again.' }, 401)
+  }
+  // Bound guessing: 5 tries per challenge, then it's burned.
+  ch.attempts++
+  if (ch.attempts > 5) {
+    challenges.delete(token)
+    return c.json({ error: 'Too many attempts. Please sign in again.' }, 429)
+  }
+
+  const row = db.select().from(users).where(eq(users.id, ch.userId)).get()
+  if (!row || row.totpEnabled !== 1 || !row.totpSecret) {
+    challenges.delete(token)
+    return c.json({ error: 'Please sign in again.' }, 401)
+  }
+
+  const code = String(body.code ?? '').trim()
+  let valid = verifyTotp(row.totpSecret, code)
+  if (!valid) {
+    // Fall back to a single-use recovery code.
+    const hashes: string[] = row.totpRecovery ? (JSON.parse(row.totpRecovery) as string[]) : []
+    const remaining = consumeRecoveryCode(hashes, code)
+    if (remaining) {
+      valid = true
+      db.update(users).set({ totpRecovery: JSON.stringify(remaining) }).where(eq(users.id, row.id)).run()
+    }
+  }
+  if (!valid) return c.json({ error: 'Invalid code.' }, 401) // keep challenge for remaining tries
+
+  challenges.delete(token)
+  startSession(c, row.id, ch.remember ? SESSION_TTL_LONG_MS : SESSION_TTL_SHORT_MS)
+  return c.json({ user: toUser(row) } satisfies LoginResult)
+})
+
+// Sign out (this device).
 auth.post('/logout', (c) => {
   endSession(c)
+  return c.json({ ok: true })
+})
+
+// Sign out everywhere — revoke every session for the current user.
+auth.post('/logout-all', requireAuth, (c) => {
+  const me = currentUser(c)
+  if (me) endAllSessions(c, me.id)
   return c.json({ ok: true })
 })
 

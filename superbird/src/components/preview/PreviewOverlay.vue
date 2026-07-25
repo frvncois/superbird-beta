@@ -72,8 +72,7 @@ const srcdoc = computed(() =>
         </button>
       </div>
 
-      <ButtonUi variant="outline" size="sm" @click="canvas.closePreview()">
-        <IconUi name="close" size="size-3.5" />
+      <ButtonUi variant="outline" size="sm" icon="close" @click="canvas.closePreview()">
         Close
       </ButtonUi>
     </div>

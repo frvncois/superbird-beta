@@ -41,6 +41,8 @@ backup.post('/backups', async (c) => {
 backup.post('/backups/:id/restore', (c) => {
   const p = proj()
   if (!p) return c.json({ error: 'Not installed.' }, 409)
+  const lim = hit(`restore:${clientIp(c)}`, 10, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many attempts. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const ok = restoreBackup(p.id, c.req.param('id'))
   if (!ok) return c.json({ error: 'Backup not found.' }, 404)
   return c.json({ ok: true })
@@ -76,6 +78,8 @@ backup.get('/export', (c) => {
 backup.post('/import', bodyLimit({ maxSize: 256 * 1024 * 1024, onError: (c) => c.json({ error: 'Backup too large (max 256 MB).' }, 413) }), async (c) => {
   const p = proj()
   if (!p) return c.json({ error: 'Not installed.' }, 409)
+  const lim = hit(`import:${clientIp(c)}`, 5, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many imports. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const json = await c.req.text()
   try {
     applyImport(p.id, json)

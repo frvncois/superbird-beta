@@ -4,6 +4,7 @@ import { db } from '../db/client'
 import { users, sessions } from '../db/schema'
 import { hashPassword, validatePassword } from '../lib/password'
 import { currentUser, requireAuth, toUser } from '../lib/session'
+import { hit, clientIp } from '../lib/rateLimit'
 import { randomId } from '../lib/ids'
 
 const usersApi = new Hono()
@@ -19,6 +20,8 @@ usersApi.get('/users', (c) => {
 
 // Add a user with an initial password (no email/invite system yet).
 usersApi.post('/users', async (c) => {
+  const lim = hit(`user-create:${clientIp(c)}`, 20, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const body = (await c.req.json()) as { name?: string; email?: string; password?: string }
   const name = body.name?.trim()
   const email = body.email?.trim().toLowerCase()
@@ -38,6 +41,9 @@ usersApi.post('/users', async (c) => {
     role: 'admin',
     passwordHash: hashPassword(password),
     createdAt: new Date().toISOString(),
+    totpSecret: null,
+    totpEnabled: 0,
+    totpRecovery: null,
   }
   try {
     db.insert(users).values(row).run()
@@ -50,6 +56,8 @@ usersApi.post('/users', async (c) => {
 
 // Remove a user. Can't remove yourself or the last remaining user.
 usersApi.delete('/users/:id', (c) => {
+  const lim = hit(`user-delete:${clientIp(c)}`, 20, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many attempts. Try again later.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const id = c.req.param('id')
   const me = currentUser(c)
   if (me && me.id === id) return c.json({ error: 'You can’t remove yourself.' }, 400)

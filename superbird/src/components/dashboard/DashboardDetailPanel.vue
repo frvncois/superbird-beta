@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 defineProps<{ icon: string; title: string }>()
 const emit = defineEmits<{ back: [] }>()
@@ -17,13 +18,10 @@ const emit = defineEmits<{ back: [] }>()
     </div>
 
     <!-- Back -->
-    <button
-      class="flex items-center gap-1.5 px-3 py-2 text-xs text-secondary hover:text-foreground cursor-pointer transition-colors duration-100"
-      @click="emit('back')"
-    >
+    <ButtonUi variant="ghost" size="sm" align="start" @click="emit('back')">
       <IconUi name="chevron-right" size="size-3" class="rotate-180" />
       Back to dashboard
-    </button>
+    </ButtonUi>
 
     <!-- Content -->
     <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-4">

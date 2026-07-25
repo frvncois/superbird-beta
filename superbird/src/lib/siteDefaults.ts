@@ -6,6 +6,9 @@ export function createDefaultSiteSettings(): SiteSettings {
       title: 'My Website',
       tagline: 'A website built with Superbird',
     },
+    deployment: {
+      url: '',
+    },
     seo: {
       titleFormat: '%page_title% | %site_title%',
       metaDescription: '',

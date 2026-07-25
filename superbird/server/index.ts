@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import { bodyLimit } from 'hono/body-limit'
 import { ensureSchema } from './db/client'
 import authRoutes from './routes/auth'
+import twoFactorRoutes from './routes/twoFactor'
 import projectRoutes from './routes/project'
 import mediaRoutes from './routes/media'
 import fontsRoutes from './routes/fonts'
@@ -19,10 +20,14 @@ import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
 import { currentUser } from './lib/session'
+import { originGuard } from './lib/originGuard'
+import { hit, clientIp } from './lib/rateLimit'
 
 ensureSchema()
 
-const app = new Hono()
+// Exported for integration tests (drive via app.fetch); `serve()` below still
+// starts the real listener when this module is the process entry.
+export const app = new Hono()
 
 // Normalize errors — never leak stack traces / internals to the client.
 app.onError((err, c) => {
@@ -53,8 +58,23 @@ app.use(
 const globalBodyLimit = bodyLimit({ maxSize: 30 * 1024 * 1024, onError: (c) => c.json({ error: 'Payload too large (max 30 MB).' }, 413) })
 app.use('*', (c, next) => (c.req.path === '/api/import' ? next() : globalBodyLimit(c, next)))
 
+// Generic per-IP ceiling on the whole API — a DoS/abuse backstop set well above
+// normal admin usage (autosave, boot fan-out). Targeted limits on sensitive
+// endpoints (login, install, import/restore, user mgmt) are tighter.
+app.use('/api/*', async (c, next) => {
+  const lim = hit(`api:${clientIp(c)}`, 1000, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many requests.' }, 429, { 'Retry-After': String(lim.retryAfter) })
+  await next()
+})
+
+// Trusted-origin guard: rejects state-changing admin (session-bearing) requests
+// from an origin outside the allowlist (own origin + configured deployment URL +
+// dev localhost). No-op for public/webhook/MCP-token/login traffic. See file.
+app.use('/api/*', originGuard)
+
 app.get('/api/health', (c) => c.json({ ok: true }))
 app.route('/api', authRoutes)
+app.route('/api', twoFactorRoutes)
 // Public form submissions (no session — visitors post here). Registered before
 // the session-guarded routers so their `/api/*` guards don't intercept it.
 app.route('/api', publicFormsRoutes)

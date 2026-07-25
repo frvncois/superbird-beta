@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, provide, ref, onMounted, onUnmounted } from 'vue'
+import { computed, provide, ref, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import { useGlobalStylesStore } from '@/stores/globalStyles'
-import { GlobalTokensKey } from '@/constants/injectionKeys'
+import { useUserComponentsStore } from '@/stores/userComponents'
+import { useToast } from '@/composables/useToast'
+import { CreateComponentPromptKey } from '@/constants/injectionKeys'
 import { startMcpBridge, stopMcpBridge } from '@/lib/ai/bridge'
+import AppShell from '@/layouts/AppShell.vue'
 import EditorLayout from '@/layouts/EditorLayout.vue'
-import AppHeader from '@/components/header/AppHeader.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
+import InputUi from '@/components/ui/InputUi.vue'
 import EditorCanvas from '@/components/canvas/EditorCanvas.vue'
 import CollapsibleSidebar from '@/components/sidebar/CollapsibleSidebar.vue'
 import SidebarLayers from '@/components/sidebar/layers/SidebarLayers.vue'
@@ -29,15 +33,37 @@ useSelectionSync()
 onMounted(startMcpBridge)
 onUnmounted(stopMcpBridge)
 
-// Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches)
-const globalStylesStore = useGlobalStylesStore()
-provide(GlobalTokensKey, computed(() => ({
-  colors: globalStylesStore.globalStyles.colors,
-  sizes: globalStylesStore.globalStyles.sizes,
-})))
-
 const canvasStore = useCanvasStore()
 const contentMode = computed(() => canvasStore.editorMode === 'content')
+
+// Create-component name prompt — hosted once here so canvas + layers context
+// menus share a single declarative dialog (see CreateComponentPromptKey).
+const componentsStore = useUserComponentsStore()
+const toast = useToast()
+const createComponentNodeId = ref<string | null>(null)
+const componentName = ref('')
+const componentNameInput = ref<HTMLElement | null>(null)
+
+watch(createComponentNodeId, async (id) => {
+  if (!id) return
+  componentName.value = ''
+  await nextTick()
+  componentNameInput.value?.querySelector('input')?.focus()
+})
+
+provide(CreateComponentPromptKey, (nodeId: string) => {
+  createComponentNodeId.value = nodeId
+})
+
+function doCreateComponent() {
+  const nodeId = createComponentNodeId.value
+  const name = componentName.value.trim()
+  if (nodeId && name) {
+    componentsStore.createComponentFromNode(nodeId, name)
+    toast.success(`Component “${name}” created`)
+  }
+  createComponentNodeId.value = null
+}
 
 const leftTab = ref('layers')
 const rightTab = ref('properties')
@@ -58,12 +84,9 @@ const rightTabs = [
 </script>
 
 <template>
-  <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed" :content-mode="contentMode">
-    <template #header>
-      <AppHeader mode="editor" />
-    </template>
-
-    <template #sidebar-left>
+  <AppShell>
+    <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed" :content-mode="contentMode">
+      <template #sidebar-left>
       <CollapsibleSidebar
         v-model="leftTab"
         :tabs="leftTabs"
@@ -105,11 +128,30 @@ const rightTabs = [
         <template #settings><SidebarSettings /></template>
         <template #interactions><SidebarInteractions /></template>
       </CollapsibleSidebar>
-    </template>
-  </EditorLayout>
+      </template>
+    </EditorLayout>
+  </AppShell>
 
   <PreviewOverlay v-if="canvasStore.previewOpen" />
 
   <!-- Locks the editor while the MCP assistant is actively editing. -->
   <McpOverlay />
+
+  <!-- Create component from a node (canvas + layers context menus) -->
+  <ModalUi
+    :open="!!createComponentNodeId"
+    variant="dialog"
+    icon="component"
+    title="Create component"
+    description="Save this element as a reusable component."
+    @update:open="createComponentNodeId = null"
+  >
+    <div ref="componentNameInput">
+      <InputUi v-model="componentName" placeholder="Component name" size="default" @keydown.enter="doCreateComponent" />
+    </div>
+    <template #actions>
+      <ButtonUi variant="ghost" @click="createComponentNodeId = null">Cancel</ButtonUi>
+      <ButtonUi variant="default" @click="doCreateComponent">Create</ButtonUi>
+    </template>
+  </ModalUi>
 </template>

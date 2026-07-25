@@ -33,6 +33,23 @@ export function getWorkingDocument(projectId: string): ProjectDocument | null {
 }
 
 /**
+ * The configured public deployment origin (e.g. `https://example.com`), or null
+ * when unset/malformed. Reuses the working-document cache, so this is a cheap
+ * timestamp read on the hot path. Used by the admin origin guard.
+ */
+export function getDeploymentOrigin(projectId: string): string | null {
+  const doc = getWorkingDocument(projectId)
+  const url = (doc?.design as { siteSettings?: { deployment?: { url?: string } } } | null)
+    ?.siteSettings?.deployment?.url?.trim()
+  if (!url) return null
+  try {
+    return new URL(/:\/\//.test(url) ? url : `https://${url}`).origin
+  } catch {
+    return null
+  }
+}
+
+/**
  * Overwrite the working document (autosave + headless MCP editor). Callers must
  * not mutate `doc` after this returns — it becomes the shared cached object.
  */

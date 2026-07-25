@@ -1,11 +1,20 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+import LabelUi from './LabelUi.vue'
+import IconUi from './IconUi.vue'
+
 type InputSize = 'default' | 'sm' | 'xs'
+
+// inheritAttrs:false so extra attrs (name, autocomplete, aria-*, …) land on the
+// <input>, not the <label> wrapper we add when `label` is set.
+defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
   defineProps<{
     placeholder?: string
     size?: InputSize
     type?: string
+    label?: string
   }>(),
   {
     size: 'sm',
@@ -15,21 +24,59 @@ const props = withDefaults(
 
 const model = defineModel<string>({ default: '' })
 
+// Expose focus() so callers can focus the field programmatically (the template
+// ref points at this component, not the inner <input>).
+const inputEl = ref<HTMLInputElement | null>(null)
+defineExpose({ focus: () => inputEl.value?.focus() })
+
+// Password fields get a show/hide eye toggle; the actual input type flips while
+// the declared `type` stays 'password'.
+const isPassword = computed(() => props.type === 'password')
+const revealed = ref(false)
+const resolvedType = computed(() => (isPassword.value ? (revealed.value ? 'text' : 'password') : props.type))
+
 const sizeClasses: Record<InputSize, string> = {
-  default: 'h-12 px-3 text-sm rounded-2xl',
+  default: 'h-10 px-3 text-sm rounded-lg',
   sm: 'h-8 px-2.5 text-xs rounded-lg',
   xs: 'h-7 px-2 text-xs rounded-lg',
 }
+
+const inputClass = computed(() => [
+  'w-full min-w-0 bg-input text-foreground placeholder:text-foreground/40 border border-input-border focus:border-input-border-focus outline-4 outline-transparent focus:outline-secondary/10',
+  sizeClasses[props.size],
+  isPassword.value ? 'pr-9' : '',
+])
 </script>
 
 <template>
-  <input
-    v-model="model"
-    :type="type"
-    :placeholder="placeholder"
-    :class="[
-      'w-full min-w-0 bg-input text-foreground placeholder:text-foreground/40 border border-input-border focus:border-input-border-focus outline-2 outline-transparent focus:outline-secondary/10',
-      sizeClasses[props.size],
-    ]"
-  />
+  <label v-if="label" class="flex flex-col gap-1.5">
+    <LabelUi>{{ label }}</LabelUi>
+    <span class="relative block">
+      <input ref="inputEl" v-model="model" v-bind="$attrs" :type="resolvedType" :placeholder="placeholder" :class="inputClass" />
+      <button
+        v-if="isPassword"
+        type="button"
+        tabindex="-1"
+        class="absolute inset-y-0 right-0 flex items-center px-2.5 text-secondary transition-colors hover:text-foreground"
+        :aria-label="revealed ? 'Hide password' : 'Show password'"
+        @click="revealed = !revealed"
+      >
+        <IconUi :name="revealed ? 'eye-slash' : 'eye'" size="size-4" />
+      </button>
+    </span>
+  </label>
+
+  <span v-else class="relative block">
+    <input v-model="model" v-bind="$attrs" :type="resolvedType" :placeholder="placeholder" :class="inputClass" />
+    <button
+      v-if="isPassword"
+      type="button"
+      tabindex="-1"
+      class="absolute inset-y-0 right-0 flex items-center px-2.5 text-secondary transition-colors hover:text-foreground"
+      :aria-label="revealed ? 'Hide password' : 'Show password'"
+      @click="revealed = !revealed"
+    >
+      <IconUi :name="revealed ? 'eye-slash' : 'eye'" size="size-4" />
+    </button>
+  </span>
 </template>

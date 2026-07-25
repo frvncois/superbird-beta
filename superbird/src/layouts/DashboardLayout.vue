@@ -1,45 +1,35 @@
 <script setup lang="ts">
-// Dashboard shell: header on top, a data sidebar, and a site preview canvas.
-// The sidebar widens (`wide`) when a "View all" detail is open.
+// Dashboard body grid (sidebar | canvas). Header is owned by AppShell. The
+// sidebar widens for the "View all" detail panel.
 withDefaults(defineProps<{ wide?: boolean }>(), { wide: false })
 </script>
 
 <template>
-  <div class="dashboard-layout" :class="wide && 'is-wide'">
-    <header class="dashboard-header border-b p-4 flex items-center justify-between">
-      <slot name="header" />
-    </header>
-
-    <aside class="dashboard-sidebar border-r overflow-auto">
+  <div class="dashboard-body" :class="wide && 'is-wide'">
+    <aside class="dashboard-sidebar overflow-auto">
       <slot name="sidebar" />
     </aside>
 
-    <main class="dashboard-canvas overflow-hidden border-t">
+    <main class="dashboard-canvas overflow-hidden border rounded-xl mr-3.5 mb-3.5">
       <slot name="canvas" />
     </main>
   </div>
 </template>
 
 <style scoped>
-.dashboard-layout {
+.dashboard-body {
   display: grid;
-  grid-template-rows: 48px 1fr;
-  grid-template-columns: 280px 1fr;
-  grid-template-areas:
-    "header  header"
-    "sidebar canvas";
-  height: 100dvh;
-  width: 100vw;
-  overflow: hidden;
-  background-color: var(--color-background);
+  height: 100%;
+  width: 100%;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-areas: "sidebar canvas";
   transition: grid-template-columns 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.dashboard-layout.is-wide {
+.dashboard-body.is-wide {
   grid-template-columns: 520px 1fr;
 }
 
-.dashboard-header { grid-area: header; }
 .dashboard-sidebar { grid-area: sidebar; }
 .dashboard-canvas { grid-area: canvas; }
 </style>

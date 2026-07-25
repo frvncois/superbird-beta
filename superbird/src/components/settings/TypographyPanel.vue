@@ -7,20 +7,20 @@ import type { Breakpoint } from '@/types/canvas'
 import { fontSetStack } from '@/lib/fonts'
 import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import { uploadFontFace, deleteFontFiles } from '@/lib/fontApi'
-import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import SettingsSection from './SettingsSection.vue'
+import SettingsPanel from './SettingsPanel.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import SelectUi from '@/components/ui/SelectUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import ModalUi from '@/components/ui/ModalUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 
 const store = useGlobalStylesStore()
-const dialog = useDialog()
 const toast = useToast()
 
 // ── Uploaded font families ──
@@ -60,15 +60,23 @@ async function onUploadFile(e: Event) {
   }
 }
 
-async function removeFamily(id: string) {
-  const family = store.globalStyles.fontSet?.find((f) => f.id === id)
-  const ok = await dialog.confirm({
-    title: 'Remove font family',
-    message: `Remove “${family?.name ?? 'this font'}”? Its uploaded files are deleted and any text using it falls back to a default. This can’t be undone.`,
-    confirmLabel: 'Remove',
-    danger: true,
-  })
-  if (!ok) return
+type FontFamily = NonNullable<typeof store.globalStyles.fontSet>[number]
+
+const pendingRemoveFamily = ref<FontFamily | null>(null)
+const pendingRemoveFamilyMessage = computed(
+  () =>
+    `Remove “${pendingRemoveFamily.value?.name ?? 'this font'}”? Its uploaded files are deleted and any text using it falls back to a default. This can’t be undone.`,
+)
+
+function removeFamily(id: string) {
+  pendingRemoveFamily.value = store.globalStyles.fontSet?.find((f) => f.id === id) ?? null
+}
+
+async function doRemoveFamily() {
+  const family = pendingRemoveFamily.value
+  if (!family) return
+  const id = family.id
+  pendingRemoveFamily.value = null
   store.removeFontFamily(id)
   toast.success(`“${family?.name ?? 'Font'}” removed`)
   // Reclaim the self-hosted files (best-effort; the family is already removed).
@@ -109,7 +117,7 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
 </script>
 
 <template>
-  <div class="space-y-10">
+  <SettingsPanel title="Typography">
     <!-- Uploaded fonts -->
     <SettingsSection title="Fonts" description="Upload your own font files (.woff2, .woff, .ttf, .otf). They're self-hosted on your site.">
       <div v-if="store.globalStyles.fontSet?.length" class="divide-y">
@@ -215,5 +223,20 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
         </div>
       </div>
     </SettingsSection>
-  </div>
+
+    <ModalUi
+      :open="!!pendingRemoveFamily"
+      variant="dialog"
+      danger
+      icon="alert"
+      title="Remove font family"
+      :description="pendingRemoveFamilyMessage"
+      @update:open="pendingRemoveFamily = null"
+    >
+      <template #actions>
+        <ButtonUi variant="ghost" @click="pendingRemoveFamily = null">Cancel</ButtonUi>
+        <ButtonUi variant="danger" @click="doRemoveFamily">Remove</ButtonUi>
+      </template>
+    </ModalUi>
+    </SettingsPanel>
 </template>

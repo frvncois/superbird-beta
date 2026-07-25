@@ -8,6 +8,7 @@ import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import InteractionDetail from './InteractionDetail.vue'
 
 const store = useCanvasStore()
@@ -85,31 +86,37 @@ function addInteraction(trigger: TriggerType) {
     <EmptyStateUi v-else compact message="No interactions yet" />
 
     <!-- Add interaction -->
-    <button
+    <ButtonUi
       v-if="!showAddTrigger"
-      class="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-foreground/15 py-2.5 text-xs text-secondary cursor-pointer hover:border-foreground/30 hover:text-foreground transition-colors duration-150"
+      variant="outline"
+      size="sm"
+      icon="add"
+      class="w-full rounded-xl border-dashed border-foreground/15 py-2.5 text-secondary hover:border-foreground/30 hover:text-foreground"
       @click="showAddTrigger = true"
     >
-      <IconUi name="add" size="size-3.5" /> Add interaction
-    </button>
+      Add interaction
+    </ButtonUi>
 
     <!-- Trigger picker -->
     <div v-else class="space-y-1 rounded-xl border border-foreground/10 p-2">
       <div class="flex items-center justify-between px-1 pb-1">
         <LabelUi>Choose trigger</LabelUi>
-        <button class="text-[10px] text-secondary cursor-pointer hover:text-foreground" @click="showAddTrigger = false">Cancel</button>
+        <ButtonUi variant="ghost" size="sm" class="text-[10px] text-secondary hover:text-foreground" @click="showAddTrigger = false">Cancel</ButtonUi>
       </div>
-      <button
+      <ButtonUi
         v-for="trigger in TRIGGER_TYPES"
         :key="trigger.key"
-        class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs cursor-pointer hover:bg-secondary/10 transition-colors duration-100"
+        variant="ghost"
+        align="start"
+        size="sm"
+        class="w-full gap-2 rounded-lg px-2.5"
         @click="addInteraction(trigger.key)"
       >
         <span class="flex size-5 shrink-0 items-center justify-center rounded-md bg-amber-bg text-amber-fg">
           <IconUi name="interactions" size="size-3" />
         </span>
         <span class="font-medium">{{ trigger.label }}</span>
-      </button>
+      </ButtonUi>
     </div>
   </div>
 </template>

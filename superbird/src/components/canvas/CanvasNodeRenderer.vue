@@ -184,7 +184,7 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     data-canvas-node
     :data-node-id="preview ? undefined : node.id"
     :class="[
-      'canvas-node relative',
+      'cursor-default transition-[box-shadow,background-color] duration-150 ease-[ease] relative',
       ...node.classes,
       isBody && isDesktop && 'bg-background h-full',
       isBody && !isDesktop && 'rounded-2xl border bg-background shadow-sm min-h-full',
@@ -342,55 +342,3 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     />
   </div>
 </template>
-
-<style scoped>
-.canvas-node {
-  cursor: default;
-  transition: box-shadow 0.15s ease, background-color 0.15s ease;
-}
-
-/* Rendered markdown (v-html output — styled via :deep) */
-.markdown-body :deep(h1),
-.markdown-body :deep(h2),
-.markdown-body :deep(h3),
-.markdown-body :deep(h4),
-.markdown-body :deep(h5),
-.markdown-body :deep(h6) {
-  font-weight: 600;
-  line-height: 1.25;
-  margin: 0.6em 0 0.3em;
-}
-.markdown-body :deep(h1) { font-size: 1.6rem; }
-.markdown-body :deep(h2) { font-size: 1.3rem; }
-.markdown-body :deep(h3) { font-size: 1.1rem; }
-.markdown-body :deep(h4) { font-size: 1rem; }
-.markdown-body :deep(p) { margin: 0.4em 0; line-height: 1.6; }
-.markdown-body :deep(ul),
-.markdown-body :deep(ol) { margin: 0.4em 0; padding-left: 1.4em; }
-.markdown-body :deep(ul) { list-style: disc; }
-.markdown-body :deep(ol) { list-style: decimal; }
-.markdown-body :deep(li) { margin: 0.15em 0; line-height: 1.6; }
-.markdown-body :deep(a) { color: var(--color-primary); text-decoration: underline; }
-.markdown-body :deep(strong) { font-weight: 600; }
-.markdown-body :deep(em) { font-style: italic; }
-.markdown-body :deep(code) {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  padding: 0.1em 0.3em;
-  border-radius: 0.25rem;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-}
-.markdown-body :deep(blockquote) {
-  margin: 0.5em 0;
-  padding-left: 0.75em;
-  border-left: 3px solid var(--color-border);
-  color: var(--color-secondary);
-}
-.markdown-body :deep(hr) {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 0.8em 0;
-}
-.markdown-body :deep(:first-child) { margin-top: 0; }
-.markdown-body :deep(:last-child) { margin-bottom: 0; }
-</style>

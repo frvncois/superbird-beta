@@ -5,7 +5,7 @@
 | System | Source | CSS vars | Consumed as | Scope |
 |---|---|---|---|---|
 | **Editor chrome** | `src/assets/main.css` `@theme` | `--color-*`, `--font-*`, `--ease-*`, `--animate-*` | Tailwind classes (`bg-foreground`, `text-red-fg`) | The app's own UI |
-| **User site** | `globalStyles` store | `--global-*` (colors/sizes/fonts) | inline on `.canvas-artboard`; picked via `ColorInputUi`/`SizeTokenInputUi` | The site the user is building |
+| **User site** | `globalStyles` store | `--global-*` (colors/sizes/fonts) | inline on `.canvas-artboard`; picked via `ColorInputUi`/`UnitInputUi` | The site the user is building |
 
 This file documents the **editor-chrome** system — the one you use when building Superbird's UI. Never hardcode a hex value; use the class. The canvas artboard resets `--color-*` to fixed light values (`.canvas-artboard` in main.css), so editor tokens don't leak into the user's rendered page.
 

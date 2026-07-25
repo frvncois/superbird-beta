@@ -23,7 +23,7 @@
 
 - **`canvas.ts`** — runtime constants: `STYLE_STATES`, `BREAKPOINTS`, `TRIGGER_TYPES`, `TARGET_TYPES`, `ACTION_PROPERTIES`, `EASING_OPTIONS`, `DEFAULT_LOCALES`, `PAGE_TYPE_CONFIGS`, `COLLECTION_SOURCES`, `nodeDefaults`, `CONTAINER_TYPES`, `TEXT_EDITABLE_TYPES`, `FORM_CHILD_TYPES`, `PARENT_CONSTRAINTS`; helpers `getPageTypeConfig`, `getCollectionSource`, `getDynamicFieldsForPageType`, `getDynamicField`, `fieldTypeToNodeType`, `fieldTypeToTag`.
 - **`propertyOptions.ts`** — the 18 `<select>` option arrays for SidebarProperties (`displayOptions`, `positionOptions`, `flexDirectionOptions`, … `cursorOptions`).
-- **`injectionKeys.ts`** — `GlobalTokensKey: InjectionKey<ComputedRef<GlobalTokens>>` where `GlobalTokens = {colors, sizes}`. Provided once in `EditorView`; consumed by `ColorInputUi`/`SizeTokenInputUi`.
+- **`injectionKeys.ts`** — `GlobalTokensKey: InjectionKey<ComputedRef<GlobalTokens>>` where `GlobalTokens = {colors, sizes}`. Provided once in `EditorView`; consumed by `ColorInputUi`/`UnitInputUi`.
 
 ## `composables/` (cross-feature)
 

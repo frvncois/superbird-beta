@@ -52,9 +52,18 @@ function selectTab(key: string) {
 
     <!-- Tab content -->
     <div class="relative overflow-hidden">
+      <!--
+        Directional slide + fade. `transition` (v4 catch-all) is used because it
+        covers `opacity` AND `translate` — `transition-[…,transform]` would miss
+        the translate utilities, which animate the `translate` property in v4.
+        Forward (right): new tab enters from the right, old leaves to the left.
+      -->
       <Transition
-        :name="direction === 'right' ? 'tab-slide-right' : 'tab-slide-left'"
         mode="out-in"
+        enter-active-class="transition duration-[250ms] ease-out"
+        leave-active-class="transition duration-200 ease-in"
+        :enter-from-class="direction === 'right' ? 'opacity-0 translate-x-3' : 'opacity-0 -translate-x-3'"
+        :leave-to-class="direction === 'right' ? 'opacity-0 -translate-x-3' : 'opacity-0 translate-x-3'"
       >
         <div :key="activeTab">
           <slot :name="activeTab" />
@@ -63,37 +72,3 @@ function selectTab(key: string) {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Slide right (forward) */
-.tab-slide-right-enter-active {
-  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
-}
-.tab-slide-right-leave-active {
-  transition: opacity 0.2s ease-in, transform 0.2s ease-in;
-}
-.tab-slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(12px);
-}
-.tab-slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(-12px);
-}
-
-/* Slide left (backward) */
-.tab-slide-left-enter-active {
-  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
-}
-.tab-slide-left-leave-active {
-  transition: opacity 0.2s ease-in, transform 0.2s ease-in;
-}
-.tab-slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(-12px);
-}
-.tab-slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(12px);
-}
-</style>

@@ -63,7 +63,16 @@ function handleClick() {
     data-canvas-scroll
     @click.self="handleClick"
   >
-    <div :class="['mx-auto canvas-artboard', isDesktop ? 'h-full' : 'min-h-full']" :style="artboardStyle">
+    <!-- `canvas-artboard` is a structural hook (selection sync + scoped compiled
+         CSS); the arbitrary props force light-theme tokens inside the artboard
+         regardless of app dark mode (inline :style / user tokens still win). -->
+    <div
+      :class="[
+        'mx-auto canvas-artboard [--color-background:#ffffff] [--color-foreground:#0a0a0a] [--color-border:#e5e7eb] [--color-secondary:#a0a3a6] text-[#0a0a0a]',
+        isDesktop ? 'h-full' : 'min-h-full',
+      ]"
+      :style="artboardStyle"
+    >
       <CanvasNodeRenderer :node="store.bodyNode" />
     </div>
   </div>

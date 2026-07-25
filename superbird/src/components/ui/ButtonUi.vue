@@ -56,7 +56,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-foreground hover:bg-secondary/10',
   danger: 'border border-red-border bg-red-bg text-red-fg hover:bg-red-bg/70',
   // `bare` colours are resolved in colorClasses (no box).
-  bare: 'text-secondary hover:text-foreground',
+  bare: 'text-foreground hover:text-foreground',
 }
 
 // Colour treatment: `bare` = no bg, hover colour only (primary when active);

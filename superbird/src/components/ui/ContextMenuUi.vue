@@ -71,7 +71,7 @@ function handleAction(item: ContextMenuItem) {
     <!-- Menu -->
     <div
       ref="menuRef"
-      class="fixed z-[9999] min-w-44 rounded-xl border bg-background p-1 shadow-lg animate-fade-in"
+      class="fixed z-[9999] min-w-44 rounded-xl border bg-background p-1 shadow-lg animate-modal-in origin-top-left"
       :style="{ left: `${adjustedX}px`, top: `${adjustedY}px` }"
     >
       <template v-for="(item, i) in items" :key="i">
@@ -103,20 +103,3 @@ function handleAction(item: ContextMenuItem) {
     </div>
   </Teleport>
 </template>
-
-<style scoped>
-.animate-fade-in {
-  animation: ctx-fade-in 0.1s ease-out;
-}
-
-@keyframes ctx-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-</style>

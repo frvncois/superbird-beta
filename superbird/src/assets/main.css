@@ -211,47 +211,6 @@
   }
 }
 
-/* ─── Overlay backdrop blur ───
-   Drives blur with an explicit backdrop-filter (not Tailwind's composed
-   `backdrop-blur-*` var, which collapses once transition classes are stripped),
-   so the blur ramps smoothly on enter/leave AND persists while open. Pair with
-   the `.sb-backdrop-off` state on a Vue <Transition> enter-from / leave-to. */
-.sb-backdrop {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition:
-    opacity 300ms ease-out,
-    backdrop-filter 300ms ease-out,
-    -webkit-backdrop-filter 300ms ease-out;
-}
-.sb-backdrop-off {
-  opacity: 0;
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
-}
-
-/* ─── Canvas Artboard Isolation ─── */
-.canvas-artboard {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-  --color-border: #e5e7eb;
-  --color-secondary: #a0a3a6;
-  color: #0a0a0a;
-}
-
-/* ─── Prevent Text Selection ─── */
-.editor-layout {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.editor-layout input,
-.editor-layout textarea,
-.editor-layout select,
-.editor-layout [contenteditable="true"] {
-  user-select: text;
-  -webkit-user-select: text;
-}
 
 /* ─── Custom Scrollbar ─── */
 * {
@@ -288,3 +247,51 @@
 .dark * {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* ─── Rendered markdown ───
+   The `richtext`/`markdown` node renders parsed HTML via `v-html`, so its inner
+   elements can't carry Tailwind classes — they're styled here by tag. Kept in
+   sync with the published-site markdown CSS in `lib/render`. */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0.6em 0 0.3em;
+}
+.markdown-body h1 { font-size: 1.6rem; }
+.markdown-body h2 { font-size: 1.3rem; }
+.markdown-body h3 { font-size: 1.1rem; }
+.markdown-body h4 { font-size: 1rem; }
+.markdown-body p { margin: 0.4em 0; line-height: 1.6; }
+.markdown-body ul,
+.markdown-body ol { margin: 0.4em 0; padding-left: 1.4em; }
+.markdown-body ul { list-style: disc; }
+.markdown-body ol { list-style: decimal; }
+.markdown-body li { margin: 0.15em 0; line-height: 1.6; }
+.markdown-body a { color: var(--color-primary); text-decoration: underline; }
+.markdown-body strong { font-weight: 600; }
+.markdown-body em { font-style: italic; }
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.markdown-body blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.75em;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-secondary);
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0.8em 0;
+}
+.markdown-body :first-child { margin-top: 0; }
+.markdown-body :last-child { margin-bottom: 0; }

@@ -67,15 +67,15 @@ function toggleExpand(e: MouseEvent) {
 </script>
 
 <template>
-  <div :class="['layer-item', isDragged && 'opacity-30']">
+  <div :class="['transition-opacity duration-150', isDragged && 'opacity-30']">
     <!-- Drop indicator: before -->
-    <div v-if="!isBody && dropPosition === 'before'" class="layer-drop-line" :style="{ marginLeft: `${indent + 16}px` }" />
+    <div v-if="!isBody && dropPosition === 'before'" class="h-0.5 mr-2 rounded-[1px] bg-primary pointer-events-none" :style="{ marginLeft: `${indent + 16}px` }" />
 
     <!-- Row -->
     <div
       :data-layer-id="node.id"
       :class="[
-        'layer-row group flex items-center h-7 pr-2 cursor-pointer mx-1 rounded',
+        'group flex items-center h-7 pr-2 cursor-pointer mx-1 rounded select-none transition-[background-color,box-shadow] duration-100',
         isSelected && !isDragged && isComponent
           ? 'bg-green-bg text-green-fg'
           : isSelected && !isDragged && isDynamic
@@ -83,7 +83,7 @@ function toggleExpand(e: MouseEvent) {
             : isSelected && !isDragged
               ? 'bg-primary/10 text-foreground'
               : 'text-foreground/80 hover:bg-secondary/8',
-        dropPosition === 'inside' && 'layer-drop-inside',
+        dropPosition === 'inside' && 'shadow-[inset_0_0_0_1.5px_var(--color-primary)]',
       ]"
       :style="{ paddingLeft: `${indent}px` }"
       :draggable="!isBody"
@@ -146,7 +146,7 @@ function toggleExpand(e: MouseEvent) {
     </div>
 
     <!-- Drop indicator: after -->
-    <div v-if="!isBody && dropPosition === 'after'" class="layer-drop-line" :style="{ marginLeft: `${indent + 16}px` }" />
+    <div v-if="!isBody && dropPosition === 'after'" class="h-0.5 mr-2 rounded-[1px] bg-primary pointer-events-none" :style="{ marginLeft: `${indent + 16}px` }" />
 
     <!-- Children -->
     <div v-if="expanded && hasChildren">
@@ -166,27 +166,3 @@ function toggleExpand(e: MouseEvent) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.layer-item {
-  transition: opacity 0.15s ease;
-}
-
-.layer-row {
-  user-select: none;
-  transition: background-color 0.1s ease, box-shadow 0.1s ease;
-}
-
-.layer-drop-line {
-  height: 2px;
-  margin-right: 8px;
-  border-radius: 1px;
-  background: var(--color-primary);
-  pointer-events: none;
-}
-
-.layer-drop-inside {
-  box-shadow: inset 0 0 0 1.5px var(--color-primary);
-  border-radius: 6px;
-}
-</style>

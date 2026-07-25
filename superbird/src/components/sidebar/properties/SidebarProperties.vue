@@ -14,7 +14,7 @@ import EffectsSection from './EffectsSection.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const globalStylesStore = useGlobalStylesStore()
-const { node, activeStyles, isContainer } = useNodeStyles()
+const { node, activeStyles, isContainer, isImage } = useNodeStyles()
 
 watch(() => node.value?.id, () => {
   if (node.value && node.value.classes.length > 0) {
@@ -36,16 +36,14 @@ watch(() => node.value?.id, () => {
 
     <!-- Style sections (always shown when a node is selected) -->
     <template v-if="activeStyles">
-      <div class="border-y">
         <LayoutSection v-if="isContainer" />
         <PositionSection />
         <SizeSection />
         <SpacingSection />
         <TypographySection />
-        <BackgroundSection />
+        <BackgroundSection v-if="!isImage" />
         <BorderSection />
         <EffectsSection />
-      </div>
     </template>
   </div>
 </template>

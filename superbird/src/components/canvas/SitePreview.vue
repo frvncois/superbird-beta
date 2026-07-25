@@ -10,7 +10,10 @@ const globalStylesStore = useGlobalStylesStore()
 
 <template>
   <div class="h-full overflow-auto">
-    <div class="mx-auto canvas-artboard h-full" :style="globalStylesStore.globalCssVars">
+    <div
+      class="mx-auto canvas-artboard h-full [--color-background:#ffffff] [--color-foreground:#0a0a0a] [--color-border:#e5e7eb] [--color-secondary:#a0a3a6] text-[#0a0a0a]"
+      :style="globalStylesStore.globalCssVars"
+    >
       <CanvasNodeRenderer :node="store.bodyNode" preview />
     </div>
   </div>

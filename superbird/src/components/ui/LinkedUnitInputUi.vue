@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import SizeTokenInputUi from './SizeTokenInputUi.vue'
-import DragLabelUi from './DragLabelUi.vue'
+import UnitInputUi from './UnitInputUi.vue'
+import LabelUi from './LabelUi.vue'
 
 withDefaults(
   defineProps<{
@@ -53,7 +53,7 @@ defineExpose({ linked, toggleLinked })
 
 <template>
   <div>
-    <SizeTokenInputUi
+    <UnitInputUi
       v-if="linked"
       :model-value="model[0] ?? ''"
       placeholder="0"
@@ -63,12 +63,14 @@ defineExpose({ linked, toggleLinked })
     />
     <div v-else class="grid grid-cols-2 gap-1.5">
       <div v-for="(label, i) in labels" :key="label" class="space-y-0.5">
-        <DragLabelUi
-          class="block text-[9px] text-secondary/60"
+        <LabelUi
+          drag
+          size="xs"
+          class="block text-secondary"
           :model-value="model[i] ?? ''"
           @update:model-value="updateValue(i, $event)"
-        >{{ label }}</DragLabelUi>
-        <SizeTokenInputUi
+        >{{ label }}</LabelUi>
+        <UnitInputUi
           :model-value="model[i] ?? ''"
           placeholder="0"
           :units="units"

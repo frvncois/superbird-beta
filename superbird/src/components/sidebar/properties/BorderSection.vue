@@ -5,6 +5,7 @@ import LinkedUnitInputUi from '@/components/ui/LinkedUnitInputUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -50,14 +51,14 @@ const activeBorderMode = ref('all')
           <div class="grid grid-cols-3 gap-1">
             <UnitInputUi v-bind="field(`border-${side}-width`)" placeholder="0" :units="['px', 'em', 'rem']" />
             <DropdownUi class="w-full" v-bind="field(`border-${side}-style`)" :options="borderStyleOptions" />
-            <ColorInputUi v-bind="field(`border-${side}-color`)" placeholder="#e5e7eb" />
+            <ColorInputUi v-bind="field(`border-${side}-color`)" compact />
           </div>
         </div>
       </template>
 
       <div class="space-y-1 pt-1">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] text-secondary">Radius</span>
+          <LabelUi size="sm" class="text-secondary">Radius</LabelUi>
           <ButtonUi
             variant="bare"
             size="sm"

@@ -17,34 +17,23 @@ const gridTemplateColumns = computed(() =>
 </script>
 
 <template>
-  <div class="editor-body" :style="{ gridTemplateColumns }">
-    <aside v-show="!contentMode" class="editor-sidebar-left overflow-hidden">
+  <div class="grid h-full w-full transition-[grid-template-columns] duration-200 ease-[ease]" :style="{ gridTemplateColumns }">
+    <aside v-show="!contentMode" class="col-start-1 relative z-30 overflow-hidden">
       <slot name="sidebar-left" />
     </aside>
 
-    <main class="editor-canvas overflow-auto border rounded-xl mb-3.5">
+    <!--
+      The canvas is `isolate`d into its own stacking context pinned at z-0, so a
+      user element's z-index (even a sticky site header) can never escape above the
+      sidebars/header and their dropdowns. `col-start-*` pins each rail to its
+      column so `v-show` (display:none) can't shift auto-placement.
+    -->
+    <main class="col-start-2 relative z-0 isolate overflow-auto border rounded-xl mb-3.5">
       <slot name="canvas" />
     </main>
 
-    <aside v-show="!contentMode" class="editor-sidebar-right overflow-hidden">
+    <aside v-show="!contentMode" class="col-start-3 relative z-30 overflow-hidden">
       <slot name="sidebar-right" />
     </aside>
   </div>
 </template>
-
-<style scoped>
-.editor-body {
-  display: grid;
-  height: 100%;
-  width: 100%;
-  grid-template-areas: "left canvas right";
-  transition: grid-template-columns 0.2s ease;
-}
-
-/* The canvas is `isolate`d into its own stacking context pinned at z-index:0, so
-   a user element's z-index (even a sticky site header) can never escape above the
-   sidebars/header and their dropdowns. */
-.editor-sidebar-left { grid-area: left; position: relative; z-index: 30; }
-.editor-sidebar-right { grid-area: right; position: relative; z-index: 30; }
-.editor-canvas { grid-area: canvas; position: relative; z-index: 0; isolation: isolate; }
-</style>

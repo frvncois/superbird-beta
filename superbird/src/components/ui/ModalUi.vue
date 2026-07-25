@@ -113,9 +113,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       class="pointer-events-none fixed inset-0 flex"
       :class="[isDialog ? 'z-[105]' : 'z-[100]', isDrawer ? 'justify-end' : 'items-center justify-center p-8']"
     >
-      <!-- Backdrop: tint + blur ramp in and out together so it never pops -->
-      <Transition enter-from-class="sb-backdrop-off" leave-to-class="sb-backdrop-off">
-        <div v-if="open" class="sb-backdrop pointer-events-auto absolute inset-0 bg-foreground/20" @click="dismiss" />
+      <!-- Backdrop: tint + blur ramp in and out together so it never pops.
+           Explicit backdrop-filter (not `backdrop-blur-*`, whose composed var
+           collapses when transition classes are stripped) so blur ramps on
+           enter/leave AND persists while open. -->
+      <Transition
+        enter-from-class="opacity-0 [--sb-backdrop-blur:0px]"
+        leave-to-class="opacity-0 [--sb-backdrop-blur:0px]"
+      >
+        <div
+          v-if="open"
+          class="pointer-events-auto absolute inset-0 bg-foreground/20 [--sb-backdrop-blur:4px] [backdrop-filter:blur(var(--sb-backdrop-blur))] [-webkit-backdrop-filter:blur(var(--sb-backdrop-blur))] [transition:opacity_300ms_ease-out,backdrop-filter_300ms_ease-out,-webkit-backdrop-filter_300ms_ease-out]"
+          @click="dismiss"
+        />
       </Transition>
 
       <!-- Panel -->

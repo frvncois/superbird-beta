@@ -14,6 +14,13 @@ export interface DropdownOption {
   label: string
   icon?: string
   accentClass?: string
+  // Section header: a header renders whenever `group` changes between rows.
+  group?: string
+  // Trailing mono badge on the row (and on the trigger when selected).
+  badge?: string
+  // Inline style / class on the label — e.g. previewing a font in its own family.
+  labelStyle?: Record<string, string>
+  labelClass?: string
 }
 </script>
 
@@ -21,6 +28,8 @@ export interface DropdownOption {
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import IconUi from './IconUi.vue'
 import ButtonUi from './ButtonUi.vue'
+import BadgeUi from './BadgeUi.vue'
+import LabelUi from './LabelUi.vue'
 
 // One dropdown primitive, unfolding inside its own border. Two modes:
 //   • menu   — pass `items` (with handlers) and/or default-slot content.
@@ -54,11 +63,14 @@ const root = ref<HTMLElement | null>(null)
 const isSelect = computed(() => props.options.length > 0)
 const selectedOption = computed(() => props.options.find((o) => o.value === model.value))
 const isPlaceholder = computed(() => isSelect.value && !selectedOption.value)
+// A selected empty value is the "Default"/unset state — shown muted in the trigger.
+const isDefaultSelected = computed(() => isSelect.value && !!selectedOption.value && model.value === '')
 
 // Trigger reflects the selection in select mode, else the label/icon props.
 const triggerLabel = computed(() => (isSelect.value ? (selectedOption.value?.label ?? props.placeholder) : props.label))
 const triggerIcon = computed(() => (isSelect.value ? selectedOption.value?.icon : props.icon))
 const triggerAccent = computed(() => (isSelect.value ? selectedOption.value?.accentClass : undefined))
+const triggerBadge = computed(() => (isSelect.value ? selectedOption.value?.badge : undefined))
 
 function toggle() {
   if (props.disabled) return
@@ -108,7 +120,7 @@ defineExpose({ close })
   <div ref="root" class="relative h-8">
     <div
       class="absolute inset-x-0 top-0 overflow-hidden rounded-xl border bg-background transition-all duration-200 ease-out"
-      :class="open ? 'z-50 border-input-border-focus shadow-lg' : 'z-10'"
+      :class="open ? 'z-50 border-input-border-focus shadow-xl' : 'z-10'"
     >
       <slot name="trigger" :open="open" :toggle="toggle">
         <button
@@ -120,11 +132,14 @@ defineExpose({ close })
         >
           <span class="flex min-w-0 items-center gap-1.5">
             <IconUi v-if="triggerIcon" :name="triggerIcon" size="size-3.5" :class="['shrink-0', triggerAccent ?? 'text-secondary']" />
-            <span :class="['truncate', triggerAccent ?? (isPlaceholder ? 'text-foreground/40' : isSelect ? 'text-foreground' : 'font-medium')]">
+            <span :class="['truncate', triggerAccent ?? (isPlaceholder ? 'text-foreground/40' : isDefaultSelected ? 'text-secondary/50' : isSelect ? 'text-foreground' : 'font-medium')]">
               {{ triggerLabel }}
             </span>
           </span>
-          <IconUi name="chevron-down" size="size-3" :class="['shrink-0 text-secondary transition-transform duration-150', open && 'rotate-180']" />
+          <span class="flex shrink-0 items-center gap-1.5">
+            <BadgeUi v-if="triggerBadge" variant="neutral" size="xs" mono>{{ triggerBadge }}</BadgeUi>
+            <IconUi name="chevron-down" size="size-3" :class="['text-secondary transition-transform duration-150', open && 'rotate-180']" />
+          </span>
         </button>
       </slot>
 
@@ -132,23 +147,30 @@ defineExpose({ close })
       <div class="grid transition-all duration-200 ease-out" :class="open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'">
         <div class="overflow-hidden">
           <div :class="['flex max-h-72 flex-col overflow-y-auto p-1', panelClass]">
-            <!-- Select options -->
+            <!-- Select options (grouped when `group` is set) -->
             <template v-if="isSelect">
-              <ButtonUi
-                v-for="opt in options"
-                :key="opt.value"
-                variant="ghost"
-                size="sm"
-                align="start"
-                class="w-full"
-                :class="opt.accentClass"
-                :active="opt.value === model"
-                :icon="opt.icon"
-                @click="selectOption(opt)"
-              >
-                <span class="min-w-0 flex-1 truncate text-left">{{ opt.label }}</span>
-                <IconUi v-if="opt.value === model" name="check" size="size-3" class="ml-auto shrink-0" />
-              </ButtonUi>
+              <template v-for="(opt, i) in options" :key="opt.value">
+                <LabelUi
+                  v-if="opt.group && opt.group !== options[i - 1]?.group"
+                  size="xs"
+                  class="block px-2.5 pb-0.5 pt-2"
+                >{{ opt.group }}</LabelUi>
+                <ButtonUi
+                  variant="ghost"
+                  size="sm"
+                  align="start"
+                  class="w-full"
+                  :class="opt.accentClass"
+                  :active="opt.value === model"
+                  :icon="opt.icon"
+                  @click="selectOption(opt)"
+                >
+                  <span class="min-w-0 flex-1 truncate text-left" :class="opt.labelClass" :style="opt.labelStyle">{{ opt.label }}</span>
+                  <BadgeUi v-if="opt.badge" variant="neutral" size="xs" mono class="shrink-0">{{ opt.badge }}</BadgeUi>
+                  <IconUi v-if="opt.value === model" name="check" size="size-3" class="shrink-0" />
+                </ButtonUi>
+              </template>
+              <slot name="footer" :close="close" />
             </template>
 
             <!-- Menu items + custom content -->

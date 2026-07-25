@@ -21,6 +21,7 @@ export function useNodeStyles() {
   const isContainer = computed(() =>
     node.value && CONTAINER_TYPES.includes(node.value.type),
   )
+  const isImage = computed(() => node.value?.type === 'image')
 
   const activeClass = computed(() => {
     if (!globalStylesStore.activeClassName) return null
@@ -121,6 +122,7 @@ export function useNodeStyles() {
     isGrid,
     isTextNode,
     isContainer,
+    isImage,
     updateStyle,
     updateLinkedStyles,
     getLinkedValues,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import InputUi from '@/components/ui/InputUi.vue'
-import SizeTokenInputUi from '@/components/ui/SizeTokenInputUi.vue'
+import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
@@ -39,7 +39,7 @@ const layoutKeys = ['display', 'flex-direction', 'flex-wrap', 'align-items', 'ju
           <DropdownUi class="w-full" v-bind="field('justify-content')" :options="justifyOptions" />
         </FieldRowUi>
         <FieldRowUi label="Gap">
-          <SizeTokenInputUi v-bind="field('gap')" placeholder="0" />
+          <UnitInputUi v-bind="field('gap')" placeholder="0" />
         </FieldRowUi>
       </template>
       <template v-if="isGrid">
@@ -50,7 +50,7 @@ const layoutKeys = ['display', 'flex-direction', 'flex-wrap', 'align-items', 'ju
           <InputUi v-bind="field('grid-template-rows')" placeholder="auto 1fr" />
         </FieldRowUi>
         <FieldRowUi label="Gap">
-          <SizeTokenInputUi v-bind="field('gap')" placeholder="0" />
+          <UnitInputUi v-bind="field('gap')" placeholder="0" />
         </FieldRowUi>
       </template>
       <FieldRowUi label="Overflow">

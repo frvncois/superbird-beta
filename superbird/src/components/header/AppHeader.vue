@@ -133,10 +133,10 @@ async function publish() {
   <!-- Self-contained app bar: fixed height, sits above the canvas stacking
        context. Same 3-column grid as EditorLayout (left | canvas | right) so the
        menu / context bar / actions align over the sidebars and canvas. -->
-  <header class="relative z-40 grid h-[var(--header-height)] shrink-0 grid-cols-[var(--sidebar-width)_1fr_var(--sidebar-width)] items-center">
+  <header class="relative z-40 grid h-[var(--header-height)] shrink-0 grid-cols-[var(--sidebar-width)_1fr_var(--sidebar-width)] items-center gap-3.5 px-3.5">
     <!-- Left: app menu (aligns with the left sidebar) -->
-    <div class="flex items-center gap-1.5 pl-3.5">
-      <DropdownUi v-model:open="menuOpen" class="w-49" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
+    <div class="flex items-center gap-1.5">
+      <DropdownUi v-model:open="menuOpen" class="w-full" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
     </div>
 
     <!-- Center: context bar over the canvas (editor only) -->
@@ -145,7 +145,7 @@ async function publish() {
     </div>
 
     <!-- Right: actions (aligns with the right sidebar) -->
-    <div class="flex items-center justify-end gap-2 pr-3.5">
+    <div class="flex items-center justify-end gap-2">
     <template v-if="mode === 'editor'">
       <ButtonUi variant="outline" size="sm" :disabled="saving" @click="save">
         {{ saving ? 'Saving…' : 'Save' }}

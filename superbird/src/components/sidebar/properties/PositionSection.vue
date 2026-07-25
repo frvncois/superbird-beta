@@ -3,7 +3,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
-import DragLabelUi from '@/components/ui/DragLabelUi.vue'
+import FieldColUi from '@/components/ui/FieldColUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
 import { positionOptions } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
@@ -21,22 +21,18 @@ const positionKeys = ['position', 'top', 'right', 'bottom', 'left', 'z-index']
       </FieldRowUi>
       <template v-if="activeStyles.position && activeStyles.position !== 'static' && activeStyles.position !== ''">
         <div class="grid grid-cols-2 gap-1.5">
-          <div class="space-y-1">
-            <DragLabelUi class="text-[10px] text-secondary" v-bind="field('top')">Top</DragLabelUi>
+          <FieldColUi label="Top" drag v-bind="field('top')">
             <UnitInputUi v-bind="field('top')" placeholder="0" :allow-auto="true" />
-          </div>
-          <div class="space-y-1">
-            <DragLabelUi class="text-[10px] text-secondary" v-bind="field('right')">Right</DragLabelUi>
+          </FieldColUi>
+          <FieldColUi label="Right" drag v-bind="field('right')">
             <UnitInputUi v-bind="field('right')" placeholder="0" :allow-auto="true" />
-          </div>
-          <div class="space-y-1">
-            <DragLabelUi class="text-[10px] text-secondary" v-bind="field('bottom')">Bottom</DragLabelUi>
+          </FieldColUi>
+          <FieldColUi label="Bottom" drag v-bind="field('bottom')">
             <UnitInputUi v-bind="field('bottom')" placeholder="0" :allow-auto="true" />
-          </div>
-          <div class="space-y-1">
-            <DragLabelUi class="text-[10px] text-secondary" v-bind="field('left')">Left</DragLabelUi>
+          </FieldColUi>
+          <FieldColUi label="Left" drag v-bind="field('left')">
             <UnitInputUi v-bind="field('left')" placeholder="0" :allow-auto="true" />
-          </div>
+          </FieldColUi>
         </div>
         <FieldRowUi label="Z-Index">
           <InputUi v-bind="field('z-index')" placeholder="auto" />

@@ -6,6 +6,9 @@ import PopoverUi from './PopoverUi.vue'
 const props = defineProps<{
   placeholder?: string
   tokens?: GlobalTokens
+  // Swatch-only: hide the hex text field and show just the colour chip (which
+  // still opens the palette / custom picker). For tight cells like per-side border.
+  compact?: boolean
 }>()
 
 const model = defineModel<string>({ default: '' })
@@ -30,22 +33,26 @@ function pickCustom(e: Event) {
 
 <template>
   <div class="relative flex h-8 min-w-0 items-center rounded-xl border border-input-border focus-within:border-input-border-focus outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
-    <!-- Color swatch button -->
+    <!-- Color swatch button (fills the control in compact mode) -->
     <button
-      class="flex size-7 shrink-0 items-center justify-center cursor-pointer"
+      :class="compact
+        ? 'flex h-full w-full items-center justify-center cursor-pointer px-1.5'
+        : 'flex size-7 shrink-0 items-center justify-center cursor-pointer'"
+      :title="compact ? (model || 'No color') : undefined"
       @click.stop="swatchOpen = !swatchOpen"
     >
       <span
-        class="size-4 rounded border border-input-border"
+        :class="['rounded border border-input-border', compact ? 'h-4 w-full' : 'size-4']"
         :style="{ backgroundColor: model || 'transparent' }"
       />
     </button>
 
-    <!-- Text input -->
+    <!-- Text input (hidden in compact mode) -->
     <input
+      v-if="!compact"
       v-model="model"
       :placeholder="placeholder ?? '#000000'"
-      class="h-full min-w-0 flex-1 bg-transparent pr-2.5 text-xs text-foreground placeholder:text-foreground/40 outline-none"
+      class="h-full bg-transparent pr-2.5 text-xs text-foreground placeholder:text-foreground/40 outline-none"
     />
 
     <PopoverUi v-model:open="swatchOpen" align="left" panel-class="p-2">

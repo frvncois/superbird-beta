@@ -5,7 +5,7 @@ import { GlobalTokensKey } from '@/constants/injectionKeys'
 import MediaLibraryModal from '@/components/modals/media-library/MediaLibraryModal.vue'
 import ToastHost from '@/components/ui/ToastHost.vue'
 
-// Design tokens for UI primitives (ColorInputUi / SizeTokenInputUi swatches),
+// Design tokens for UI primitives (ColorInputUi / UnitInputUi swatches),
 // provided once at the app root for every view that needs them.
 const globalStylesStore = useGlobalStylesStore()
 provide(GlobalTokensKey, computed(() => ({

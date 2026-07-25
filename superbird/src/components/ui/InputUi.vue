@@ -36,13 +36,13 @@ const revealed = ref(false)
 const resolvedType = computed(() => (isPassword.value ? (revealed.value ? 'text' : 'password') : props.type))
 
 const sizeClasses: Record<InputSize, string> = {
-  default: 'h-10 px-3 text-sm rounded-lg',
-  sm: 'h-8 px-2.5 text-xs rounded-lg',
-  xs: 'h-7 px-2 text-xs rounded-lg',
+  default: 'h-10 px-3 text-sm rounded-xl',
+  sm: 'h-8 px-2.5 text-xs rounded-xl',
+  xs: 'h-7 px-2 text-xs rounded-xl',
 }
 
 const inputClass = computed(() => [
-  'w-full min-w-0 bg-input text-foreground placeholder:text-foreground/40 border border-input-border focus:border-input-border-focus outline-4 outline-transparent focus:outline-secondary/10',
+  'w-full min-w-0 bg-input text-foreground placeholder:text-secondary/50 border border-input-border focus:border-input-border-focus outline-4 outline-transparent focus:outline-secondary/10',
   sizeClasses[props.size],
   isPassword.value ? 'pr-9' : '',
 ])

@@ -38,7 +38,7 @@ onMounted(async () => {
     <DashboardLayout :wide="detail !== null">
       <template #sidebar>
       <!-- Card stack -->
-      <div v-if="!detail" class="flex h-full flex-col gap-3.5 px-3.5 pb-3.5">
+      <div v-if="!detail" class="flex h-full flex-col gap-3.5">
         <ProjectInfoCard />
         <AnalyticsCard style="animation-delay: 60ms" @view="open('analytics')" />
         <FormSubmissionsCard style="animation-delay: 120ms" @view="open('submissions')" />

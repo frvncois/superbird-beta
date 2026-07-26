@@ -1,6 +1,7 @@
 import type { Breakpoint, CanvasNode, NodeType, Page, PageType, StateStyles } from '@/types/canvas'
 import { nodeDefaults } from '@/constants/canvas'
 import { generateNodeId, generatePageId } from '@/lib/ids'
+import { slugify } from '@/lib/slug'
 
 function createStateStyles(): StateStyles {
   return { default: {}, hover: {}, focus: {}, active: {}, visited: {} }
@@ -50,7 +51,7 @@ export function createPage(name: string, slug?: string, pageType: PageType = 'pa
   return {
     id: generatePageId(),
     name,
-    slug: slug ?? name.toLowerCase().replace(/\s+/g, '-'),
+    slug: slug ?? slugify(name),
     pageType,
     body: createNode('body'),
   }

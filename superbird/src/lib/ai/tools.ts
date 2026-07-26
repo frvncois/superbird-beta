@@ -2,6 +2,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useCollectionsStore } from '@/stores/collections'
 import { useLocalesStore } from '@/stores/locales'
+import { slugify } from '@/lib/slug'
 import { AI_TOOL_DEFS } from '@shared/aiTools'
 import type { AiToolDef } from '@shared/types'
 import type {
@@ -224,7 +225,7 @@ const EXECUTORS: Record<string, (input: Input) => string> = {
     const c = useCanvasStore()
     const col = useCollectionsStore()
     const name = input.name as string
-    const slug = name.toLowerCase().replace(/\s+/g, '-')
+    const slug = slugify(name)
     const page = c.addPage(name, slug, 'collection')
     const collection = col.addCollection({ name, templatePageId: page.id })
     return `Created collection "${name}" (id: ${collection.id}, template page: ${page.id}).`

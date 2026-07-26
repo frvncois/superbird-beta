@@ -7,6 +7,7 @@ import { useMediaStore } from '@/stores/media'
 import { useLocalesStore } from '@/stores/locales'
 import { renderDocument, buildRenderContext, type RenderContext } from '@/lib/render'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
 const canvas = useCanvasStore()
@@ -23,6 +24,13 @@ const widths = [
 ] as const
 const viewport = ref<'desktop' | 'tablet' | 'mobile'>('desktop')
 const frameWidth = computed(() => widths.find((w) => w.key === viewport.value)?.width ?? 0)
+
+// SegmentedControlUi models a plain string; proxy bridges the typed union.
+const viewportOptions = widths.map((w) => ({ value: w.key, title: w.label }))
+const viewportProxy = computed({
+  get: () => viewport.value as string,
+  set: (v) => (viewport.value = v as 'desktop' | 'tablet' | 'mobile'),
+})
 
 // Same render context factory as the SSR site, backed by the editor stores.
 // includeDrafts:true — Preview shows unpublished entries as an authoring aid
@@ -58,20 +66,11 @@ const srcdoc = computed(() =>
         <span class="text-secondary">{{ canvas.activePage.name }}</span>
       </div>
 
-      <div class="mx-auto flex items-center gap-0.5 rounded-xl bg-foreground/5 p-0.5">
-        <button
-          v-for="w in widths"
-          :key="w.key"
-          type="button"
-          :class="[
-            'flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs cursor-pointer transition-colors duration-100',
-            viewport === w.key ? 'bg-background text-foreground shadow-sm' : 'text-secondary hover:text-foreground',
-          ]"
-          @click="viewport = w.key"
-        >
-          <IconUi :name="w.icon" size="size-3.5" />
-        </button>
-      </div>
+      <SegmentedControlUi v-model="viewportProxy" :options="viewportOptions" class="mx-auto">
+        <template #option="{ option }">
+          <IconUi :name="option.value" size="size-3.5" />
+        </template>
+      </SegmentedControlUi>
 
       <ButtonUi variant="outline" size="sm" icon="close" @click="canvas.closePreview()">
         Close

@@ -9,6 +9,7 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import HeaderPageSettings from './HeaderPageSettings.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
@@ -199,7 +200,7 @@ function backToTemplate() {
 
       <!-- Pages (user-created) -->
       <div class="px-2.5 pb-1 pt-0.5">
-        <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">Pages</span>
+        <LabelUi size="xs" class="text-secondary/50">Pages</LabelUi>
       </div>
       <ButtonUi
         v-for="page in pagePages"
@@ -244,7 +245,7 @@ function backToTemplate() {
       <!-- Other page types (System — auto-generated) -->
       <template v-for="section in otherSections" :key="section.config.key">
         <div class="px-2.5 pb-1 pt-0.5">
-          <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">{{ section.config.plural }}</span>
+          <LabelUi size="xs" class="text-secondary/50">{{ section.config.plural }}</LabelUi>
         </div>
         <ButtonUi
           v-for="page in section.pages"
@@ -265,7 +266,7 @@ function backToTemplate() {
 
       <!-- Collections -->
       <div class="px-2.5 pb-1 pt-0.5">
-        <span class="text-[9px] font-mono uppercase tracking-wider text-secondary/50">Collections</span>
+        <LabelUi size="xs" class="text-secondary/50">Collections</LabelUi>
       </div>
       <ButtonUi
         v-for="col in collections.collections"
@@ -322,9 +323,9 @@ function backToTemplate() {
         @mouseleave="scheduleCloseFlyout"
       >
         <div class="w-56 rounded-xl border bg-background p-1 shadow-lg">
-          <div class="px-2.5 pb-1 pt-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">
+          <LabelUi size="xs" class="block px-2.5 pb-1 pt-1 text-secondary/50">
             {{ hoveredCollection.plural }}
-          </div>
+          </LabelUi>
           <ButtonUi
             v-for="entry in collections.entriesByCollection(hoveredCollection.id)"
             :key="entry.id"

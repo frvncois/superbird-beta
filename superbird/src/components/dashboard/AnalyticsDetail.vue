@@ -2,6 +2,7 @@
 import { analytics, analyticsDetail } from '@/data/dashboardDemo'
 import ChartUi from '@/components/ui/ChartUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 
 const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
 </script>
@@ -36,7 +37,7 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
 
     <!-- Top pages -->
     <div>
-      <p class="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary">Top pages</p>
+      <LabelUi class="mb-2 block text-secondary">Top pages</LabelUi>
       <div class="space-y-2">
         <div v-for="p in analyticsDetail.topPages" :key="p.path" class="text-xs">
           <div class="flex justify-between gap-2">
@@ -52,7 +53,7 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
 
     <!-- Traffic sources -->
     <div>
-      <p class="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary">Traffic sources</p>
+      <LabelUi class="mb-2 block text-secondary">Traffic sources</LabelUi>
       <div class="space-y-2">
         <div v-for="s in analyticsDetail.sources" :key="s.name" class="text-xs">
           <div class="flex justify-between gap-2"><span class="text-foreground">{{ s.name }}</span><span class="text-secondary">{{ s.pct }}%</span></div>
@@ -65,7 +66,7 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
 
     <!-- Devices -->
     <div>
-      <p class="mb-2 font-mono text-[10px] uppercase tracking-wider text-secondary">Devices</p>
+      <LabelUi class="mb-2 block text-secondary">Devices</LabelUi>
       <div class="space-y-2">
         <div v-for="d in analyticsDetail.devices" :key="d.name" class="text-xs">
           <div class="flex justify-between gap-2"><span class="text-foreground">{{ d.name }}</span><span class="text-secondary">{{ d.pct }}%</span></div>

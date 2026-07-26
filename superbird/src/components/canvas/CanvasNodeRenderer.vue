@@ -9,6 +9,7 @@ import { renderMarkdown } from '@/lib/markdown'
 import type { CanvasNode, Entry } from '@/types/canvas'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import NodePlaceholder from '@/components/canvas/NodePlaceholder.vue'
 import { useNodeDnD } from '@/components/canvas/useNodeDnD'
 import { useContextMenu } from '@/composables/useContextMenu'
@@ -247,7 +248,7 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
           @keydown="onMarkdownKeydown"
         />
         <div class="mt-2 border-t border-border/60 pt-2">
-          <div class="mb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/60">Preview</div>
+          <LabelUi size="xs" class="mb-1 block text-secondary/60">Preview</LabelUi>
           <div class="markdown-body" v-html="draftHtml" />
         </div>
       </template>

@@ -9,11 +9,13 @@
 
 **`nodeFactory.ts`** — `createNode(type, overrides?)`, `deepCloneNode(node)`, `createPage(name, slug?, pageType?)`, `createStyleClassStyles()`. Nodes only come from here.
 
-**`ids.ts`** — `createIdGenerator(prefix)` + named generators: `generateNodeId`, `generateComponentId`, `generatePageId`, `generateInteractionId`, `generateStepId`, `generateMediaId`, `generateFolderId`, `generateRedirectId`. IDs only come from here.
+**`ids.ts`** — `createIdGenerator(prefix)` + named generators: `generateNodeId`, `generateComponentId`, `generatePageId`, `generateInteractionId`, `generateStepId`, `generateMediaId`, `generateFolderId`, `generateRedirectId`, `generateCollectionId`, `generateEntryId`. IDs only come from here.
 
 **`styles.ts`** — `resolveStyles(node, styleClasses, breakpoint, state?)` — pure resolver. The `globalStyles` store wraps it with its reactive state; use the store's `resolveStyles(node, state?)` from components.
 
-**`unitValue.ts`** — `parseUnitValue(val, keywords?)` → `{num, unit}`; `stepUnitValue(e, unit, apply)` (arrow-key ±1 / shift ±10 / alt ±0.1). Shared by unit inputs & DragLabel.
+**`unitValue.ts`** — `parseUnitValue(val, keywords?)` → `{num, unit}`; `stepUnitValue(e, unit, apply)` (arrow-key ±1 / shift ±10 / alt ±0.1). Shared by unit inputs & `LabelUi`'s drag scrub.
+
+**`autoHideScrollbars.ts`** — `initAutoHideScrollbars()` (called once in `main.ts`). A global capture `scroll` listener that tags the scrolled element `.is-scrolling` and clears it after an idle delay, so scrollbars (styled transparent-at-rest in `main.css`) show only while scrolling. DOM-touching by design (like `theme.ts`), not a pure helper.
 
 **`animations.ts`** — `runStep`, `runStepsReverse`, `runAllSteps` (Web Animations API keyframe builders; used by `useInteractionRunner`).
 

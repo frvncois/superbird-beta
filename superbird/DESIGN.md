@@ -95,7 +95,7 @@ Rule of thumb: `rounded-2xl` for containers, `rounded-xl` for inner controls, `r
 
 All elements inherit `border-color: var(--color-border)` from the base reset.
 
-**Canonical input spec** (InputUi, TextareaUi, SelectUi, and composite input shells like ColorInputUi/UnitInputUi):
+**Canonical input spec** (InputUi, TextareaUi, and composite input shells like ColorInputUi/UnitInputUi):
 
 ```
 border border-foreground/15 focus:border-foreground/40
@@ -134,7 +134,7 @@ src/
 - **v-model**: always `defineModel()` (never manual `modelValue` prop + emit).
 - **Props**: `withDefaults(defineProps<{...}>(), {...})`.
 - **Stores**: all mutations go through store actions — undo/redo depends on it. Never write store state from components.
-- **No stores in primitives**: `components/ui/` never imports stores. Global design tokens reach ColorInputUi/SizeTokenInputUi via `GlobalTokensKey` provide/inject (`constants/injectionKeys.ts`).
+- **No stores in primitives**: `components/ui/` never imports stores. Global design tokens reach ColorInputUi/UnitInputUi via `GlobalTokensKey` provide/inject (`constants/injectionKeys.ts`).
 - **Use the primitives**: every dropdown is built on PopoverUi, every modal on ModalUi, every icon via IconUi, every micro-label via LabelUi, every label+control row via FieldRowUi.
 - **Review flag**: a raw `<input>`, `<select>`, `<textarea>`, or `<button>` outside `components/ui/` is a signal to reach for a primitive instead.
 
@@ -142,14 +142,17 @@ src/
 
 ## 3. UI Primitives (`src/components/ui/`)
 
+> **`docs/ui-primitives.md` is the authoritative, always-current catalog** of every `*Ui` (props, model, variants). The notes below capture design-system intent; when they disagree with the code, ui-primitives.md wins.
+
 ### ButtonUi
 
-Renders `<button>` or `<RouterLink>` (via `to` prop). Props: `variant`, `size`, `to`, `disabled`.
+Renders `<button>` or `<RouterLink>` (via `to` prop). Props: `variant`, `size`, `to`, `disabled`, `icon`, `align` (`center`|`start`), `square`, `active`, `tone` (`default`|`primary`).
 
 | Size | Classes |
 |------|---------|
-| `default` | `h-9 px-4 text-sm rounded-xl` |
-| `sm` | `h-7 px-3 text-xs rounded-xl` |
+| `default` | `h-9 px-3.5 text-sm rounded-lg` |
+| `sm` | `h-7 px-3.5 text-xs rounded-lg` |
+| `xs` | `h-6 px-2 text-[11px] rounded-md` |
 
 | Variant | Style |
 |---------|-------|
@@ -158,8 +161,9 @@ Renders `<button>` or `<RouterLink>` (via `to` prop). Props: `variant`, `size`, 
 | `outline` | `bg-transparent border text-foreground hover:bg-secondary/10` |
 | `ghost` | `bg-transparent text-foreground hover:bg-secondary/10` |
 | `danger` | `border border-red-border bg-red-bg text-red-fg hover:bg-red-bg/70` |
+| `bare` | no box/padding/bg — hover colour only (`text-secondary hover:text-foreground`, `text-primary` when `active`) |
 
-Base: `inline-flex items-center justify-center font-medium cursor-pointer gap-1.5`, color transitions at 250ms. Disabled: `pointer-events-none opacity-50`.
+`active` = selected tint (`bg-primary/10 text-primary font-medium`); `square` = icon-only square; `tone="primary"` accents a ghost button; `icon` renders a leading `IconUi`. Base: `inline-flex items-center font-medium cursor-pointer gap-1.5`, color transitions at 250ms. Disabled: `pointer-events-none opacity-50`.
 
 ### IconButtonUi
 
@@ -189,9 +193,9 @@ Always: `w-full bg-transparent text-foreground placeholder:text-foreground/40` +
 
 `defineModel<string>`. Props: `placeholder`, `rows` (3), `mono` (adds `font-mono`). `rounded-xl px-2.5 py-2 text-xs resize-none` + canonical border/focus spec.
 
-### SelectUi
+### DropdownUi
 
-Native select, `defineModel<string>`. Prop: `options: { value, label }[]`. `h-8 rounded-xl px-2.5 text-xs appearance-none` + canonical border/focus spec.
+The one dropdown + select primitive (absorbed the old `SelectUi`). `defineModel('open')` + `defineModel<string>` (selected value). **Menu mode:** pass `items` (with handlers). **Select mode:** pass `options: {value,label,icon?,badge?,group?}[]` + `v-model` — trigger shows the selection, rows are `ButtonUi active`. Self-contained trigger + panel unfold inside a shared border; long lists scroll. See ui-primitives.md.
 
 ### ToggleUi
 
@@ -201,7 +205,7 @@ Switch, `defineModel<boolean>`, `role="switch"`. Track: `h-5 w-9 rounded-full`, 
 
 Tab bar + directional slide-fade content. Props: `tabs: { key, label }[]`; `defineModel<string>` for the active key (falls back to first tab). Content goes in a named slot per tab key.
 
-Tab button: `px-3 py-2 text-xs`; active `text-foreground font-medium`, inactive `text-secondary hover:text-foreground`. Content slides 12px left/right by tab direction: enter 250ms ease-out, leave 200ms ease-in.
+Tab buttons render via `ButtonUi` (`variant="ghost" size="sm"`, `:active` for the current tab, `!text-secondary` when inactive). Content slides 12px left/right by tab direction: enter 250ms ease-out, leave 200ms ease-in.
 
 ### SegmentedControlUi
 
@@ -223,7 +227,7 @@ Backdrop: `bg-foreground/20 backdrop-blur-sm`, click to close. Panel: `border bg
 
 ### LabelUi
 
-Micro-label span. Prop: `size` — `default` (`text-[10px] font-mono uppercase tracking-wider text-secondary`) or `xs` (`text-[9px] ... text-secondary/50`).
+Micro-label span (`font-mono uppercase tracking-widest`). Props: `size` — `default`/`sm` (`text-[10px]`) or `xs` (`text-[9px]`); `drag` + `defineModel<string>` — with `drag`, horizontal pointer drag on the label scrubs the bound numeric value (Shift ×10, Alt ×0.1), turning `text-primary` while dragging (absorbed the old `DragLabelUi`).
 
 ### FieldRowUi
 
@@ -235,7 +239,7 @@ Centered placeholder text. Props: `message` (or default slot), `compact` (`py-6`
 
 ### IconUi
 
-Renders a 20×20 `fill="currentColor"` glyph from the `ICON_PATHS` registry in `icons.ts`. Props: `name` (registry key), `size` (Tailwind class, default `size-3.5`).
+Renders a heroicon glyph from the `ICONS` registry in `icons.ts`. Props: `name` (registry key), `size` (Tailwind class, default `size-3.5`).
 
 **All icons live in `src/components/ui/icons.ts`** — keyed path data covering sidebar tabs, node types, property sections, and context-menu actions, with shared constants for reused glyphs. New glyphs go in the registry; never paste inline `<svg>` markup in feature components.
 
@@ -245,19 +249,11 @@ Color field, `defineModel<string>`. Props: `placeholder`, `tokens?` (falls back 
 
 ### UnitInputUi
 
-CSS length field, `defineModel<string>` (e.g. `"12px"`). Props: `placeholder`, `units` (default `px % em rem vw vh`), `allowAuto`. Number input + unit dropdown (PopoverUi); arrow keys step the value via `stepUnitValue` from `@/lib/unitValue`.
-
-### SizeTokenInputUi
-
-UnitInputUi plus global size tokens. Extra prop: `tokens?` (falls back to `GlobalTokensKey` inject). Tag button opens a token list; picking one writes `var(--global-size-<name>)` and shows a dismissible `bg-primary/15 text-primary` badge instead of the number input.
+CSS length field, `defineModel<string>` (e.g. `"12px"`). Props: `placeholder`, `units` (default `px % em rem vw vh`), `allowAuto`, `tokens?` (falls back to `GlobalTokensKey` inject). Number input + unit dropdown; arrow keys step the value via `stepUnitValue` from `@/lib/unitValue`. When size tokens are available it also shows a token picker that writes `var(--global-size-<name>)` (absorbed the old `SizeTokenInputUi`).
 
 ### LinkedUnitInputUi
 
-Four-sided value (`defineModel<[string, string, string, string]>`, T/R/B/L) with a link toggle: linked = one SizeTokenInputUi drives all sides; unlinked = 2×2 grid of per-side inputs. Props: `labels` (default `['T','R','B','L']`), `units`, `allowAuto`.
-
-### DragLabelUi
-
-Wraps a label in a `cursor-ew-resize` span; horizontal pointer drag scrubs the numeric part of the `defineModel<string>` unit value. Prop: `sensitivity` (Shift = ×10, Alt = ×0.1). Text turns `text-primary` while dragging.
+Four-sided value (`defineModel<[string, string, string, string]>`, T/R/B/L) with a link toggle: linked = one `UnitInputUi` drives all sides; unlinked = 4-up per-side inputs. Props: `labels` (default `['T','R','B','L']`), `units`, `allowAuto`. Usually wrapped by `LinkedFieldUi` (titled group header + link toggle) so callers write one line.
 
 ### PropertySectionUi
 

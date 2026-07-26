@@ -9,7 +9,7 @@ Common moves, done the house way. Copy the shape.
            @update:model-value="updateStyle('opacity', $event)" />
 </FieldRowUi>
 ```
-`labelWidth` `sm|md|lg` (w-12/14/16). Grid rows with `DragLabelUi` headers stay as raw grids — FieldRowUi is for single label+control.
+`labelWidth` `sm|md|lg` (w-12/14/16). Grid-packed rows use `FieldColUi` (label stacked above control, `drag` scrub via `LabelUi`) — `FieldRowUi` is for a single label+control side by side.
 
 ## Edit a node's styles (in a properties section)
 ```ts

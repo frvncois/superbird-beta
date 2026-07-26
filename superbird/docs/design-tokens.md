@@ -63,6 +63,6 @@ Not in `@theme` but treated as canonical — match them, don't invent new values
 
 ## Icons
 
-Rendered only via `IconUi name="…"`. Path data lives in `components/ui/icons.ts` (`ICON_PATHS`). **Add new glyphs to the registry — never paste `<svg>` inline.** Current keys:
+Rendered only via `IconUi name="…"`. Glyphs are heroicons mapped in `components/ui/icons.ts` (the `ICONS` registry). **Add new glyphs to the registry — never paste `<svg>` inline.** Current keys:
 
-`plus close undo redo chevron-down chevron-right layers elements components properties settings interactions component section container columns heading text button image eye-slash link layout position size spacing typography background border effects rename duplicate copy paste wrap unwrap move-up move-down classes delete add select-parent`
+`plus add close check home logout chevron-down chevron-right settings search users sparkles info alert check-circle lock sun moon folder upload download archive document globe arrow-right external-link analytics submissions trend-up trend-down eye preview desktop tablet mobile layers elements components component properties interactions layout position size spacing typography background border effects rename duplicate copy paste wrap unwrap move-up move-down classes delete select-parent section container columns column div heading text richtext markdown link link-block span list blockquote image video audio weight embed form input textarea select checkbox radio label button collection number date eye-slash swatch`

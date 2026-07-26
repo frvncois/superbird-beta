@@ -23,20 +23,20 @@ A layer may only import from layers to its left. Enforced by convention, not too
 
 ```
 components/
-  ui/                 22 primitives (*Ui) + icons.ts registry — NEVER import stores
-  header/             EditorHeader, HeaderPageSelect/LocaleSwitch/ViewportSwitch, SuperbirdIcon
+  ui/                 26 primitives (*Ui) + icons.ts registry — NEVER import stores
+  header/             AppHeader, HeaderContextBar (page/collection/item selector), HeaderLocaleSwitch/PageSettings/ViewportSwitch, SuperbirdIcon
   sidebar/
     CollapsibleSidebar.vue          shell shared by both sidebars
     layers/ elements/ components/    left-sidebar panels
     properties/                      SidebarProperties + 9 *Section.vue + useNodeStyles.ts
-    settings/                        SidebarSettings + 10 *Block.vue + useNodeSettings.ts
+    settings/                        SidebarSettings + 7 *Block.vue + useNodeSettings.ts
     interactions/                    SidebarInteractions + List/Editor/Step/Action + ActionPickerPopover
   canvas/             EditorCanvas, CanvasNodeRenderer, NodePlaceholder, useNodeDnD.ts
   modals/
     global-styles/    GlobalStylesPanel + 6 *Tab.vue
     media-library/    MediaLibraryModal (title bar + search/type/sort/view controls) + Breadcrumb/Grid/DetailPanel (unified in-area folders+files, grid+list, DnD, context menu, private flag)
 layouts/              AppShell (AppHeader + body) · AuthShell (centered login/setup) · DashboardLayout / EditorLayout / SettingsLayout (body-only grids inside AppShell)
-stores/               canvas globalStyles media siteSettings locales userComponents collections
+stores/               canvas globalStyles media siteSettings locales userComponents collections submissions setup auth mcp
 lib/                  tree ids nodeFactory styles animations unitValue media siteDefaults
 constants/            canvas.ts propertyOptions.ts injectionKeys.ts
 composables/          useHistory useKeyboardShortcuts useContextMenu useNodeContextMenu useInteractionRunner

@@ -20,7 +20,6 @@ store's return (so `store.copyNode` etc. are unchanged): `interactions.ts`
 - **Class ↔ node bindings:** `addClassToNode`, `removeClassFromNode`, `renameClass`, `deleteStyleClass` (the class *records* live in globalStyles; these wire nodes to them and walk all pages)
 - **Node mutations:** `findNode`, `addNode`, `insertNode`, `moveNode`, `updateNode`, `removeNode`, `setNodeSettings`, `setCustomAttribute`, `removeCustomAttribute`
 - **Clipboard/ops:** `clipboardNode`, `clipboardClasses`, `copyNode`, `pasteNode`, `duplicateNode`, `wrapInContainer`, `unwrapNode`, `moveUp`, `moveDown`, `copyClasses`, `pasteClasses`, `getNodeIndex`, `isContainerNode`, `getParentId`
-- **Dynamic fields:** `addDynamicField(fieldType, targetId?, position?)` — places a typed field element (a collection's schema is derived from the placed nodes, see `useCollectionsStore.schemaFor`)
 - **Interactions** (state lives on nodes, so it's here): `getNodeInteractions`, `add/remove/updateInteraction`, `add/remove/updateStep`, `add/removeActionFromStep`, `updateActionInStep`
 - **Localized content:** `getNodeContent`, `setNodeContent` (read `locales.activeLocale`)
 
@@ -55,7 +54,7 @@ API-backed. `items`, `forms`, `loading`, `loaded`, `load`, `loadForms`, `markSee
 `project`, `publishedAt`, `installing`, `error`, `isInstalled`, `isPublished`, `hydrate`, `markPublished`, `install`. Hydrated from `fetchSessionState()` in `main.ts` before routing.
 
 ## `useAuthStore` — admin session
-`currentUser` (incl. `twoFactorEnabled`), `authenticating`, `error`, `isAuthenticated`, `canDesign` (role `admin` → may edit design vs. content only), `hydrate`, `login(email, password, remember?)` → `LoginResult` (`{user}` or `{twoFactorRequired, challenge}`), `verifyTwoFactor(challenge, code)`, `logout`, `logoutAll` (revoke every session), `setupTwoFactor`/`enableTwoFactor(code)`/`disableTwoFactor(code)` (Settings › Security). Admin identity only — customer auth is a fully separate space (server-side `customers`/`sb_customer`).
+`currentUser` (incl. `twoFactorEnabled`), `authenticating`, `error`, `isAuthenticated`, `canDesign` (role `admin` → may edit design vs. content only), `hydrate`, `login(email, password, remember?)` → `LoginResult` (`{user}` or `{twoFactorRequired, challenge}`), `verifyTwoFactor(challenge, code)`, `logout`, `logoutAll` (revoke every session), `setupTwoFactor`/`enableTwoFactor(code)`/`disableTwoFactor(code)` (Settings › Security). Admin identity only.
 
 ## `useMcpStore` — headless MCP bridge status
 `connected`, `active`, `paused`, `lastAction`, `actionCount`, `setConnected`, `noteTool`, `release`, `pause`, `resume`. Surfaces live MCP-editor activity in the UI.

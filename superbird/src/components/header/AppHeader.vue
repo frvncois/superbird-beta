@@ -9,7 +9,7 @@ import { useToast } from '@/composables/useToast'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import DropdownUi, { type DropdownItem } from '@/components/ui/DropdownUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ProcessDialogUi from '@/components/ui/ProcessDialogUi.vue'
 import HeaderContextBar from './HeaderContextBar.vue'
 
 const router = useRouter()
@@ -87,14 +87,6 @@ const pub = reactive({
   link: null as string | null,
   confirmLabel: 'Done',
 })
-const pubBusy = computed(() => pub.open && pub.phase === 'busy')
-const pubChip = computed(() =>
-  pub.phase === 'success'
-    ? { icon: 'check-circle', class: 'bg-green-bg text-green-fg' }
-    : pub.phase === 'error'
-      ? { icon: 'alert', class: 'bg-red-bg text-red-fg' }
-      : null,
-)
 
 async function publish() {
   if (publishing.value) return
@@ -169,45 +161,23 @@ async function publish() {
     </div>
   </header>
 
-  <!-- Publish status modal (busy → success/error) -->
-  <ModalUi
+  <!-- Publish status dialog (busy → success/error) -->
+  <ProcessDialogUi
     :open="pub.open"
-    variant="dialog"
-    :closable="false"
-    :dismissible="!pubBusy"
-    @update:open="pub.open = false"
+    :phase="pub.phase"
+    :title="pub.title"
+    :message="pub.message"
+    :confirm-label="pub.confirmLabel"
+    @close="pub.open = false"
   >
-    <template #header>
-      <span
-        v-if="pubBusy"
-        class="size-9 shrink-0 animate-spin rounded-full border-2 border-secondary/25 border-t-primary"
-      />
-      <span
-        v-else-if="pubChip"
-        :class="['flex size-9 shrink-0 items-center justify-center rounded-full', pubChip.class]"
-      >
-        <IconUi :name="pubChip.icon" size="size-4" />
-      </span>
-      <div class="min-w-0 flex-1">
-        <h2 class="text-base font-semibold text-foreground">{{ pub.title }}</h2>
-      </div>
-    </template>
-
-    <div class="space-y-3">
-      <p v-if="pub.message" class="whitespace-pre-line text-sm leading-relaxed text-secondary">{{ pub.message }}</p>
-      <a
-        v-if="pub.phase === 'success' && pub.link"
-        :href="pub.link"
-        target="_blank"
-        rel="noopener"
-        class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-      >
-        <IconUi name="external-link" size="size-4" /> {{ pub.link }}
-      </a>
-    </div>
-
-    <template v-if="!pubBusy" #actions>
-      <ButtonUi @click="pub.open = false">{{ pub.confirmLabel }}</ButtonUi>
-    </template>
-  </ModalUi>
+    <a
+      v-if="pub.phase === 'success' && pub.link"
+      :href="pub.link"
+      target="_blank"
+      rel="noopener"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+    >
+      <IconUi name="external-link" size="size-4" /> {{ pub.link }}
+    </a>
+  </ProcessDialogUi>
 </template>

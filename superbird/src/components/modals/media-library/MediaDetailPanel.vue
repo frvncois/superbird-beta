@@ -9,7 +9,7 @@ import type { CanvasNode, MediaItem } from '@/types/canvas'
 import InputUi from '@/components/ui/InputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
@@ -176,19 +176,13 @@ function doDelete() {
       </ButtonUi>
     </div>
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDelete"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete media"
       :description="pendingDelete ? `Delete “${pendingDelete.name}”? Any element using it will lose its image. This can’t be undone.` : ''"
+      confirm-label="Delete"
       @update:open="pendingDelete = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDelete"
+    />
   </div>
 </template>

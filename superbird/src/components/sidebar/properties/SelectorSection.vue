@@ -3,8 +3,7 @@ import { ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import ClassInputUi from '@/components/ui/ClassInputUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
-import ButtonUi from '@/components/ui/ButtonUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import { useNodeStyles } from './useNodeStyles'
 
 const store = useCanvasStore()
@@ -78,19 +77,13 @@ function renameClass(oldName: string, newName: string) {
       @update:active-state="globalStylesStore.setActiveState"
     />
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDelete"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete class"
       :description="pendingDelete ? `Delete “.${pendingDelete}” from every element that uses it? This can’t be undone.` : ''"
+      confirm-label="Delete"
       @update:open="pendingDelete = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDelete"
+    />
   </section>
 </template>

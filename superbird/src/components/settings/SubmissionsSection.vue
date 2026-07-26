@@ -10,6 +10,7 @@ import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 
@@ -235,19 +236,13 @@ async function runExport() {
     </ModalUi>
 
     <!-- Delete confirm dialog -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDelete"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete submission"
       :description="pendingDelete ? `Delete this submission from “${pendingDelete.formName}”? This can’t be undone.` : ''"
+      confirm-label="Delete"
       @update:open="pendingDelete = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doRemove">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doRemove"
+    />
   </section>
 </template>

@@ -14,7 +14,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
@@ -224,19 +224,13 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
       </div>
     </SettingsSection>
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingRemoveFamily"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Remove font family"
       :description="pendingRemoveFamilyMessage"
+      confirm-label="Remove"
       @update:open="pendingRemoveFamily = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingRemoveFamily = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doRemoveFamily">Remove</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doRemoveFamily"
+    />
     </SettingsPanel>
 </template>

@@ -11,7 +11,7 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 
 const auth = useAuthStore()
 const toast = useToast()
@@ -134,19 +134,13 @@ function initials(u: User): string {
       </div>
     </SettingsSection>
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingRemove"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Remove user"
       :description="pendingRemove ? `Remove ${pendingRemove.name} (${pendingRemove.email})? They will lose access to this site.` : ''"
+      confirm-label="Remove"
       @update:open="pendingRemove = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingRemove = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doRemove">Remove</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doRemove"
+    />
   </SettingsPanel>
 </template>

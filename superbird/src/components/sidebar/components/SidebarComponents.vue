@@ -4,8 +4,7 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
-import ButtonUi from '@/components/ui/ButtonUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useToast } from '@/composables/useToast'
@@ -114,23 +113,17 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       @close="ctx.close"
     />
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDelete"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete component"
       :description="
         pendingDelete
           ? `Delete “${pendingDelete.name}”? Instances placed on your pages will be detached. This can’t be undone.`
           : ''
       "
+      confirm-label="Delete"
       @update:open="pendingDelete = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDeleteComponent">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDeleteComponent"
+    />
   </div>
 </template>

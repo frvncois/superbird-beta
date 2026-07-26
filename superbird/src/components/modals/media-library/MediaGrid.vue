@@ -11,6 +11,7 @@ import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 
@@ -463,43 +464,31 @@ function doDeleteFolder() {
     </ModalUi>
 
     <!-- Delete media -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDeleteItem"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete media"
       :description="
         pendingDeleteItem
           ? `Delete “${pendingDeleteItem.name}”? Any element using it will lose its image. This can’t be undone.`
           : ''
       "
+      confirm-label="Delete"
       @update:open="pendingDeleteItem = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDeleteItem = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDeleteItem">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDeleteItem"
+    />
 
     <!-- Delete folder -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDeleteFolder"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete folder"
       :description="
         pendingDeleteFolder
           ? `Delete the folder “${pendingDeleteFolder.name}”? Media inside it won’t be deleted — it moves to the parent. This can’t be undone.`
           : ''
       "
+      confirm-label="Delete"
       @update:open="pendingDeleteFolder = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDeleteFolder = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDeleteFolder">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDeleteFolder"
+    />
   </div>
 </template>

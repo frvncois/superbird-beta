@@ -12,7 +12,8 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
+import ProcessDialogUi from '@/components/ui/ProcessDialogUi.vue'
 
 const toast = useToast()
 
@@ -45,16 +46,8 @@ const proc = reactive<ProcState>({
   progress: null,
   confirmLabel: 'Done',
 })
-const procBusy = computed(() => proc.open && proc.phase === 'busy')
 const procPct = computed(() =>
   proc.progress && proc.progress.total ? Math.round((proc.progress.loaded / proc.progress.total) * 100) : 0,
-)
-const procChip = computed(() =>
-  proc.phase === 'success'
-    ? { icon: 'check-circle', class: 'bg-green-bg text-green-fg' }
-    : proc.phase === 'error'
-      ? { icon: 'alert', class: 'bg-red-bg text-red-fg' }
-      : null,
 )
 
 function startProcess(opts: { title: string; message?: string; progress?: { loaded: number; total: number } }) {
@@ -240,89 +233,54 @@ async function doImport() {
     </SettingsSection>
 
     <!-- Restore confirm -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingRestore"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Restore backup"
       :description="
         pendingRestore
           ? `Restore “${pendingRestore.label}” from ${fmtDate(pendingRestore.createdAt)}?\n\nThis replaces the current project. A safety backup is taken first, then the editor reloads.`
           : ''
       "
+      confirm-label="Restore"
       @update:open="pendingRestore = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingRestore = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doRestore">Restore</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doRestore"
+    />
 
     <!-- Delete confirm -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingDelete"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Delete backup"
       :description="pendingDelete ? `Delete backup “${pendingDelete.label}”? This can't be undone.` : ''"
+      confirm-label="Delete"
       @update:open="pendingDelete = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingDelete = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doDelete">Delete</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doDelete"
+    />
 
     <!-- Import confirm -->
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingImport"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Import site"
       :description="
         pendingImport
           ? `Import “${pendingImport.name}”?\n\nThis REPLACES the current project (pages, content, media). A safety backup is taken first, then the editor reloads.`
           : ''
       "
+      confirm-label="Import"
       @update:open="pendingImport = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingImport = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doImport">Import</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doImport"
+    />
 
-    <!-- Status process modal (busy → success/error) -->
-    <ModalUi
+    <!-- Status process dialog (busy → success/error) -->
+    <ProcessDialogUi
       :open="proc.open"
-      variant="dialog"
-      :closable="false"
-      :dismissible="!procBusy"
-      @update:open="proc.open = false"
+      :phase="proc.phase"
+      :title="proc.title"
+      :message="proc.message"
+      :confirm-label="proc.confirmLabel"
+      @close="proc.open = false"
     >
-      <template #header>
-        <span
-          v-if="procBusy"
-          class="size-9 shrink-0 animate-spin rounded-full border-2 border-secondary/25 border-t-primary"
-        />
-        <span
-          v-else-if="procChip"
-          :class="['flex size-9 shrink-0 items-center justify-center rounded-full', procChip.class]"
-        >
-          <IconUi :name="procChip.icon" size="size-4" />
-        </span>
-        <div class="min-w-0 flex-1">
-          <h2 class="text-base font-semibold text-foreground">{{ proc.title }}</h2>
-        </div>
-      </template>
-
-      <div class="space-y-3">
-        <p v-if="proc.message" class="whitespace-pre-line text-sm leading-relaxed text-secondary">{{ proc.message }}</p>
-
-        <div v-if="procBusy && proc.progress">
+      <template #default="{ busy }">
+        <div v-if="busy && proc.progress">
           <div class="mb-1 flex items-center justify-between text-xs text-secondary">
             <span class="font-mono">
               {{ fmtSize(proc.progress.loaded) }}<template v-if="proc.progress.total"> / {{ fmtSize(proc.progress.total) }}</template>
@@ -337,11 +295,7 @@ async function doImport() {
             />
           </div>
         </div>
-      </div>
-
-      <template v-if="!procBusy" #actions>
-        <ButtonUi @click="proc.open = false">{{ proc.confirmLabel }}</ButtonUi>
       </template>
-    </ModalUi>
+    </ProcessDialogUi>
     </SettingsPanel>
 </template>

@@ -6,7 +6,7 @@ import type { Locale } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
-import ModalUi from '@/components/ui/ModalUi.vue'
+import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 const store = useLocalesStore()
@@ -139,19 +139,13 @@ watch(isOpen, (open) => {
       </div>
     </PopoverUi>
 
-    <ModalUi
+    <ConfirmDialogUi
       :open="!!pendingRemove"
-      variant="dialog"
-      danger
-      icon="alert"
       title="Remove language"
       :description="removeDescription"
+      confirm-label="Remove"
       @update:open="pendingRemove = null"
-    >
-      <template #actions>
-        <ButtonUi variant="ghost" @click="pendingRemove = null">Cancel</ButtonUi>
-        <ButtonUi variant="danger" @click="doRemove">Remove</ButtonUi>
-      </template>
-    </ModalUi>
+      @confirm="doRemove"
+    />
   </div>
 </template>

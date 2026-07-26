@@ -2,8 +2,10 @@
 import { ref, computed, inject, type Ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { deleteNodeWithUndo } from '@/composables/useNodeContextMenu'
 import type { CanvasNode } from '@/types/canvas'
 import IconUi from '@/components/ui/IconUi.vue'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 
 // Maps node types to icon registry keys (body reuses the layers glyph,
 // section/column reuse the container square)
@@ -18,6 +20,9 @@ const TYPE_ICONS: Record<string, string> = {
   text: 'text',
   button: 'button',
   image: 'image',
+  label: 'label',
+  link: 'link',
+  'link-block': 'link',
 }
 
 const props = defineProps<{
@@ -64,6 +69,16 @@ function toggleExpand(e: MouseEvent) {
   e.stopPropagation()
   expanded.value = !expanded.value
 }
+
+// Row hover actions — same behaviour as the context menu (delete shows an Undo toast).
+function duplicate(e: MouseEvent) {
+  e.stopPropagation()
+  store.duplicateNode(props.node.id)
+}
+function remove(e: MouseEvent) {
+  e.stopPropagation()
+  deleteNodeWithUndo(props.node.id)
+}
 </script>
 
 <template>
@@ -96,9 +111,10 @@ function toggleExpand(e: MouseEvent) {
       @drop="emit('drop-node', $event, node)"
     >
       <!-- Expand/collapse chevron -->
-      <button
+      <ButtonUi
         v-if="hasChildren"
-        class="flex size-4 shrink-0 items-center justify-center rounded cursor-pointer hover:bg-secondary/15"
+        variant="bare"
+        class="size-4 shrink-0"
         @click="toggleExpand"
       >
         <IconUi
@@ -106,7 +122,7 @@ function toggleExpand(e: MouseEvent) {
           size="size-3"
           :class="['text-secondary transition-transform duration-150', expanded && 'rotate-90']"
         />
-      </button>
+      </ButtonUi>
       <span v-else class="size-4 shrink-0" />
 
       <!-- Type icon -->
@@ -126,23 +142,32 @@ function toggleExpand(e: MouseEvent) {
         {{ node.label }}
       </span>
 
-      <!-- Hidden indicator -->
-      <IconUi
-        v-if="isHiddenAtBreakpoint"
-        name="eye-slash"
-        size="size-2.5"
-        class="shrink-0 text-secondary/40 ml-auto"
-        title="Hidden at this breakpoint"
-      />
+      <!-- Right rail: status indicators, swapped for actions on row hover -->
+      <div class="ml-auto flex shrink-0 items-center gap-0.5 pl-1">
+        <!-- Hidden indicator -->
+        <IconUi
+          v-if="isHiddenAtBreakpoint"
+          name="eye-slash"
+          size="size-2.5"
+          class="text-secondary/40 group-hover:hidden"
+          title="Hidden at this breakpoint"
+        />
 
-      <!-- Dynamic field indicator -->
-      <IconUi
-        v-else-if="isDynamic"
-        name="link"
-        size="size-2.5"
-        class="shrink-0 text-purple-fg/60 ml-auto"
-        title="Dynamic field"
-      />
+        <!-- Dynamic field indicator -->
+        <IconUi
+          v-else-if="isDynamic"
+          name="link"
+          size="size-2.5"
+          class="text-purple-fg/60 group-hover:hidden"
+          title="Dynamic field"
+        />
+
+        <!-- Hover actions -->
+        <span v-if="!isBody" class="hidden items-center gap-0.5 group-hover:flex">
+          <ButtonUi variant="bare" square size="xs" icon="duplicate" title="Duplicate" @click="duplicate" />
+          <ButtonUi variant="bare" square size="xs" icon="delete" title="Delete" @click="remove" />
+        </span>
+      </div>
     </div>
 
     <!-- Drop indicator: after -->

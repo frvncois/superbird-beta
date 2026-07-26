@@ -6,6 +6,7 @@ import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useToast } from '@/composables/useToast'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
@@ -74,10 +75,10 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
 </script>
 
 <template>
-  <div class="p-2 space-y-3">
+  <div class="p-4 space-y-6">
     <!-- User components -->
     <div v-if="userComponentsList.length > 0">
-      <div class="px-2 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Components</div>
+      <LabelUi size="xs">Components</LabelUi>
       <div class="space-y-0.5">
         <div
           v-for="comp in userComponentsList"

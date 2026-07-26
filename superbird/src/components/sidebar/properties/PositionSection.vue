@@ -19,7 +19,7 @@ const positionKeys = ['position', 'top', 'right', 'bottom', 'left', 'z-index']
       <FieldRowUi label="Position">
         <DropdownUi class="w-full" v-bind="field('position')" :options="positionOptions" />
       </FieldRowUi>
-      <template v-if="activeStyles.position && activeStyles.position !== 'static' && activeStyles.position !== ''">
+      <template v-if="activeStyles.position && activeStyles.position !== 'static'">
         <div class="grid grid-cols-2 gap-1.5">
           <FieldColUi label="Top" drag v-bind="field('top')">
             <UnitInputUi v-bind="field('top')" placeholder="0" :allow-auto="true" />

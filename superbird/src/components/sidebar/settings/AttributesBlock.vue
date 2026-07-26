@@ -41,7 +41,7 @@ function removeCustomAttribute(key: string) {
 
 <template>
   <PropertySectionUi v-if="node" title="Attributes" icon="settings" :default-open="false">
-    <div class="space-y-1.5">
+
       <FieldRowUi label="ID" label-width="sm">
         <InputUi
           :model-value="node.htmlId ?? ''"
@@ -93,6 +93,5 @@ function removeCustomAttribute(key: string) {
           </div>
         </div>
       </div>
-    </div>
   </PropertySectionUi>
 </template>

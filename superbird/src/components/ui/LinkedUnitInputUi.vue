@@ -46,8 +46,6 @@ function toggleLinked() {
   }
 }
 
-// The link/unlink toggle lives in the group's title — the parent renders it and
-// drives it via these. `linked` also picks single vs. 4-up layout below.
 defineExpose({ linked, toggleLinked })
 </script>
 

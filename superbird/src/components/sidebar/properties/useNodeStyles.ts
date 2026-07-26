@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
-import { CONTAINER_TYPES, TEXT_EDITABLE_TYPES } from '@/constants/canvas'
+import { CONTAINER_TYPES } from '@/constants/canvas'
 import { tailwindToStyles } from '@/lib/tailwindToStyles'
 import type { StyleState } from '@/types/canvas'
 
@@ -15,9 +15,6 @@ export function useNodeStyles() {
   const globalStylesStore = useGlobalStylesStore()
   const node = computed(() => store.selectedNode)
 
-  const isTextNode = computed(() =>
-    node.value && TEXT_EDITABLE_TYPES.includes(node.value.type),
-  )
   const isContainer = computed(() =>
     node.value && CONTAINER_TYPES.includes(node.value.type),
   )
@@ -27,8 +24,6 @@ export function useNodeStyles() {
     if (!globalStylesStore.activeClassName) return null
     return globalStylesStore.styleClasses[globalStylesStore.activeClassName] ?? null
   })
-
-  const hasClass = computed(() => !!activeClass.value)
 
   // When a class is active, edit the class styles at the active breakpoint+state.
   // Otherwise, edit instance styles directly. Tailwind utilities on the node are
@@ -115,17 +110,12 @@ export function useNodeStyles() {
 
   return {
     node,
-    activeClass,
-    hasClass,
     activeStyles,
     isFlex,
     isGrid,
-    isTextNode,
     isContainer,
     isImage,
     updateStyle,
-    updateLinkedStyles,
-    getLinkedValues,
     field,
     linked,
     statesWithValues,

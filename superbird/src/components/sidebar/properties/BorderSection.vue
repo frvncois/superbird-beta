@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import UnitInputUi from '@/components/ui/UnitInputUi.vue'
-import LinkedUnitInputUi from '@/components/ui/LinkedUnitInputUi.vue'
+import LinkedFieldUi from '@/components/ui/LinkedFieldUi.vue'
 import ColorInputUi from '@/components/ui/ColorInputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
-import ButtonUi from '@/components/ui/ButtonUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
@@ -13,8 +12,6 @@ import { borderStyleOptions } from '@/constants/propertyOptions'
 import { useNodeStyles } from './useNodeStyles'
 
 const { field, linked, statesWithValues } = useNodeStyles()
-
-const radiusLink = ref<{ linked: boolean; toggleLinked: () => void } | null>(null)
 
 const borderKeys = ['border-width', 'border-style', 'border-color', 'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius']
 
@@ -47,7 +44,7 @@ const activeBorderMode = ref('all')
 
       <template v-else>
         <div v-for="side in ['top', 'right', 'bottom', 'left']" :key="side" class="space-y-1">
-          <span class="text-[10px] text-secondary capitalize">{{ side }}</span>
+          <LabelUi size="sm" class="text-secondary capitalize">{{ side }}</LabelUi>
           <div class="grid grid-cols-3 gap-1">
             <UnitInputUi v-bind="field(`border-${side}-width`)" placeholder="0" :units="['px', 'em', 'rem']" />
             <DropdownUi class="w-full" v-bind="field(`border-${side}-style`)" :options="borderStyleOptions" />
@@ -56,20 +53,10 @@ const activeBorderMode = ref('all')
         </div>
       </template>
 
-      <div class="space-y-1 pt-1">
-        <div class="flex items-center justify-between">
-          <LabelUi size="sm" class="text-secondary">Radius</LabelUi>
-          <ButtonUi
-            variant="bare"
-            size="sm"
-            icon="link"
-            :active="radiusLink?.linked"
-            :title="radiusLink?.linked ? 'Unlink corners' : 'Link corners'"
-            @click="radiusLink?.toggleLinked()"
-          />
-        </div>
-        <LinkedUnitInputUi
-          ref="radiusLink"
+      <div class="pt-1">
+        <LinkedFieldUi
+          title="Radius"
+          link-noun="corners"
           v-bind="linked(['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'])"
           :labels="['TL', 'TR', 'BR', 'BL']"
           :units="['px', '%', 'em', 'rem']"

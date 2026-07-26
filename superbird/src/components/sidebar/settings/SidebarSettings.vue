@@ -14,9 +14,6 @@ const { node, isTextNode, isCollectionList, isLinkable, boundField } = useNodeSe
 
 <template>
   <EmptyStateUi v-if="!node" message="Select an element to edit" />
-
-  <!-- Same shape as the Properties panel: a padded header block, then a
-       border-wrapped group of accordion sections. -->
   <div v-else>
     <div class="space-y-3 p-4">
       <ElementInfoBlock />

@@ -16,11 +16,8 @@ const props = withDefaults(
     disabled?: boolean
     icon?: string
     align?: ButtonAlign
-    // Icon-only square (no horizontal padding, width = height).
     square?: boolean
-    // Selected / toggled look — overrides the variant's colours.
     active?: boolean
-    // `primary` tints a ghost button's text/hover for accent actions.
     tone?: ButtonTone
   }>(),
   {
@@ -55,7 +52,6 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: 'bg-transparent border text-foreground hover:bg-secondary/10',
   ghost: 'bg-transparent text-foreground hover:bg-secondary/10',
   danger: 'border border-red-border bg-red-bg text-red-fg hover:bg-red-bg/70',
-  // `bare` colours are resolved in colorClasses (no box).
   bare: 'text-foreground hover:text-foreground',
 }
 

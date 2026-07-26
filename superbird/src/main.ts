@@ -9,8 +9,12 @@ import { useAuthStore } from '@/stores/auth'
 import { useMediaStore } from '@/stores/media'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import { useToast } from '@/composables/useToast'
+import { initAutoHideScrollbars } from '@/lib/autoHideScrollbars'
 
 import './assets/main.css'
+
+// Show scrollbars only while an area is being scrolled (see main.css).
+initAutoHideScrollbars()
 
 const app = createApp(App)
 app.use(createPinia())

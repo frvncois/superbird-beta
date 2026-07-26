@@ -14,18 +14,13 @@ const { node, isTextNode, isCollectionList, isLinkable, boundField } = useNodeSe
 
 <template>
   <EmptyStateUi v-if="!node" message="Select an element to edit" />
-  <div v-else>
-    <div class="space-y-3 p-4">
+  <div v-else class="space-y-1.5">
       <ElementInfoBlock />
       <CollectionBlock v-if="isCollectionList" />
       <FieldInfoBlock v-if="boundField" :field="boundField" />
       <ContentBlock v-if="isTextNode && !boundField" />
-    </div>
-
-    <div class="border-y">
       <VisibilityBlock />
       <AttributesBlock />
       <LinkBlock v-if="isLinkable" />
     </div>
-  </div>
 </template>

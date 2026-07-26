@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import ButtonUi from './ButtonUi.vue'
 
 export interface Tab {
   key: string
@@ -34,20 +35,18 @@ function selectTab(key: string) {
 <template>
   <div>
     <!-- Tab bar -->
-    <div class="flex items-center gap-1 border-b p-1.5">
-      <button
+    <div class="flex items-center justify-between gap-1 mb-1.5">
+      <ButtonUi
         v-for="tab in tabs"
         :key="tab.key"
-        :class="[
-          'cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-150',
-          activeTab === tab.key
-            ? 'bg-primary/10 text-primary'
-            : 'bg-transparent text-secondary hover:bg-secondary/10 hover:text-foreground',
-        ]"
+        variant="ghost"
+        size="sm"
+        :active="activeTab === tab.key"
+        :class="activeTab !== tab.key && '!text-secondary hover:!text-foreground'"
         @click="selectTab(tab.key)"
       >
         {{ tab.label }}
-      </button>
+      </ButtonUi>
     </div>
 
     <!-- Tab content -->

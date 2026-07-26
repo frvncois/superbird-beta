@@ -41,7 +41,7 @@ function stateColor(state: StyleState): string {
 </script>
 
 <template>
-  <div class="border-b border-foreground/8 last:border-b-0 py-1 px-3">
+  <div class="border rounded-xl border-foreground/8 py-1 px-3">
     <!-- Header -->
     <button
       class="flex w-full items-center gap-2 py-2.5 cursor-pointer group"

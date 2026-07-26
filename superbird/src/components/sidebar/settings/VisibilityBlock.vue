@@ -30,7 +30,6 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
   <PropertySectionUi v-if="node" title="Visibility" icon="effects" :default-open="false">
     <div class="space-y-2">
       <!-- Breakpoint toggles -->
-      <div class="space-y-1.5">
         <FieldRowUi label="Hide on Desktop">
           <ToggleUi
             class="justify-self-end"
@@ -52,7 +51,6 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
             @update:model-value="updateVisibility({ hideMobile: $event })"
           />
         </FieldRowUi>
-      </div>
 
       <!-- Conditional logic -->
       <FieldColUi v-if="hasFields" label="Conditional Logic" class="pt-1">

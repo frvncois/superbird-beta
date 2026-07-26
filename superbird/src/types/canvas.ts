@@ -247,18 +247,12 @@ export interface CollectionField {
   type: FieldType
 }
 
-// The broad shape of a collection — drives its icon and grouping. 'content' is
-// the flexible catch-all (services, albums, team, portfolios, single structured
-// pages, …). Optional for docs saved before kinds existed (defaults to 'content').
-export type CollectionKind = 'blog' | 'categories' | 'content'
-
 export interface Collection {
   id: string
   name: string
   singular: string
   plural: string
   basePath: string        // URL segment, e.g. "blog"
-  kind?: CollectionKind
   status?: 'draft' | 'published'
   templatePageId: string  // the Page (pageType 'collection') this collection edits
 }

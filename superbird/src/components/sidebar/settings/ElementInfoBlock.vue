@@ -47,7 +47,7 @@ function updateTag(value: string) {
 </script>
 
 <template>
-  <section v-if="node" class="space-y-2">
+  <section v-if="node" class="space-y-2 p-3.5 border-b">
     <LabelUi>Name</LabelUi>
     <div class="space-y-1.5">
       <InputUi

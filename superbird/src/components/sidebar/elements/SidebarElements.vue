@@ -118,7 +118,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
 </script>
 
 <template>
-  <div class="p-4 space-y-6">
+  <div class="space-y-6">
     <InputUi v-model="query" type="search" placeholder="Search elements…" />
 
     <div v-for="cat in filteredCategories" :key="cat.label" class="space-y-2">

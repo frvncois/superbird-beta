@@ -59,7 +59,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 // else `active` (selected) wins, then `tone=primary` accent, then the variant.
 const colorClasses = computed(() => {
   if (props.variant === 'bare') return props.active ? 'text-primary' : 'text-secondary hover:text-foreground'
-  if (props.active) return 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
+  if (props.active) return 'bg-primary/10 text-primary hover:bg-primary/15'
   if (props.tone === 'primary' && props.variant === 'ghost') return 'text-primary hover:bg-primary/10'
   return variantClasses[props.variant]
 })

@@ -4,7 +4,7 @@ import { generateCollectionId, generateEntryId } from '@/lib/ids'
 import { walkTree } from '@/lib/tree'
 import { slugify } from '@/lib/slug'
 import { demoCollections, demoEntries } from '@/data/demo'
-import type { CanvasNode, Collection, CollectionField, CollectionKind, Entry, FieldType } from '@/types/canvas'
+import type { CanvasNode, Collection, CollectionField, Entry, FieldType } from '@/types/canvas'
 
 /**
  * User-defined content types (collections) and their entries — in-app only
@@ -64,7 +64,6 @@ export const useCollectionsStore = defineStore('collections', () => {
   function addCollection(input: {
     name: string
     templatePageId: string
-    kind?: CollectionKind
   }): Collection {
     const singular = input.name.replace(/s$/, '')
     const collection: Collection = {
@@ -73,7 +72,6 @@ export const useCollectionsStore = defineStore('collections', () => {
       singular,
       plural: input.name,
       basePath: slugify(input.name),
-      kind: input.kind ?? 'content',
       templatePageId: input.templatePageId,
     }
     collections.value.push(collection)

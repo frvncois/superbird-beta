@@ -108,7 +108,6 @@ function handleDrop(e: DragEvent, node: CanvasNode) {
 </script>
 
 <template>
-  <div class="py-1">
     <LayerTreeItem
       :node="store.bodyNode"
       :depth="0"
@@ -120,7 +119,6 @@ function handleDrop(e: DragEvent, node: CanvasNode) {
       @dragleave-node="handleDragLeave"
       @drop-node="handleDrop"
     />
-
     <ContextMenuUi
       v-if="ctx.visible.value"
       :items="ctx.items.value"
@@ -128,5 +126,4 @@ function handleDrop(e: DragEvent, node: CanvasNode) {
       :y="ctx.y.value"
       @close="ctx.close"
     />
-  </div>
 </template>

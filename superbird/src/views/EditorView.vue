@@ -77,7 +77,7 @@ const leftTabs = [
 ]
 
 const rightTabs = [
-  { key: 'properties', label: 'Properties', icon: 'properties' },
+  { key: 'properties', label: 'Style', icon: 'properties' },
   { key: 'settings', label: 'Settings', icon: 'settings' },
   { key: 'interactions', label: 'Interactions', icon: 'interactions' },
 ]

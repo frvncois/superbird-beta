@@ -6,6 +6,7 @@ import ButtonUi from '@/components/ui/ButtonUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
+import FieldColUi from '@/components/ui/FieldColUi.vue'
 import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
 const store = useCanvasStore()
@@ -41,7 +42,7 @@ function removeCustomAttribute(key: string) {
 
 <template>
   <PropertySectionUi v-if="node" title="Attributes" icon="settings" :default-open="false">
-
+    <div class="space-y-2">
       <FieldRowUi label="ID" label-width="sm">
         <InputUi
           :model-value="node.htmlId ?? ''"
@@ -58,10 +59,8 @@ function removeCustomAttribute(key: string) {
       </FieldRowUi>
 
       <!-- Custom key/value attributes -->
-      <div class="pt-1.5">
-        <span class="text-[10px] text-secondary">Custom Attributes</span>
-        <!-- Existing attributes -->
-        <div v-if="node.customAttributes" class="space-y-1 mt-1">
+      <FieldColUi label="Custom Attributes">
+        <div class="space-y-1">
           <div
             v-for="(val, key) in node.customAttributes"
             :key="key"
@@ -74,9 +73,7 @@ function removeCustomAttribute(key: string) {
               <IconUi name="close" size="size-3" />
             </IconButtonUi>
           </div>
-        </div>
-        <!-- Add new -->
-        <div class="mt-1 space-y-1">
+          <!-- Add new -->
           <InputUi v-model="newAttrKey" size="xs" placeholder="key" />
           <div class="flex items-center gap-1">
             <InputUi
@@ -92,6 +89,7 @@ function removeCustomAttribute(key: string) {
             </ButtonUi>
           </div>
         </div>
-      </div>
+      </FieldColUi>
+    </div>
   </PropertySectionUi>
 </template>

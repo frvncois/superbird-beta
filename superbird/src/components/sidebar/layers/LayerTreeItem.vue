@@ -90,7 +90,7 @@ function remove(e: MouseEvent) {
     <div
       :data-layer-id="node.id"
       :class="[
-        'group flex items-center h-7 pr-2 cursor-pointer mx-1 rounded select-none transition-[background-color,box-shadow] duration-100',
+        'group flex items-center h-7 pr-2 cursor-pointer rounded-xl select-none transition-[background-color,box-shadow] duration-100',
         isSelected && !isDragged && isComponent
           ? 'bg-green-bg text-green-fg'
           : isSelected && !isDragged && isDynamic

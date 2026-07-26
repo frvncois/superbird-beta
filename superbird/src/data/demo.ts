@@ -778,8 +778,8 @@ export const demoPages: Page[] = [
 // ============================================================================
 
 export const demoCollections: Collection[] = [
-  { id: 'col-blog', name: 'Blog', singular: 'Post', plural: 'Posts', basePath: 'blog', kind: 'blog', templatePageId: 'demo-single-post' },
-  { id: 'col-categories', name: 'Categories', singular: 'Category', plural: 'Categories', basePath: 'category', kind: 'categories', templatePageId: 'demo-category-template' },
+  { id: 'col-blog', name: 'Blog', singular: 'Post', plural: 'Posts', basePath: 'blog', templatePageId: 'demo-single-post' },
+  { id: 'col-categories', name: 'Categories', singular: 'Category', plural: 'Categories', basePath: 'category', templatePageId: 'demo-category-template' },
 ]
 
 export const demoEntries: Entry[] = [

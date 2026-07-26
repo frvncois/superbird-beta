@@ -140,7 +140,7 @@ async function publish() {
     </div>
 
     <!-- Center: context bar over the canvas (editor only) -->
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center justify-center gap-1.5">
       <HeaderContextBar v-if="mode === 'editor'" />
     </div>
 

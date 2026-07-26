@@ -17,7 +17,7 @@ const gridTemplateColumns = computed(() =>
 </script>
 
 <template>
-  <div class="grid h-full w-full transition-[grid-template-columns] duration-200 ease-[ease]" :style="{ gridTemplateColumns }">
+  <div class="grid h-full w-full transition-[grid-template-columns] duration-200 ease-[ease] gap-3.5 px-3.5" :style="{ gridTemplateColumns }">
     <aside v-show="!contentMode" class="col-start-1 relative z-30 overflow-hidden">
       <slot name="sidebar-left" />
     </aside>

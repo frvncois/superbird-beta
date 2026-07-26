@@ -2,7 +2,6 @@ import type {
   ActionProperty,
   Breakpoint,
   CanvasNode,
-  CollectionKind,
   CollectionSource,
   CollectionSourceConfig,
   DynamicField,
@@ -120,30 +119,6 @@ export const PAGE_TYPE_CONFIGS: PageTypeConfig[] = [
 
 export function getPageTypeConfig(type: PageType): PageTypeConfig {
   return PAGE_TYPE_CONFIGS.find((c) => c.key === type)!
-}
-
-// --- Collection kinds (label + icon; 'content' is the flexible catch-all) ---
-
-export interface CollectionKindConfig {
-  key: CollectionKind
-  label: string
-  icon: string
-}
-
-export const COLLECTION_KIND_CONFIGS: CollectionKindConfig[] = [
-  { key: 'blog', label: 'Blog', icon: 'richtext' },
-  { key: 'categories', label: 'Categories', icon: 'folder' },
-  { key: 'content', label: 'Content', icon: 'collection' },
-]
-
-// Fall back to the stored kind (or 'content' for pre-kind docs).
-export function collectionKind(c: { kind?: CollectionKind }): CollectionKind {
-  return c.kind ?? 'content'
-}
-
-export function collectionKindIcon(c: { kind?: CollectionKind }): string {
-  const key = collectionKind(c)
-  return COLLECTION_KIND_CONFIGS.find((k) => k.key === key)?.icon ?? 'collection'
 }
 
 // --- Collection sources ---

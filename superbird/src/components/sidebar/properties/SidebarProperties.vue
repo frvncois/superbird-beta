@@ -31,7 +31,7 @@ watch(() => node.value?.id, () => {
   <EmptyStateUi v-if="!node" message="Select an element to edit" />
 
   <!-- Properties panel -->
-  <div v-else>
+  <div v-else class="space-y-1.5">
     <SelectorSection />
 
     <!-- Style sections (always shown when a node is selected) -->

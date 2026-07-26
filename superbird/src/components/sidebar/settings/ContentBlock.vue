@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useLocalesStore } from '@/stores/locales'
 import TextareaUi from '@/components/ui/TextareaUi.vue'
-import LabelUi from '@/components/ui/LabelUi.vue'
+import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
 const store = useCanvasStore()
 const localesStore = useLocalesStore()
@@ -21,19 +21,19 @@ function updateContent(value: string) {
 </script>
 
 <template>
-  <section v-if="node" class="space-y-2">
-    <div class="flex items-center justify-between">
-      <LabelUi>Content</LabelUi>
-      <span
-        v-if="!localesStore.isDefaultLocale"
-        class="text-[9px] font-mono font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded"
-      >{{ localesStore.activeLocale.toUpperCase() }}</span>
+  <PropertySectionUi v-if="node" title="Content" icon="settings">
+    <div class="space-y-1.5">
+      <div v-if="!localesStore.isDefaultLocale" class="flex justify-end">
+        <span class="text-[9px] font-mono font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded">
+          {{ localesStore.activeLocale.toUpperCase() }}
+        </span>
+      </div>
+      <TextareaUi
+        :model-value="nodeContent"
+        placeholder="Text content"
+        :rows="3"
+        @update:model-value="updateContent"
+      />
     </div>
-    <TextareaUi
-      :model-value="nodeContent"
-      placeholder="Text content"
-      :rows="3"
-      @update:model-value="updateContent"
-    />
-  </section>
+  </PropertySectionUi>
 </template>

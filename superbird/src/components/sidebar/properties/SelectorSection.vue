@@ -61,7 +61,7 @@ function renameClass(oldName: string, newName: string) {
 </script>
 
 <template>
-  <section v-if="node" class="p-2.5">
+  <section v-if="node" class="py-3.5">
     <ClassInputUi
       :classes="node.classes"
       :active-class="globalStylesStore.activeClassName"

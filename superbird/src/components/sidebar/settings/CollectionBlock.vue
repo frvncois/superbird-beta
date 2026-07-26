@@ -4,8 +4,8 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
 import InputUi from '@/components/ui/InputUi.vue'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
-import LabelUi from '@/components/ui/LabelUi.vue'
 import FieldRowUi from '@/components/ui/FieldRowUi.vue'
+import PropertySectionUi from '@/components/ui/PropertySectionUi.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -34,8 +34,7 @@ function updatePropValue(key: string, value: string) {
 </script>
 
 <template>
-  <section v-if="node" class="space-y-2 pb-3">
-    <LabelUi>Collection</LabelUi>
+  <PropertySectionUi v-if="node" title="Collection" icon="settings">
     <div class="space-y-1.5">
       <FieldRowUi label="Source" label-width="md">
         <DropdownUi
@@ -69,5 +68,5 @@ function updatePropValue(key: string, value: string) {
         />
       </FieldRowUi>
     </div>
-  </section>
+  </PropertySectionUi>
 </template>

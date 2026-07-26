@@ -2,8 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
-import { PAGE_TYPE_CONFIGS, COLLECTION_KIND_CONFIGS, collectionKindIcon } from '@/constants/canvas'
-import type { Page, CollectionKind } from '@/types/canvas'
+import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
+import type { Page } from '@/types/canvas'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
@@ -98,12 +98,10 @@ function confirmAdd() {
 // Add collection
 const isAddingCollection = ref(false)
 const newCollectionName = ref('')
-const newCollectionKind = ref<CollectionKind>('content')
 const collectionInputRef = ref<{ focus: () => void } | null>(null)
 function startAddingCollection() {
   isAddingCollection.value = true
   newCollectionName.value = ''
-  newCollectionKind.value = 'content'
   requestAnimationFrame(() => collectionInputRef.value?.focus())
 }
 function confirmAddCollection() {
@@ -113,7 +111,6 @@ function confirmAddCollection() {
   const collection = collections.addCollection({
     name,
     templatePageId: page.id,
-    kind: newCollectionKind.value,
   })
   store.openCollection(collection.id)
   close()
@@ -163,7 +160,6 @@ watch(pagesOpen, (open) => {
     newPageName.value = ''
     isAddingCollection.value = false
     newCollectionName.value = ''
-    newCollectionKind.value = 'content'
     addingItem.value = false
     newItemTitle.value = ''
     hovered.value = null
@@ -183,9 +179,9 @@ function backToTemplate() {
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
+  <div class="flex items-center justify-center gap-2">
     <!-- Pages / collections navigation -->
-    <DropdownUi v-model:open="pagesOpen" class="w-64">
+    <DropdownUi v-model:open="pagesOpen" class="w-64" panel-class="!max-h-[80vh]">
       <template #trigger="{ open, toggle }">
         <button
           class="flex h-8 w-full items-center justify-between gap-1.5 px-3 text-xs font-medium cursor-pointer"
@@ -212,11 +208,10 @@ function backToTemplate() {
         align="start"
         icon="document"
         class="w-full"
-        :class="page.id === store.activePageId && !store.activeEntry ? 'bg-primary/10 font-medium' : ''"
+        :active="page.id === store.activePageId && !store.activeEntry"
         @click="selectPage(page.id)"
       >
         <span class="truncate">{{ page.name }}</span>
-        <span class="ml-auto font-mono text-[10px] text-secondary/40">/{{ page.slug }}</span>
       </ButtonUi>
 
       <!-- New page (regular pages only — System pages are auto-generated) -->
@@ -258,11 +253,10 @@ function backToTemplate() {
           align="start"
           :icon="systemIcon(page)"
           class="w-full"
-          :class="page.id === store.activePageId && !store.activeEntry ? 'bg-primary/10 font-medium' : ''"
+          :active="page.id === store.activePageId && !store.activeEntry"
           @click="selectPage(page.id)"
         >
           <span class="truncate">{{ page.name }}</span>
-          <span class="ml-auto font-mono text-[10px] text-secondary/40">/{{ page.slug }}</span>
         </ButtonUi>
       </template>
 
@@ -278,47 +272,28 @@ function backToTemplate() {
         variant="ghost"
         size="sm"
         align="start"
-        :icon="collectionKindIcon(col)"
+        icon="collection"
         class="w-full"
-        :class="store.activeCollection?.id === col.id ? 'bg-primary/10 font-medium' : ''"
+        :active="store.activeCollection?.id === col.id"
         @click="openCollection(col.id)"
         @mouseenter="openFlyout($event, col.id)"
         @mouseleave="scheduleCloseFlyout"
       >
         <span class="truncate">{{ col.name }}</span>
-        <span class="ml-auto font-mono text-[10px] text-secondary/40">{{ collections.entriesByCollection(col.id).length }}</span>
-        <IconUi name="chevron-right" size="size-3" class="text-secondary/40" />
+        <IconUi name="chevron-right" size="size-3" class="ml-auto text-secondary/40" />
       </ButtonUi>
 
       <template v-if="isAddingCollection">
-        <div class="space-y-1.5 px-1 py-1">
-          <!-- Inline kind picker (a nested teleporting select would close the dropdown) -->
-          <div class="grid grid-cols-2 gap-1">
-            <ButtonUi
-              v-for="k in COLLECTION_KIND_CONFIGS"
-              :key="k.key"
-              type="button"
-              variant="outline"
-              size="sm"
-              align="start"
-              :icon="k.icon"
-              :class="newCollectionKind === k.key ? 'border-primary/60 bg-primary/10 font-medium' : 'border-foreground/10 text-secondary'"
-              @click="newCollectionKind = k.key"
-            >
-              <span class="truncate">{{ k.label }}</span>
-            </ButtonUi>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <InputUi
-              ref="collectionInputRef"
-              v-model="newCollectionName"
-              placeholder="Collection name"
-              size="xs"
-              class="flex-1"
-              @keydown="handleKeydown($event, confirmAddCollection)"
-            />
-            <ButtonUi size="sm" @click="confirmAddCollection">Add</ButtonUi>
-          </div>
+        <div class="flex items-center gap-1.5 px-1 py-1">
+          <InputUi
+            ref="collectionInputRef"
+            v-model="newCollectionName"
+            placeholder="Collection name"
+            size="xs"
+            class="flex-1"
+            @keydown="handleKeydown($event, confirmAddCollection)"
+          />
+          <ButtonUi size="sm" @click="confirmAddCollection">Add</ButtonUi>
         </div>
       </template>
       <ButtonUi
@@ -356,7 +331,7 @@ function backToTemplate() {
             size="sm"
             align="start"
             class="w-full"
-            :class="store.activeEntry?.id === entry.id ? 'bg-primary/10 font-medium' : ''"
+            :active="store.activeEntry?.id === entry.id"
             @click="openEntry(entry.id)"
           >
             <span class="truncate">{{ entry.title }}</span>

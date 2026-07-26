@@ -10,7 +10,7 @@
 
   /* App chrome sizing — one source of truth for the shell */
   --header-height: 55px;
-  --sidebar-width: 280px;
+  --sidebar-width: 250px;
 
   /* Core palette (light mode defaults) */
   --color-background: #ffffff;
@@ -212,10 +212,14 @@
 }
 
 
-/* ─── Custom Scrollbar ─── */
+/* ─── Custom Scrollbar (auto-hide: visible only while the area is scrolling) ───
+   The thumb is transparent at rest; a global capture listener (see
+   lib/autoHideScrollbars) tags the scrolling element with `.is-scrolling` on
+   each scroll and drops it after a short idle delay, so the bar fades in only
+   while in motion. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  scrollbar-color: transparent transparent;
 }
 
 *::-webkit-scrollbar {
@@ -228,24 +232,37 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
   border-radius: 50px;
+  transition: background 0.3s ease;
 }
 
-*::-webkit-scrollbar-thumb:hover {
+/* While actively scrolling → reveal the thumb. */
+.is-scrolling {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.is-scrolling::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.35);
 }
 
-.dark *::-webkit-scrollbar-thumb {
+.dark .is-scrolling,
+.dark.is-scrolling {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.dark .is-scrolling::-webkit-scrollbar-thumb,
+.dark.is-scrolling::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.dark *::-webkit-scrollbar-thumb:hover {
+.dark .is-scrolling::-webkit-scrollbar-thumb:hover,
+.dark.is-scrolling::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
-}
-
-.dark * {
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* ─── Rendered markdown ───

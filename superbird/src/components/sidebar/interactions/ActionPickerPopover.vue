@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { ACTION_PROPERTIES } from '@/constants/canvas'
 import type { ActionProperty, ClassOp } from '@/types/canvas'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 
 defineProps<{
   position: { x: number; y: number }
@@ -41,7 +42,7 @@ const classOps: { op: ClassOp; label: string }[] = [
       :style="{ left: `${position.x - 144}px`, top: `${position.y}px` }"
     >
       <template v-for="(items, group) in actionGroups" :key="group">
-        <div class="px-2 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-secondary/50">{{ group }}</div>
+        <LabelUi size="xs" class="block px-2 pt-1.5 pb-0.5 text-secondary/50">{{ group }}</LabelUi>
         <ButtonUi
           v-for="prop in items"
           :key="prop.key"
@@ -56,7 +57,7 @@ const classOps: { op: ClassOp; label: string }[] = [
       </template>
 
       <!-- Class operations (purple, like other class affordances) -->
-      <div class="px-2 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-purple-fg/70">Class</div>
+      <LabelUi size="xs" class="block px-2 pt-1.5 pb-0.5 text-purple-fg/70">Class</LabelUi>
       <ButtonUi
         v-for="c in classOps"
         :key="c.op"

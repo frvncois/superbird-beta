@@ -10,6 +10,7 @@ import InputUi from '@/components/ui/InputUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
+import BadgeUi from '@/components/ui/BadgeUi.vue'
 import HeaderPageSettings from './HeaderPageSettings.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
@@ -337,7 +338,7 @@ function backToTemplate() {
             @click="openEntry(entry.id)"
           >
             <span class="truncate">{{ entry.title }}</span>
-            <span v-if="entry.status === 'draft'" class="ml-auto rounded bg-muted-bg px-1 py-px text-[8px] font-mono uppercase text-muted-fg">draft</span>
+            <BadgeUi v-if="entry.status === 'draft'" variant="default" size="xs" mono class="ml-auto">draft</BadgeUi>
           </ButtonUi>
 
           <div class="my-1 border-t border-foreground/8" />

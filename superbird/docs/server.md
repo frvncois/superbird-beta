@@ -3,7 +3,7 @@
 > **Status: shipped.** Auth/install, the whole-document project store
 > (design + content: collections/entries live in the `project_state` JSON, not
 > yet normalised into rows), media (files-on-disk + metadata), forms +
-> submissions, the store/commerce tier (products, orders, customers, Stripe),
+> submissions,
 > the render pipeline, and the **public SSR site** (draft/publish, per-request
 > render with an in-memory published-design + compiled-asset cache) are all
 > built. See the routes table below and `render.md`.
@@ -26,7 +26,7 @@ server/
   index.ts            Hono app + @hono/node-server bootstrap (port 3001)
   db/
     client.ts         better-sqlite3 + drizzle instance; ensureSchema()
-    schema.ts         Drizzle tables: projects, users, sessions, media, mediaFolders, backups, submissions, smtpConfig, projectState, storeConfig, products, orders, orderItems, customers, customerSessions
+    schema.ts         Drizzle tables: projects, users, sessions, media, mediaFolders, backups, submissions, smtpConfig, projectState
   lib/
     password.ts       scrypt hash/verify
     session.ts        session create/read/destroy + cookie helpers
@@ -59,12 +59,6 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 | `GET /api/forms/submitted-forms` | ✓ | Distinct forms with submissions (filter options) |
 | `GET /api/forms/submissions/export` | ✓ | Scoped CSV/JSON export (rate-limited attachment) |
 | `GET/PUT /api/forms/smtp` · `POST /api/forms/smtp/test` | ✓ | SMTP config (password write-only) + test email |
-| `GET/PUT /api/store/config` | ✓ | Store toggle + currency + Stripe keys (secret/webhook write-only) |
-| `GET /api/store/products` · `PUT` · `DELETE/:entryId` · `POST /:entryId/archive` | ✓ | Product commerce rows (price/stock/active), remove soft/hard, archive |
-| `GET /api/store/orders` · `PATCH /:id` | ✓ | Orders list (status filter) + status transitions |
-| `GET /api/store/customers` · `GET /:id/orders` | ✓ | Customers + per-customer order history |
-| `POST /api/store/auth/{register,login,logout}` · `GET /session` | — | **Public** — customer auth (separate from admin `users`) |
-| `GET /api/store/catalog` · `POST /store/checkout` · `POST /store/webhook` · `GET /store/order` | — | **Public** — storefront: catalog, Stripe Checkout, webhook, order lookup |
 | `GET /api/health` | — | Liveness |
 | `GET /*` (non-`/api`, non-`/media`) | — | **Public SSR site** — resolves the URL and returns rendered HTML |
 
@@ -154,7 +148,7 @@ editor SPA stays on Vite (`5173`). In production they're different domains.
 
 ## Security & hardening
 
-Layers on the admin surface (public storefront/forms/webhook/SSR are deliberately untouched):
+Layers on the admin surface (public forms/webhook/SSR are deliberately untouched):
 
 - **Sessions** — `sb_session` httpOnly + `SameSite=Lax` (+ `Secure` in prod). TTL is **1 day** by default, **30 days** with login "remember me". `startSession` **rotates** (drops the incoming cookie's session first, killing fixation). `POST /api/logout-all` revokes **every** session for the user ("Log out all devices" in the app menu).
 - **Two-factor (TOTP)** — opt-in per user (Settings › Security). `lib/totp.ts` implements RFC 6238 (SHA-1, 6 digits, 30s, ±1 window) over `node:crypto` — no dependency; the base32 secret is entered manually into an authenticator. Login becomes two-step: `/api/login` returns `{ twoFactorRequired, challenge }` (short-lived in-memory token, ≤5 tries) and `/api/login/2fa` completes it. Enrollment (`/api/2fa/setup|enable|disable`) issues **8 single-use recovery codes** (SHA-256-hashed at rest, shown once); disabling requires a current code. `users.totp_secret/enabled/recovery`; `User.twoFactorEnabled` flows to the client.

@@ -1,33 +1,25 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
-import type { FieldType, NodeType, PrebuiltElementKey } from '@/types/canvas'
+import { useLocalesStore } from '@/stores/locales'
+import type { NodeType, PrebuiltElementKey } from '@/types/canvas'
+import ButtonUi from '@/components/ui/ButtonUi.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
+import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import InputUi from '@/components/ui/InputUi.vue'
+import LabelUi from '@/components/ui/LabelUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { buildElementActions } from '@/composables/useNodeContextMenu'
 
 const store = useCanvasStore()
+const localesStore = useLocalesStore()
 const ctx = useContextMenu()
 
-// Dynamic fields — only when editing a collection template. Dragging one
-// creates a new field on the collection and places its bound element.
-interface FieldDef { type: FieldType; label: string; glyph: string }
-const dynamicFields: FieldDef[] = [
-  { type: 'text', label: 'Text', glyph: 'T' },
-  { type: 'richtext', label: 'Rich text', glyph: '¶' },
-  { type: 'image', label: 'Image', glyph: '▦' },
-  { type: 'number', label: 'Number', glyph: '#' },
-  { type: 'date', label: 'Date', glyph: '📅' },
-]
-
-function handleFieldDragStart(e: DragEvent, type: FieldType) {
-  e.dataTransfer!.effectAllowed = 'copy'
-  e.dataTransfer!.setData('application/superbird-dynamic-field', type)
-}
-
-// `prebuilt` marks a ready-made "Dynamic" element (login/cart) — dragged with a
+// `prebuilt` marks a ready-made "System" element (lang) — dragged with a
 // different MIME so the drop inserts a whole tree instead of a single node.
-interface ElementDef { type: NodeType; label: string; icon: string; prebuilt?: PrebuiltElementKey }
+// `requires` gates an element on a site capability being on (multilang).
+interface ElementDef { type: NodeType; label: string; icon: string; prebuilt?: PrebuiltElementKey; requires?: 'multilang' }
 interface ElementCategory { label: string; elements: ElementDef[] }
 
 const categories: ElementCategory[] = [
@@ -40,7 +32,7 @@ const categories: ElementCategory[] = [
     ],
   },
   {
-    label: 'Typography',
+    label: 'Content',
     elements: [
       { type: 'heading', label: 'Heading', icon: 'heading' },
       { type: 'text', label: 'Text', icon: 'text' },
@@ -48,19 +40,14 @@ const categories: ElementCategory[] = [
       { type: 'link', label: 'Link', icon: 'link' },
       { type: 'span', label: 'Span', icon: 'span' },
       { type: 'list', label: 'List', icon: 'list' },
-      { type: 'blockquote', label: 'Quote', icon: 'blockquote' },
-    ],
-  },
-  {
-    label: 'Media',
-    elements: [
+      { type: 'blockquote', label: 'Blockquote', icon: 'blockquote' },
       { type: 'image', label: 'Image', icon: 'image' },
       { type: 'video', label: 'Video', icon: 'video' },
       { type: 'embed', label: 'Embed', icon: 'embed' },
     ],
   },
   {
-    label: 'Form',
+    label: 'Forms',
     elements: [
       { type: 'form', label: 'Form', icon: 'form' },
       { type: 'input', label: 'Input', icon: 'input' },
@@ -69,27 +56,47 @@ const categories: ElementCategory[] = [
       { type: 'checkbox', label: 'Checkbox', icon: 'checkbox' },
       { type: 'radio', label: 'Radio', icon: 'radio' },
       { type: 'label', label: 'Label', icon: 'label' },
-      { type: 'file-upload', label: 'Upload', icon: 'upload' },
+      { type: 'file-upload', label: 'File Upload', icon: 'upload' },
     ],
   },
   {
     label: 'Interactive',
     elements: [
       { type: 'button', label: 'Button', icon: 'button' },
-      { type: 'link-block', label: 'Link Block', icon: 'link-block' },
+      { type: 'link-block', label: 'Link Container', icon: 'link-block' },
+      { type: 'collection-list', label: 'Collection List', icon: 'collection' },
     ],
   },
   {
-    label: 'Dynamic',
+    label: 'System',
     elements: [
-      { type: 'collection-list', label: 'Collection', icon: 'collection' },
-      { type: 'div', label: 'Lang', icon: 'globe', prebuilt: 'lang-switcher' },
-      { type: 'form', label: 'Login', icon: 'users', prebuilt: 'login' },
-      { type: 'div', label: 'Cart', icon: 'cart', prebuilt: 'cart' },
-      { type: 'button', label: 'Add to cart', icon: 'cart', prebuilt: 'add-to-cart' },
+      { type: 'div', label: 'Lang Switcher', icon: 'globe', prebuilt: 'lang-switcher', requires: 'multilang' },
     ],
   },
 ]
+
+// Multilang on ⇔ more than the default locale is configured.
+const multilangEnabled = computed(() => localesStore.locales.length > 1)
+
+function isAvailable(el: ElementDef): boolean {
+  if (el.requires === 'multilang') return multilangEnabled.value
+  return true
+}
+
+// ── Search / filter ──
+const query = ref('')
+const q = computed(() => query.value.trim().toLowerCase())
+
+const filteredCategories = computed(() =>
+  categories
+    .map((cat) => ({
+      ...cat,
+      elements: cat.elements.filter((el) => isAvailable(el) && (!q.value || el.label.toLowerCase().includes(q.value))),
+    }))
+    .filter((cat) => cat.elements.length > 0),
+)
+
+const hasResults = computed(() => filteredCategories.value.length > 0)
 
 function handleDragStart(e: DragEvent, el: ElementDef) {
   e.dataTransfer!.effectAllowed = 'copyMove'
@@ -112,31 +119,17 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
 
 <template>
   <div class="p-4 space-y-6">
-    <!-- Dynamic fields (collection templates only) -->
-    <div v-if="store.isCollectionTemplate">
-      <div class="px-1 pb-1 pt-0.5 text-[9px] font-mono uppercase tracking-wider text-purple-fg/70">Dynamic Fields</div>
-      <div class="grid grid-cols-4 gap-0.5">
-        <div
-          v-for="f in dynamicFields"
-          :key="f.type"
-          class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground transition-colors duration-150 hover:bg-purple-bg/40 active:cursor-grabbing"
-          draggable="true"
-          @dragstart="handleFieldDragStart($event, f.type)"
-        >
-          <span class="flex size-7 items-center justify-center rounded-md bg-purple-bg text-purple-fg"><IconUi :name="f.type" size="size-4" /></span>
-          <span class="text-[9px]">{{ f.label }}</span>
-        </div>
-      </div>
-    </div>
+    <InputUi v-model="query" type="search" placeholder="Search elements…" />
 
-    <div v-for="cat in categories" :key="cat.label" class="space-y-2">
-      <div class="text-xs font-medium">{{ cat.label }}</div>
+    <div v-for="cat in filteredCategories" :key="cat.label" class="space-y-2">
+      <LabelUi size="xs">{{ cat.label }}</LabelUi>
       <div class="grid grid-cols-4 gap-0.5">
-        <div
+        <ButtonUi
           v-for="el in cat.elements"
           :key="el.type"
-          class="flex cursor-grab flex-col items-center gap-1 rounded-lg py-1.5 text-foreground active:cursor-grabbing"
+          variant="bare"
           draggable="true"
+          class="w-full flex-col rounded-lg py-1.5 !cursor-grab active:!cursor-grabbing"
           @dragstart="handleDragStart($event, el)"
           @dragend="handleDragEnd"
           @contextmenu.prevent="handleContextMenu($event, el.type)"
@@ -144,10 +137,12 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           <span class="flex size-12 items-center justify-center rounded-md bg-foreground/5 text-secondary">
             <IconUi :name="el.icon" size="size-5" />
           </span>
-          <span class="text-[9px] font-mono uppercase tracking-wider">{{ el.label }}</span>
-        </div>
+          <LabelUi size="xs" class="text-foreground">{{ el.label }}</LabelUi>
+        </ButtonUi>
       </div>
     </div>
+
+    <EmptyStateUi v-if="!hasResults" :message="`No elements match “${query}”`" compact />
 
     <ContextMenuUi
       v-if="ctx.visible.value"

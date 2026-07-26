@@ -1,11 +1,9 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { createNode, createPage } from '@/lib/nodeFactory'
-import { SYSTEM_PAGE_DEFS, buildSystemPage } from '@/lib/storeSystemPages'
 import { buildPrebuilt } from '@/lib/prebuiltElements'
-import { generateFieldId } from '@/lib/ids'
 import { findNode, findParent, findParentNode } from '@/lib/tree'
-import { FORM_CHILD_TYPES, fieldTypeToNodeType, fieldTypeToTag } from '@/constants/canvas'
+import { FORM_CHILD_TYPES } from '@/constants/canvas'
 import { resolveNodeContent } from '@/lib/render/context'
 import { useInteractionOps } from './canvas/interactions'
 import { useClipboardOps } from './canvas/clipboard'
@@ -14,7 +12,7 @@ import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
 import { demoPages } from '@/data/demo'
-import type { CanvasNode, FieldType, NodeType, Page, PageType, PrebuiltElementKey, SystemPageKey } from '@/types/canvas'
+import type { CanvasNode, NodeType, Page, PageType, PrebuiltElementKey } from '@/types/canvas'
 
 /**
  * Pages, the node tree, selection, clipboard and node-level operations.
@@ -98,35 +96,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     pages.value.push(page)
     setActivePage(page.id)
     return page
-  }
-
-  function systemPage(key: SystemPageKey): Page | undefined {
-    return pages.value.find((p) => p.systemKey === key)
-  }
-
-  // Create any missing store system pages (login/account/cart/confirmation).
-  // Idempotent — safe to call every time the store is activated.
-  function ensureStoreSystemPages(): Page[] {
-    const created: Page[] = []
-    for (const def of SYSTEM_PAGE_DEFS) {
-      if (!systemPage(def.key)) {
-        const page = buildSystemPage(def)
-        pages.value.push(page)
-        created.push(page)
-      }
-    }
-    return created
-  }
-
-  // Remove the store system pages (on deactivation). Returns how many went.
-  function removeStoreSystemPages(): number {
-    const keys = new Set<SystemPageKey>(SYSTEM_PAGE_DEFS.map((d) => d.key))
-    const before = pages.value.length
-    pages.value = pages.value.filter((p) => !(p.systemKey && keys.has(p.systemKey)))
-    if (!pages.value.find((p) => p.id === activePageId.value)) {
-      setActivePage(pages.value[0]?.id ?? '')
-    }
-    return before - pages.value.length
   }
 
   function removePage(pageId: string) {
@@ -415,29 +384,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     getParentId,
   } = useClipboardOps(activePage, selectedNodeId)
 
-  // --- Dynamic Fields ---
-
-  // Drop a typed dynamic field from the Elements tab onto a collection
-  // template: creates a NEW field (fresh key) and places its bound element.
-  const FIELD_LABELS: Record<FieldType, string> = {
-    text: 'Text field',
-    richtext: 'Rich text field',
-    image: 'Image field',
-    number: 'Number field',
-    date: 'Date field',
-  }
-
-  function addDynamicField(fieldType: FieldType, targetId?: string, position?: 'before' | 'after' | 'inside') {
-    const label = FIELD_LABELS[fieldType]
-    return addNode(fieldTypeToNodeType(fieldType), {
-      tag: fieldTypeToTag(fieldType),
-      label,
-      content: label,
-      dynamicField: generateFieldId(),
-      props: { fieldType },
-    }, targetId, position)
-  }
-
   // --- Interactions --- (extracted to ./canvas/interactions.ts)
   const {
     getNodeInteractions,
@@ -509,9 +455,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     pagesByType,
     setActivePage,
     hydratePages,
-    systemPage,
-    ensureStoreSystemPages,
-    removeStoreSystemPages,
     // Collection / entry context
     activeEntryId,
     activeEntry,
@@ -577,7 +520,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     isContainerNode,
     getParentId,
     // Dynamic fields
-    addDynamicField,
     // Interactions
     getNodeInteractions,
     addInteraction,

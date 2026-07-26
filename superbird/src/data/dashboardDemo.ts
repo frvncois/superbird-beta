@@ -64,25 +64,3 @@ export const submissions: FormSubmission[] = [
   { id: 's4', name: 'Tom Okafor', email: 'tom@okafor.dev', form: 'Contact', time: '5h ago' },
 ]
 
-export interface Sale {
-  id: string
-  customer: string
-  product: string
-  amount: number
-  time: string
-}
-
-export const sales = {
-  total: 8940,
-  changePct: 6.2,
-  recent: [
-    { id: 'o1', customer: 'Amelia Chen', product: 'Pro plan — annual', amount: 240, time: '22m ago' },
-    { id: 'o2', customer: 'Northwind Co.', product: 'Team seats ×5', amount: 600, time: '1h ago' },
-    { id: 'o3', customer: 'Priya Nair', product: 'Starter plan', amount: 29, time: '4h ago' },
-    { id: 'o4', customer: 'Tom Okafor', product: 'Pro plan — monthly', amount: 24, time: '6h ago' },
-  ] as Sale[],
-}
-
-export function formatCurrency(amount: number): string {
-  return '$' + amount.toLocaleString('en-US')
-}

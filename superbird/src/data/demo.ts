@@ -353,15 +353,6 @@ const blogCardTree = box('Blog Card', ['card'], [
   txt('Date', 'July 15, 2026', ['text-small'], { styles: { 'margin-top': '12px' } }),
 ])
 
-const productCardTree = box('Product Card', ['card'], [
-  img('Image', ['img-square'], { styles: { 'margin-bottom': '16px' } }),
-  h('h3', 'Title', 'Product name', ['heading-card']),
-  box('Row', ['flex-between'], [
-    span('Price', '$49', ['price'], { styles: { 'font-size': '24px' } }),
-    btn('Buy', 'Add to cart', ['btn', 'btn-primary', 'btn-sm']),
-  ]),
-])
-
 const ctaBannerTree = sec('CTA', ['section'], [
   box('CTA Inner', ['container'], [
     box('CTA Card', ['cta-card'], [
@@ -384,7 +375,6 @@ export const demoUserComponents: Record<string, UserComponent> = {
   'comp-stat': { id: 'comp-stat', name: 'Stat', tree: statTree },
   'comp-team-member': { id: 'comp-team-member', name: 'Team Member', tree: teamMemberTree },
   'comp-blog-card': { id: 'comp-blog-card', name: 'Blog Card', tree: blogCardTree },
-  'comp-product-card': { id: 'comp-product-card', name: 'Product Card', tree: productCardTree },
   'comp-cta-banner': { id: 'comp-cta-banner', name: 'CTA Banner', tree: ctaBannerTree },
 }
 
@@ -433,14 +423,6 @@ const teamChildren = (name: string, role: string): CanvasNode[] => [
   img('Avatar', ['team-avatar']),
   span('Name', name, ['team-name']),
   txt('Role', role, ['team-role']),
-]
-const productChildren = (title: string, price: string): CanvasNode[] => [
-  img('Image', ['img-square'], { styles: { 'margin-bottom': '16px' } }),
-  h('h3', 'Title', title, ['heading-card']),
-  box('Row', ['flex-between'], [
-    span('Price', price, ['price'], { styles: { 'font-size': '24px' } }),
-    btn('Buy', 'Add to cart', ['btn', 'btn-primary', 'btn-sm']),
-  ]),
 ]
 const faqItem = (q: string, a: string) =>
   box('FAQ', ['faq-item'], [txt('Question', q, ['faq-q']), txt('Answer', a, ['faq-a'])])
@@ -700,28 +682,6 @@ const contactPage = page('demo-contact', 'Contact', 'contact', 'page', [
   comp('comp-footer', 'Footer'),
 ])
 
-const productsPage = page('demo-products', 'Products', 'products', 'page', [
-  comp('comp-navbar', 'Navbar'),
-  sec('Hero', ['page-hero'], [
-    box('Inner', ['container-sm'], [
-      h('h1', 'Title', 'Templates & themes', ['heading-hero', 'mb-md']),
-      txt('Sub', 'Professionally designed starting points, built with Superbird.', ['text-large', 'mx-auto']),
-    ]),
-  ]),
-  sec('Grid', ['section'], [
-    box('Inner', ['container'], [
-      box('Products Grid', ['grid-4'], [
-        comp('comp-product-card', 'P1', { children: productChildren('Starter Kit', '$39') }),
-        comp('comp-product-card', 'P2', { children: productChildren('Agency Theme', '$89') }),
-        comp('comp-product-card', 'P3', { children: productChildren('Store Theme', '$129') }),
-        comp('comp-product-card', 'P4', { children: productChildren('Blog Theme', '$49') }),
-      ], { interactions: [staggerChildren()] }),
-    ]),
-  ]),
-  comp('comp-cta-banner', 'CTA Banner'),
-  comp('comp-footer', 'Footer'),
-])
-
 // --- Blog archive (a regular Page listing the Blog collection) ---
 
 const blogArchive = page('demo-blog', 'Blog Archive', 'blog', 'page', [
@@ -775,40 +735,6 @@ const blogTemplate = page('demo-single-post', 'Blog', 'blog', 'collection', [
   comp('comp-footer', 'Footer'),
 ])
 
-const productsTemplate = page('demo-single-product', 'Products', 'products', 'collection', [
-  comp('comp-navbar', 'Navbar'),
-  sec('Product', ['section'], [
-    box('Inner', ['container', 'grid-2'], [
-      img('Gallery', ['img-hero'], { dynamicField: 'product_gallery' }),
-      box('Details', ['flex-col', 'gap-lg'], [
-        h('h1', 'Title', 'Premium Theme Bundle', ['heading-hero'], { dynamicField: 'product_title', styles: { 'font-size': '40px' } }),
-        box('Price Row', ['price-row'], [
-          span('Price', '$99', ['price'], { dynamicField: 'product_price' }),
-          span('Period', 'one-time', ['price-period']),
-        ]),
-        txt('Desc', 'Lifetime access to every premium theme, with updates and support included.', ['text-body'], { dynamicField: 'product_description' }),
-        box('Actions', ['flex-row'], [
-          btn('Add', 'Add to cart', ['btn', 'btn-primary'], { element: 'add-to-cart', dynamicField: 'product_add_to_cart' }),
-          btn('Wishlist', 'Save for later', ['btn', 'btn-outline']),
-        ]),
-        txt('SKU', 'SKU: SB-BUNDLE-001', ['text-small'], { dynamicField: 'product_sku' }),
-      ]),
-    ]),
-  ]),
-  sec('Related', ['section', 'bg-alt'], [
-    box('Inner', ['container'], [
-      sectionHead('More', 'You might also like'),
-      box('Related Grid', ['grid-4'], [
-        comp('comp-product-card', 'R1', { children: productChildren('Starter Kit', '$39') }),
-        comp('comp-product-card', 'R2', { children: productChildren('Agency Theme', '$89') }),
-        comp('comp-product-card', 'R3', { children: productChildren('Store Theme', '$129') }),
-        comp('comp-product-card', 'R4', { children: productChildren('Blog Theme', '$49') }),
-      ]),
-    ]),
-  ]),
-  comp('comp-footer', 'Footer'),
-])
-
 const notFoundPage = page('demo-404', '404', '404', 'system', [
   comp('comp-navbar', 'Navbar'),
   sec('404', ['hero'], [
@@ -840,12 +766,10 @@ export const demoPages: Page[] = [
   pricingPage,
   aboutPage,
   contactPage,
-  productsPage,
   blogArchive,
   notFoundPage,
   // Collection templates (reached via the Collections tab, not the Pages tab)
   blogTemplate,
-  productsTemplate,
   categoriesTemplate,
 ]
 
@@ -855,7 +779,6 @@ export const demoPages: Page[] = [
 
 export const demoCollections: Collection[] = [
   { id: 'col-blog', name: 'Blog', singular: 'Post', plural: 'Posts', basePath: 'blog', kind: 'blog', templatePageId: 'demo-single-post' },
-  { id: 'col-products', name: 'Products', singular: 'Product', plural: 'Products', basePath: 'products', kind: 'products', templatePageId: 'demo-single-product' },
   { id: 'col-categories', name: 'Categories', singular: 'Category', plural: 'Categories', basePath: 'category', kind: 'categories', templatePageId: 'demo-category-template' },
 ]
 
@@ -892,29 +815,6 @@ export const demoEntries: Entry[] = [
       post_date: 'July 5, 2026',
       post_content: 'We have been working hard to bring you the most powerful visual builder yet. Here is what is new.',
       post_featured_image: '',
-    },
-  },
-  // Products — fields: product_title, product_price, product_description, product_sku, product_gallery, product_add_to_cart
-  {
-    id: 'entry-product-1', collectionId: 'col-products', title: 'Premium Theme Bundle', slug: 'premium-theme-bundle', status: 'published',
-    values: {
-      product_title: 'Premium Theme Bundle',
-      product_price: '$99',
-      product_description: 'Lifetime access to every premium theme, with updates and support included.',
-      product_sku: 'SB-BUNDLE-001',
-      product_add_to_cart: 'Add to cart',
-      product_gallery: '',
-    },
-  },
-  {
-    id: 'entry-product-2', collectionId: 'col-products', title: 'Agency Starter Kit', slug: 'agency-starter-kit', status: 'published',
-    values: {
-      product_title: 'Agency Starter Kit',
-      product_price: '$149',
-      product_description: 'Everything a studio needs to launch client sites fast — components, templates, and CMS presets.',
-      product_sku: 'SB-AGENCY-002',
-      product_add_to_cart: 'Add to cart',
-      product_gallery: '',
     },
   },
   // Categories — fields: cat_name, cat_description

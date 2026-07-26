@@ -132,19 +132,16 @@ export interface CollectionKindConfig {
 
 export const COLLECTION_KIND_CONFIGS: CollectionKindConfig[] = [
   { key: 'blog', label: 'Blog', icon: 'richtext' },
-  { key: 'products', label: 'Products', icon: 'store' },
   { key: 'categories', label: 'Categories', icon: 'folder' },
   { key: 'content', label: 'Content', icon: 'collection' },
 ]
 
-// The store's Products collection always reads as 'products'; otherwise fall
-// back to the stored kind (or 'content' for pre-kind docs).
-export function collectionKind(c: { kind?: CollectionKind; isProducts?: boolean }): CollectionKind {
-  if (c.isProducts) return 'products'
+// Fall back to the stored kind (or 'content' for pre-kind docs).
+export function collectionKind(c: { kind?: CollectionKind }): CollectionKind {
   return c.kind ?? 'content'
 }
 
-export function collectionKindIcon(c: { kind?: CollectionKind; isProducts?: boolean }): string {
+export function collectionKindIcon(c: { kind?: CollectionKind }): string {
   const key = collectionKind(c)
   return COLLECTION_KIND_CONFIGS.find((k) => k.key === key)?.icon ?? 'collection'
 }
@@ -165,18 +162,6 @@ export const COLLECTION_SOURCES: CollectionSourceConfig[] = [
       { key: 'post_categories', label: 'Categories', type: 'list', placeholder: 'Design, Dev' },
       { key: 'post_tags', label: 'Tags', type: 'list', placeholder: 'css, vue' },
       { key: 'post_permalink', label: 'Permalink', type: 'text', placeholder: '/blog/post-slug' },
-    ],
-  },
-  {
-    key: 'products',
-    label: 'Products',
-    fields: [
-      { key: 'product_title', label: 'Title', type: 'text', placeholder: 'Product Name' },
-      { key: 'product_price', label: 'Price', type: 'number', placeholder: '$29.99' },
-      { key: 'product_description', label: 'Description', type: 'richtext', placeholder: 'Product description...' },
-      { key: 'product_gallery', label: 'Image', type: 'image' },
-      { key: 'product_sku', label: 'SKU', type: 'text', placeholder: 'SKU-001' },
-      { key: 'product_permalink', label: 'Permalink', type: 'text', placeholder: '/products/slug' },
     ],
   },
   {
@@ -289,31 +274,3 @@ export function getDynamicField(pageType: PageType, fieldKey: string): DynamicFi
   return getDynamicFieldsForPageType(pageType).find((f) => f.key === fieldKey)
 }
 
-export function fieldTypeToNodeType(fieldType: DynamicField['type']): NodeType {
-  switch (fieldType) {
-    case 'text':
-    case 'date':
-    case 'number':
-      return 'text'
-    case 'richtext':
-      return 'container'
-    case 'image':
-      return 'image'
-    case 'list':
-      return 'container'
-    case 'action':
-      return 'button'
-  }
-}
-
-export function fieldTypeToTag(fieldType: DynamicField['type']): string {
-  switch (fieldType) {
-    case 'text': return 'p'
-    case 'date': return 'time'
-    case 'number': return 'span'
-    case 'richtext': return 'div'
-    case 'image': return 'img'
-    case 'list': return 'div'
-    case 'action': return 'button'
-  }
-}

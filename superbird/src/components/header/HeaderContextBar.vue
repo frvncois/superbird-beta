@@ -35,20 +35,9 @@ const otherSections = computed(() =>
     .filter((s) => s.pages.length > 0),
 )
 
-// System pages carry a fixed role — icon reflects it (404 is the keyless default).
-function systemIcon(page: Page): string {
-  switch (page.systemKey) {
-    case 'login':
-      return 'lock'
-    case 'account':
-      return 'users'
-    case 'cart':
-      return 'cart'
-    case 'order-confirmation':
-      return 'check-circle'
-    default:
-      return 'alert' // 404 / not-found
-  }
+// The only system page is the 404 / not-found page.
+function systemIcon(_page: Page): string {
+  return 'alert'
 }
 
 function close() {

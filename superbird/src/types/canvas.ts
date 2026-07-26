@@ -175,12 +175,12 @@ export interface CanvasNode {
   advanced?: NodeAdvanced
   interactions?: Interaction[]
   translations?: Record<string, string>
-  // Prebuilt "dynamic" element with a premade action (login/cart/lang-switcher).
+  // Prebuilt "dynamic" element with a premade action (lang-switcher).
   // The tree is user-editable; the runtime wires the action via data-sb-el.
   element?: PrebuiltElementKey
 }
 
-export type PrebuiltElementKey = 'login' | 'cart' | 'lang-switcher' | 'add-to-cart'
+export type PrebuiltElementKey = 'lang-switcher'
 
 // --- Locales ---
 
@@ -201,10 +201,6 @@ export interface UserComponent {
 // --- Pages ---
 
 export type PageType = 'page' | 'collection' | 'system'
-
-// Store system pages, generated when the store is activated. `systemKey`
-// identifies a page's fixed role (routing + which runtime it uses).
-export type SystemPageKey = 'login' | 'account' | 'cart' | 'order-confirmation'
 
 export interface PageTypeConfig {
   key: PageType
@@ -233,7 +229,6 @@ export interface Page {
   name: string
   slug: string
   pageType: PageType
-  systemKey?: SystemPageKey
   status?: 'draft' | 'published'
   seo?: PageSeo
   body: CanvasNode
@@ -254,9 +249,8 @@ export interface CollectionField {
 
 // The broad shape of a collection — drives its icon and grouping. 'content' is
 // the flexible catch-all (services, albums, team, portfolios, single structured
-// pages, …). Optional for docs saved before kinds existed (defaults to 'content',
-// or 'products' for the store's Products collection).
-export type CollectionKind = 'blog' | 'products' | 'categories' | 'content'
+// pages, …). Optional for docs saved before kinds existed (defaults to 'content').
+export type CollectionKind = 'blog' | 'categories' | 'content'
 
 export interface Collection {
   id: string
@@ -267,7 +261,6 @@ export interface Collection {
   kind?: CollectionKind
   status?: 'draft' | 'published'
   templatePageId: string  // the Page (pageType 'collection') this collection edits
-  isProducts?: boolean    // the store's Products collection (entries = products)
 }
 
 export interface Entry {
@@ -281,7 +274,7 @@ export interface Entry {
 
 // --- Collections ---
 
-export type CollectionSource = 'posts' | 'products' | 'categories' | 'tags' | 'pages'
+export type CollectionSource = 'posts' | 'categories' | 'tags' | 'pages'
 
 export interface CollectionSourceConfig {
   key: CollectionSource

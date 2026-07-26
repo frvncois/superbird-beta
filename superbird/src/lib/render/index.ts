@@ -4,7 +4,6 @@ export { renderNodeToHtml } from './html'
 export { compilePageCss, compileSiteCss } from './css'
 export { interactionsScript } from './interactionsRuntime'
 export { formsRuntimeScript } from './formsRuntime'
-export { storefrontRuntimeScript } from './storefrontRuntime'
 export { buildRenderContext, resolveNodeContent } from './context'
 export type { RenderContext, RenderContextInput, LocaleContext } from './context'
 
@@ -114,9 +113,9 @@ export function renderDocument(
   const html = renderNodeToHtml(body, ctx)
   const ixMap = collectInteractions(body)
   const hasIx = Object.keys(ixMap).length > 0
-  // The shared runtime also powers forms + the storefront (login/etc.), so it
-  // must load on those pages even without interactions.
-  const needsScript = hasIx || hasRuntimeNode(body) || !!ctx.systemKey
+  // The shared runtime also powers forms, so it must load on those pages even
+  // without interactions.
+  const needsScript = hasIx || hasRuntimeNode(body)
 
   let headTags = ''
   const title = head.title ? formatTitle(site.seo?.titleFormat, head.title, site.siteTitle ?? '') : undefined
@@ -165,9 +164,6 @@ export function renderDocument(
     scriptTag = `<script>window.__SB_IX__=${json};${interactionsRuntimeScript()}</script>`
   }
 
-  let bodyAttrs = ctx.systemKey ? ` data-sb-system="${ctx.systemKey}"` : ''
-  if (ctx.productEntryId) bodyAttrs += ` data-sb-entry="${escapeAttr(ctx.productEntryId)}"`
-
   // GTM needs a <noscript> iframe right after <body>. Custom body-start/end code
   // is admin-authored and injected verbatim.
   const gtm = analyticsId(site.seo?.googleTagManagerId)
@@ -182,7 +178,7 @@ export function renderDocument(
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
     headTags +
     styleTag +
-    `</head><body${bodyAttrs}>${bodyStart}${html}${scriptTag}${bodyEnd}</body></html>`
+    `</head><body>${bodyStart}${html}${scriptTag}${bodyEnd}</body></html>`
   )
 }
 

@@ -6,13 +6,11 @@ import {
   collectInteractions,
   interactionsScript,
   formsRuntimeScript,
-  storefrontRuntimeScript,
   buildRenderContext,
   type RenderContext,
   type LocaleContext,
   type SiteChrome,
 } from '@/lib/render'
-import { currentCustomer } from '../lib/customerSession'
 import { getCookie, setCookie } from 'hono/cookie'
 import type { CanvasNode, Collection, Entry, GlobalStyles, Page, SiteSettings, StyleClass } from '@/types/canvas'
 
@@ -108,7 +106,7 @@ site.get('/script.js', (c) => {
     if (!design) return c.body('', 404)
     const map: Record<string, unknown> = {}
     for (const p of design.pages) Object.assign(map, collectInteractions(p.body))
-    jsCache = { key: publishedAt, js: interactionsScript(map) + formsRuntimeScript() + storefrontRuntimeScript() }
+    jsCache = { key: publishedAt, js: interactionsScript(map) + formsRuntimeScript() }
   }
   return new Response(jsCache.js, {
     headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache', ETag: etag },
@@ -208,16 +206,11 @@ site.get('*', (c) => {
     if (home) return c.html(render(home.body, buildContext(entries, collections, undefined, localeCtx), pageHead(home)))
   }
 
-  // Static page (single segment) — incl. store system pages by slug.
+  // Static page (single segment).
   if (segments.length === 1) {
     const page = pages.find((p) => p.pageType !== 'collection' && p.slug === segments[0])
     if (page) {
-      // Customer-auth gating for the store's system pages.
-      if (page.systemKey === 'account' && !currentCustomer(c)) return c.redirect('/login')
-      if (page.systemKey === 'login' && currentCustomer(c)) return c.redirect('/account')
-      const ctx = buildContext(entries, collections, undefined, localeCtx)
-      ctx.systemKey = page.systemKey
-      return c.html(render(page.body, ctx, pageHead(page)))
+      return c.html(render(page.body, buildContext(entries, collections, undefined, localeCtx), pageHead(page)))
     }
   }
 
@@ -228,8 +221,6 @@ site.get('*', (c) => {
     const entry = col ? entries.find((e) => e.collectionId === col.id && e.slug === segments[1] && e.status === 'published') : undefined
     if (col && template && entry) {
       const ctx = buildContext(entries, collections, entry, localeCtx)
-      // Products-collection single → expose the entry id for add-to-cart.
-      if ((col as Collection & { isProducts?: boolean }).isProducts) ctx.productEntryId = entry.id
       return c.html(render(template.body, ctx, { title: entry.title }))
     }
   }

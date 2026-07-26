@@ -64,7 +64,6 @@ export const useCollectionsStore = defineStore('collections', () => {
   function addCollection(input: {
     name: string
     templatePageId: string
-    isProducts?: boolean
     kind?: CollectionKind
   }): Collection {
     const singular = input.name.replace(/s$/, '')
@@ -74,16 +73,11 @@ export const useCollectionsStore = defineStore('collections', () => {
       singular,
       plural: input.name,
       basePath: slugify(input.name),
-      kind: input.kind ?? (input.isProducts ? 'products' : 'content'),
+      kind: input.kind ?? 'content',
       templatePageId: input.templatePageId,
-      ...(input.isProducts ? { isProducts: true } : {}),
     }
     collections.value.push(collection)
     return collection
-  }
-
-  function productsCollection(): Collection | undefined {
-    return collections.value.find((c) => c.isProducts)
   }
 
   function renameCollection(id: string, name: string) {
@@ -148,7 +142,6 @@ export const useCollectionsStore = defineStore('collections', () => {
     entriesByCollection,
     schemaFor,
     addCollection,
-    productsCollection,
     renameCollection,
     updateCollection,
     removeCollection,

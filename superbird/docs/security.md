@@ -34,15 +34,6 @@ Posture and hardening for a self-hosted, internet-facing Superbird instance.
   the exportable document/backup and never returned to the client (the API exposes
   only `hasPassword`; the password is write-only). Backups include submissions but
   **not** SMTP config.
-- **Store / customers**: customers are a fully separate identity space from admin
-  `users` (own table, `sb_customer` cookie, `customer_sessions`) — a customer
-  session never grants admin access. Storefront prices/stock are server-owned:
-  checkout validates the cart against the `products` table and builds the Stripe
-  session from DB prices (the browser can't set price). The webhook is
-  signature-verified and idempotent. Stripe secret + webhook keys live in
-  `store_config` (write-only, masked, **excluded from backups**); products/orders/
-  customers ride in backups, keys never do. Payment is handled entirely by Stripe
-  (Checkout redirect) — no card data touches the server.
 - **Private media**: a media item flagged `private` (or living in a `private`
   folder -- the flag cascades down the folder tree) is served by `/media/:id`
   only to an authenticated admin; anonymous callers get `404` (existence hidden,

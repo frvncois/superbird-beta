@@ -62,7 +62,6 @@ import {
   DeviceTabletIcon,
   DevicePhoneMobileIcon,
   ChartBarIcon,
-  CurrencyDollarIcon,
   InboxArrowDownIcon,
   ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
@@ -74,8 +73,6 @@ import {
   LockClosedIcon,
   MusicalNoteIcon,
   ScaleIcon,
-  ShoppingBagIcon,
-  ShoppingCartIcon,
   SunIcon,
   MoonIcon,
 } from '@heroicons/vue/24/outline'
@@ -100,8 +97,6 @@ export const ICONS: Record<string, Component> = {
   alert: ExclamationTriangleIcon,
   'check-circle': CheckCircleIcon,
   lock: LockClosedIcon,
-  store: ShoppingBagIcon,
-  cart: ShoppingCartIcon,
   sun: SunIcon,
   moon: MoonIcon,
   folder: FolderIcon,
@@ -115,7 +110,6 @@ export const ICONS: Record<string, Component> = {
 
   // Dashboard
   analytics: ChartBarIcon,
-  sales: CurrencyDollarIcon,
   submissions: InboxArrowDownIcon,
   'trend-up': ArrowTrendingUpIcon,
   'trend-down': ArrowTrendingDownIcon,

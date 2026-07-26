@@ -5,7 +5,7 @@ import { clientIp } from './rateLimit'
 //   SUPERBIRD_ADMIN_ALLOW_IPS="127.0.0.1,10.0.0.0/8,203.0.113.4"
 // to a comma-separated list of exact IPs and/or IPv4 CIDRs. Unset/empty = no
 // restriction (default). Enforced in requireAuth + login/install, so public
-// visitor traffic (storefront, form posts, Stripe webhook, SSR) is never
+// visitor traffic (public form posts, SSR site) is never
 // affected. Env-based on purpose: a wrong entry is fixed by editing env and
 // restarting — it can never be a permanent, self-inflicted UI lockout.
 //

@@ -2,12 +2,8 @@ import type {
   ActionProperty,
   Breakpoint,
   CanvasNode,
-  CollectionSource,
-  CollectionSourceConfig,
-  DynamicField,
   Locale,
   NodeType,
-  PageType,
   PageTypeConfig,
   StyleState,
   TriggerType,
@@ -117,61 +113,6 @@ export const PAGE_TYPE_CONFIGS: PageTypeConfig[] = [
   },
 ]
 
-export function getPageTypeConfig(type: PageType): PageTypeConfig {
-  return PAGE_TYPE_CONFIGS.find((c) => c.key === type)!
-}
-
-// --- Collection sources ---
-
-export const COLLECTION_SOURCES: CollectionSourceConfig[] = [
-  {
-    key: 'posts',
-    label: 'Blog Posts',
-    fields: [
-      { key: 'post_title', label: 'Title', type: 'text', placeholder: 'Post Title' },
-      { key: 'post_content', label: 'Content', type: 'richtext', placeholder: 'Post content...' },
-      { key: 'post_excerpt', label: 'Excerpt', type: 'text', placeholder: 'A short excerpt...' },
-      { key: 'post_featured_image', label: 'Featured Image', type: 'image' },
-      { key: 'post_date', label: 'Date', type: 'date', placeholder: 'Jan 1, 2026' },
-      { key: 'post_author', label: 'Author', type: 'text', placeholder: 'John Doe' },
-      { key: 'post_categories', label: 'Categories', type: 'list', placeholder: 'Design, Dev' },
-      { key: 'post_tags', label: 'Tags', type: 'list', placeholder: 'css, vue' },
-      { key: 'post_permalink', label: 'Permalink', type: 'text', placeholder: '/blog/post-slug' },
-    ],
-  },
-  {
-    key: 'categories',
-    label: 'Categories',
-    fields: [
-      { key: 'cat_name', label: 'Name', type: 'text', placeholder: 'Category Name' },
-      { key: 'cat_description', label: 'Description', type: 'text', placeholder: 'Category description...' },
-      { key: 'cat_count', label: 'Post Count', type: 'number', placeholder: '12' },
-      { key: 'cat_permalink', label: 'Permalink', type: 'text', placeholder: '/category/slug' },
-    ],
-  },
-  {
-    key: 'tags',
-    label: 'Tags',
-    fields: [
-      { key: 'tag_name', label: 'Name', type: 'text', placeholder: 'Tag Name' },
-      { key: 'tag_count', label: 'Post Count', type: 'number', placeholder: '5' },
-      { key: 'tag_permalink', label: 'Permalink', type: 'text', placeholder: '/tag/slug' },
-    ],
-  },
-  {
-    key: 'pages',
-    label: 'Pages',
-    fields: [
-      { key: 'page_title', label: 'Title', type: 'text', placeholder: 'Page Title' },
-      { key: 'page_permalink', label: 'Permalink', type: 'text', placeholder: '/page-slug' },
-    ],
-  },
-]
-
-export function getCollectionSource(key: CollectionSource): CollectionSourceConfig | undefined {
-  return COLLECTION_SOURCES.find((s) => s.key === key)
-}
-
 // --- Node defaults & element groups ---
 
 export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id' | 'type'>>>> = {
@@ -231,21 +172,4 @@ export const CONTENT_TYPES: NodeType[] = [
 
 // Form elements that require a form parent
 export const FORM_CHILD_TYPES: NodeType[] = ['input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload', 'label']
-
-// Elements that require a specific parent
-export const PARENT_CONSTRAINTS: Partial<Record<NodeType, { parent: NodeType; wrapTag: string }>> = {
-  'list-item': { parent: 'list', wrapTag: 'ul' },
-  column: { parent: 'columns', wrapTag: 'div' },
-}
-
-// --- Dynamic field helpers ---
-
-export function getDynamicFieldsForPageType(pageType: PageType): DynamicField[] {
-  const config = PAGE_TYPE_CONFIGS.find((c) => c.key === pageType)
-  return config?.dynamicFields ?? []
-}
-
-export function getDynamicField(pageType: PageType, fieldKey: string): DynamicField | undefined {
-  return getDynamicFieldsForPageType(pageType).find((f) => f.key === fieldKey)
-}
 

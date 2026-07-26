@@ -207,14 +207,6 @@ export interface PageTypeConfig {
   label: string
   plural: string
   allowMultiple: boolean
-  dynamicFields?: DynamicField[]
-}
-
-export interface DynamicField {
-  key: string
-  label: string
-  type: 'text' | 'image' | 'richtext' | 'date' | 'list' | 'number' | 'action'
-  placeholder?: string
 }
 
 export interface PageSeo {
@@ -264,16 +256,6 @@ export interface Entry {
   slug: string
   status: 'draft' | 'published'
   values: Record<string, string>  // keyed by field key (a node's `dynamicField`)
-}
-
-// --- Collections ---
-
-export type CollectionSource = 'posts' | 'categories' | 'tags' | 'pages'
-
-export interface CollectionSourceConfig {
-  key: CollectionSource
-  label: string
-  fields: DynamicField[]
 }
 
 // --- Media library ---

@@ -194,11 +194,6 @@ export function buildSubmissionsCsv(rows: SubmissionDTO[]): string {
   return '﻿' + lines.join('\r\n')
 }
 
-export function getSubmission(id: string): SubmissionDTO | null {
-  const row = db.select().from(submissions).where(eq(submissions.id, id)).get()
-  return row ? rowToDTO(row) : null
-}
-
 export function markSeen(id: string): void {
   db.update(submissions).set({ seen: 1 }).where(eq(submissions.id, id)).run()
 }

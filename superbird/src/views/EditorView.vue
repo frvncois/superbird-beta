@@ -88,7 +88,6 @@ const rightTabs = [
     <EditorLayout :left-collapsed="leftCollapsed" :right-collapsed="rightCollapsed" :content-mode="contentMode">
       <template #sidebar-left>
       <CollapsibleSidebar
-        v-model="leftTab"
         :tabs="leftTabs"
         :collapsed="leftCollapsed"
         side="left"
@@ -112,7 +111,6 @@ const rightTabs = [
 
     <template #sidebar-right>
       <CollapsibleSidebar
-        v-model="rightTab"
         :tabs="rightTabs"
         :collapsed="rightCollapsed"
         side="right"

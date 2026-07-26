@@ -53,14 +53,6 @@ export function removeClassFromTree(node: CanvasNode, name: string): void {
   })
 }
 
-// --- Dynamic fields ---
-
-export function collectDynamicFields(node: CanvasNode, used: Set<string>): void {
-  walkTree(node, (n) => {
-    if (n.dynamicField) used.add(n.dynamicField)
-  })
-}
-
 // --- Component instances ---
 
 export function clearComponentIds(node: CanvasNode): void {

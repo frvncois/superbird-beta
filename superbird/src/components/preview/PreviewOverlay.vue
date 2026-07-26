@@ -62,6 +62,7 @@ const srcdoc = computed(() =>
         <button
           v-for="w in widths"
           :key="w.key"
+          type="button"
           :class="[
             'flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs cursor-pointer transition-colors duration-100',
             viewport === w.key ? 'bg-background text-foreground shadow-sm' : 'text-secondary hover:text-foreground',

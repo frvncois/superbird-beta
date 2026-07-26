@@ -10,13 +10,11 @@ export interface SidebarTab {
 
 const props = defineProps<{
   tabs: SidebarTab[]
-  modelValue: string
   collapsed: boolean
   side: 'left' | 'right'
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string]
   toggle: []
 }>()
 

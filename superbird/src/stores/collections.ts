@@ -78,11 +78,6 @@ export const useCollectionsStore = defineStore('collections', () => {
     return collection
   }
 
-  function renameCollection(id: string, name: string) {
-    const c = collectionById(id)
-    if (c) { c.name = name; c.plural = name; c.singular = name.replace(/s$/, ''); c.basePath = slugify(name) }
-  }
-
   function updateCollection(id: string, patch: Partial<Pick<Collection, 'name' | 'basePath' | 'status'>>) {
     const c = collectionById(id)
     if (!c) return
@@ -140,7 +135,6 @@ export const useCollectionsStore = defineStore('collections', () => {
     entriesByCollection,
     schemaFor,
     addCollection,
-    renameCollection,
     updateCollection,
     removeCollection,
     addEntry,

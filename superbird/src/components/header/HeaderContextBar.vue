@@ -184,6 +184,7 @@ function backToTemplate() {
     <DropdownUi v-model:open="pagesOpen" class="w-64" panel-class="!max-h-[80vh]">
       <template #trigger="{ open, toggle }">
         <button
+          type="button"
           class="flex h-8 w-full items-center justify-between gap-1.5 px-3 text-xs font-medium cursor-pointer"
           @click="toggle"
         >

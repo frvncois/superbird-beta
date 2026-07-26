@@ -5,8 +5,8 @@ import { getInstalledProject, getDeploymentOrigin } from './project'
 
 // Trusted-origin (CSRF) guard for the authenticated admin API. It only acts on
 // state-changing requests that carry an admin session cookie — so public
-// callers (form posts, storefront, Stripe webhook, the token-auth MCP bridge,
-// login/install before a session exists) are never affected.
+// callers (public form posts, the token-auth MCP bridge, login/install before a
+// session exists) are never affected.
 //
 // For a guarded request the browser Origin (or Referer) must be in the
 // allowlist: the server's own origin, localhost in dev, and the configured

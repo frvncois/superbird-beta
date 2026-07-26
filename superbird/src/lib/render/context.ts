@@ -1,7 +1,7 @@
 import type { CanvasNode, Collection, Entry } from '@/types/canvas'
 
 // The data the pure renderer needs, abstracted from its source. Built from the
-// stores in the editor (preview); from the DB in the SSR runtime (Task 3).
+// stores in the editor (preview); from the DB in the SSR runtime.
 export interface RenderContext {
   // Resolve a node's text content. `entry` is set when rendering a
   // collection-list item so field-bound nodes read that entry's values.

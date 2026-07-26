@@ -1,7 +1,7 @@
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
-// Auth/install tables. Content tables (collections, fields, entries, media)
-// land in a later slice.
+// Auth/install + project tables. The editable project (design + content) is one
+// JSON document in project_state; media/backups/submissions have their own tables.
 
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(),

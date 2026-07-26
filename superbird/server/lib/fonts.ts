@@ -25,7 +25,7 @@ const FORMAT_BY_EXT: Record<string, string> = {
 }
 
 /** Persist uploaded font bytes and return the filename + public url. */
-export function saveFontFile(bytes: Buffer, ext: string): { file: string; url: string } {
+function saveFontFile(bytes: Buffer, ext: string): { file: string; url: string } {
   const clean = ext.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'woff2'
   const file = `${randomHex()}.${clean}`
   writeFileSync(resolve(FONTS_DIR, file), bytes)

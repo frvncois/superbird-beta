@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { deepCloneNode } from '@/lib/nodeFactory'
 import { generateComponentId } from '@/lib/ids'
-import { findNode, clearComponentIds, countInstances, detachAllInstances, syncInstancesInTree } from '@/lib/tree'
+import { findNode, clearComponentIds, countInstances, detachAllInstances } from '@/lib/tree'
 import { useCanvasStore } from '@/stores/canvas'
 import { demoUserComponents } from '@/data/demo'
 import type { CanvasNode, UserComponent } from '@/types/canvas'
@@ -56,25 +56,6 @@ export const useUserComponentsStore = defineStore('userComponents', () => {
     canvas.insertNode(instance, targetId, position)
   }
 
-  function syncComponentInstances(compId: string) {
-    const comp = userComponents.value[compId]
-    if (!comp) return
-
-    // Sync across all pages
-    for (const page of canvas.pages) {
-      syncInstancesInTree(page.body, comp)
-    }
-  }
-
-  function updateComponentDefinition(compId: string, updatedNode: CanvasNode) {
-    const comp = userComponents.value[compId]
-    if (!comp) return
-    const masterTree = deepCloneNode(updatedNode)
-    clearComponentIds(masterTree)
-    comp.tree = masterTree
-    syncComponentInstances(compId)
-  }
-
   function detachComponentInstance(nodeId: string) {
     const body = canvas.bodyNode
     const node = findNode(body.children, nodeId)
@@ -104,9 +85,7 @@ export const useUserComponentsStore = defineStore('userComponents', () => {
     userComponents,
     hydrate,
     createComponentFromNode,
-    instantiateComponent,
     addComponentToPage,
-    updateComponentDefinition,
     detachComponentInstance,
     deleteComponent,
     getComponentInstanceCount,

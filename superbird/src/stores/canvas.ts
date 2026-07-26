@@ -109,13 +109,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
-  function renamePage(pageId: string, name: string, slug?: string) {
-    const page = pages.value.find((p) => p.id === pageId)
-    if (!page) return
-    page.name = name
-    if (slug !== undefined) page.slug = slug
-  }
-
   function updatePage(pageId: string, patch: Partial<Pick<Page, 'name' | 'slug' | 'status' | 'seo'>>) {
     const page = pages.value.find((p) => p.id === pageId)
     if (page) Object.assign(page, patch)
@@ -241,7 +234,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     return insertNode(node, targetId, position)
   }
 
-  // Insert a prebuilt "Dynamic" element tree (login/cart/…) at the drop target.
+  // Insert a prebuilt "Dynamic" element tree (lang-switcher) at the drop target.
   function addPrebuilt(key: PrebuiltElementKey, targetId?: string, position?: 'before' | 'after' | 'inside') {
     const tree = buildPrebuilt(key)
     if (!tree) return null
@@ -464,7 +457,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     openEntry,
     addPage,
     removePage,
-    renamePage,
     updatePage,
     // Editor mode
     editorMode,
@@ -519,7 +511,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     getNodeIndex,
     isContainerNode,
     getParentId,
-    // Dynamic fields
     // Interactions
     getNodeInteractions,
     addInteraction,

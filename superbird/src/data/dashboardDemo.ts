@@ -49,18 +49,3 @@ export const analyticsDetail = {
   ],
 }
 
-export interface FormSubmission {
-  id: string
-  name: string
-  email: string
-  form: string
-  time: string
-}
-
-export const submissions: FormSubmission[] = [
-  { id: 's1', name: 'Amelia Chen', email: 'amelia@acme.co', form: 'Contact', time: '12m ago' },
-  { id: 's2', name: 'Marcus Bell', email: 'marcus.b@gmail.com', form: 'Demo request', time: '48m ago' },
-  { id: 's3', name: 'Priya Nair', email: 'priya@studio.io', form: 'Newsletter', time: '3h ago' },
-  { id: 's4', name: 'Tom Okafor', email: 'tom@okafor.dev', form: 'Contact', time: '5h ago' },
-]
-

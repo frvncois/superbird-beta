@@ -22,7 +22,7 @@ import type {
 
 // Whole-project persistence: the project (design + content) is one JSON
 // document loaded on sign-in and autosaved (debounced) on any change. Media
-// is not persisted here yet (files-on-disk pipeline is a later slice).
+// bytes/metadata persist separately via the media store + /api/media.
 
 let watching = false
 let suspend = false // true while hydrating, so we don't autosave the load

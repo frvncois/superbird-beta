@@ -59,7 +59,7 @@ backup.delete('/backups/:id', (c) => {
 backup.get('/export', (c) => {
   const p = proj()
   if (!p) return c.json({ error: 'Not installed.' }, 409)
-  const lim = hit(`export:${clientIp(c)}`, 10, 60_000)
+  const lim = hit(`backup-export:${clientIp(c)}`, 10, 60_000)
   if (!lim.ok) return c.json({ error: 'Too many exports. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const body = buildExport(p.id)
   const stamp = new Date().toISOString().slice(0, 10)

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projectState } from '../db/schema'
 import { requireAuth } from '../lib/session'
-import { getInstalledProject, publishDesign } from '../lib/project'
+import { getInstalledProject, publishDesign, setWorkingDocument } from '../lib/project'
 import { maybeAutoBackup } from '../lib/backup'
 import type { ProjectDocument, PublishResult } from '../../shared/types'
 
@@ -32,14 +32,8 @@ project.put('/project', async (c) => {
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const body = (await c.req.json()) as ProjectDocument
-  const now = new Date().toISOString()
-  db.insert(projectState)
-    .values({ projectId: proj.id, document: JSON.stringify(body), updatedAt: now })
-    .onConflictDoUpdate({
-      target: projectState.projectId,
-      set: { document: JSON.stringify(body), updatedAt: now },
-    })
-    .run()
+  // Persists + keeps the working-doc cache coherent (avoids a re-parse on read).
+  setWorkingDocument(proj.id, body)
   // Lazily take an automatic backup (at most once/day; prunes old autos).
   maybeAutoBackup(proj.id)
   return c.json({ ok: true })

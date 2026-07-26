@@ -5,6 +5,7 @@ import { DEFAULT_LOCALES } from '@/constants/canvas'
 import type { Locale } from '@/types/canvas'
 import PopoverUi from '@/components/ui/PopoverUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
+import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import ModalUi from '@/components/ui/ModalUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 
@@ -68,27 +69,33 @@ watch(isOpen, (open) => {
       <div>
         <!-- Active locales -->
         <div class="space-y-0.5">
-          <ButtonUi
+          <div
             v-for="locale in store.locales"
             :key="locale.code"
-            variant="ghost"
-            size="sm"
-            align="start"
-            class="w-full"
-            :class="locale.code === store.activeLocale ? 'bg-primary/10 font-medium' : ''"
-            @click="selectLocale(locale.code)"
+            class="flex items-center gap-0.5"
           >
-            <span class="w-6 text-[10px] font-mono font-semibold text-secondary">{{ locale.flag }}</span>
-            <span class="flex-1 text-left">{{ locale.label }}</span>
-            <span v-if="locale.code === store.defaultLocale" class="text-[9px] text-secondary/50 font-mono">default</span>
-            <button
-              v-else
-              class="flex size-4 items-center justify-center rounded text-secondary/30 cursor-pointer hover:text-red-fg transition-colors duration-100"
-              @click.stop="removeLocale(locale.code)"
+            <ButtonUi
+              variant="ghost"
+              size="sm"
+              align="start"
+              class="min-w-0 flex-1"
+              :active="locale.code === store.activeLocale"
+              @click="selectLocale(locale.code)"
+            >
+              <span class="w-6 text-[10px] font-mono font-semibold text-secondary">{{ locale.flag }}</span>
+              <span class="flex-1 truncate text-left">{{ locale.label }}</span>
+              <span v-if="locale.code === store.defaultLocale" class="text-[9px] text-secondary/50 font-mono">default</span>
+            </ButtonUi>
+            <IconButtonUi
+              v-if="locale.code !== store.defaultLocale"
+              size="sm"
+              variant="danger"
+              title="Remove language"
+              @click="removeLocale(locale.code)"
             >
               <IconUi name="close" size="size-2.5" />
-            </button>
-          </ButtonUi>
+            </IconButtonUi>
+          </div>
         </div>
 
         <div class="my-1.5 border-t border-foreground/8" />

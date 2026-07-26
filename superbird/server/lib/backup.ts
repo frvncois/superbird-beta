@@ -1,6 +1,6 @@
 import { resolve, basename } from 'node:path'
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
-import { eq, desc } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { db } from '../db/client'
 import { backups, media, mediaFolders, submissions } from '../db/schema'
 import { getWorkingDocument, setWorkingDocument } from './project'
@@ -50,15 +50,15 @@ export function deleteBackup(projectId: string, id: string): void {
   if (row && row.projectId === projectId) db.delete(backups).where(eq(backups.id, id)).run()
 }
 
-// Keep only the newest `keep` auto backups (manual ones are never auto-pruned).
+// Keep only the newest `keep` auto backups for this project (manual ones are
+// never auto-pruned).
 function pruneAuto(projectId: string, keep: number): void {
   const auto = db
     .select({ id: backups.id })
     .from(backups)
-    .where(eq(backups.kind, 'auto'))
+    .where(and(eq(backups.projectId, projectId), eq(backups.kind, 'auto')))
     .orderBy(desc(backups.createdAt))
     .all()
-    .filter(() => true)
   for (const r of auto.slice(keep)) db.delete(backups).where(eq(backups.id, r.id)).run()
 }
 
@@ -70,7 +70,7 @@ export function maybeAutoBackup(projectId: string): void {
   const last = db
     .select({ createdAt: backups.createdAt })
     .from(backups)
-    .where(eq(backups.kind, 'auto'))
+    .where(and(eq(backups.projectId, projectId), eq(backups.kind, 'auto')))
     .orderBy(desc(backups.createdAt))
     .get()
   if (last && Date.now() - new Date(last.createdAt).getTime() < AUTO_INTERVAL_MS) return

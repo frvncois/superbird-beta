@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve, basename } from 'node:path'
-import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, statSync } from 'node:fs'
 import type { FontFaceDTO } from '../../shared/types'
 import { randomHex } from './ids'
 
@@ -36,14 +36,18 @@ function saveFontFile(bytes: Buffer, ext: string): { file: string; url: string }
  * Read a font file for the public /fonts/:file route. Uploaded fonts win; falls
  * back to the bundled defaults dir so default fonts serve too. Guards traversal.
  */
-export function readFontFile(file: string): { bytes: Buffer; mime: string } | null {
+export function readFontFile(file: string): { path: string; mime: string; size: number } | null {
   const safe = basename(file)
   const ext = safe.slice(safe.lastIndexOf('.') + 1).toLowerCase()
   const mime = MIME_BY_EXT[ext] ?? 'application/octet-stream'
-  const uploaded = resolve(FONTS_DIR, safe)
-  if (existsSync(uploaded)) return { bytes: readFileSync(uploaded), mime }
-  const bundled = resolve(DEFAULTS_DIR, safe)
-  if (existsSync(bundled)) return { bytes: readFileSync(bundled), mime }
+  for (const dir of [FONTS_DIR, DEFAULTS_DIR]) {
+    const path = resolve(dir, safe)
+    try {
+      return { path, mime, size: statSync(path).size }
+    } catch {
+      // not in this dir — try the next
+    }
+  }
   return null
 }
 
@@ -58,8 +62,9 @@ export function deleteFontFiles(urls: string[]): void {
 const ALLOWED_FONT_EXT = new Set(['woff2', 'woff', 'ttf', 'otf'])
 
 // Sniff the file signature so an arbitrary blob can't be written to the fonts
-// dir (and later served). Covers woff2/woff/otf/ttf/ttc.
-function looksLikeFont(bytes: Buffer): boolean {
+// dir (and later served). Covers woff2/woff/otf/ttf/ttc. Shared with the backup
+// import path so both entry points validate identically.
+export function looksLikeFont(bytes: Buffer): boolean {
   if (bytes.length < 4) return false
   const tag = bytes.subarray(0, 4).toString('latin1')
   if (tag === 'wOF2' || tag === 'wOFF' || tag === 'OTTO' || tag === 'true' || tag === 'ttcf') return true

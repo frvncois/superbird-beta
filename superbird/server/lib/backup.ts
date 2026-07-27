@@ -1,11 +1,11 @@
 import { resolve, basename } from 'node:path'
-import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync, renameSync } from 'node:fs'
 import { eq, and, desc } from 'drizzle-orm'
 import { db } from '../db/client'
 import { backups, media, mediaFolders, submissions } from '../db/schema'
 import { getWorkingDocument, setWorkingDocument } from './project'
 import { MEDIA_DIR } from './media'
-import { FONTS_DIR } from './fonts'
+import { FONTS_DIR, looksLikeFont } from './fonts'
 import { randomId } from './ids'
 import type { BackupMeta, ProjectDocument } from '../../shared/types'
 
@@ -136,7 +136,20 @@ export function buildExport(projectId: string): string {
 
 export class ImportError extends Error {}
 
-/** Restore a portable backup into the current project (replaces everything). */
+// Cap a single bundled media file so one huge base64 entry can't exhaust memory
+// (the 256 MB body limit bounds the whole bundle, not each file).
+const MAX_IMPORT_MEDIA_BYTES = 50 * 1024 * 1024
+
+/**
+ * Restore a portable backup into the current project (replaces everything).
+ * Failure-safe: nothing existing is deleted until (a) a full, recoverable safety
+ * backup — document + media + submissions + fonts — is written to disk and (b)
+ * every incoming media file is decoded and written to a staging dir. The row
+ * swap runs in a single DB transaction (all-or-nothing), and only then are the
+ * old files removed and the staged ones moved in. A throw at any point before
+ * the commit leaves the project untouched; a throw after is recoverable from the
+ * on-disk safety backup.
+ */
 export function applyImport(projectId: string, json: string): void {
   let bundle: {
     superbird?: string
@@ -158,35 +171,100 @@ export function applyImport(projectId: string, json: string): void {
   if (!bundle.document || typeof bundle.document !== 'object' || !('content' in bundle.document)) {
     throw new ImportError('Backup is missing its project document.')
   }
+  const document = bundle.document
 
-  createBackup(projectId, 'Before import', 'auto') // safety net
+  // 1) Recoverable safety net BEFORE any destruction: a full portable backup
+  //    (document + media + submissions + fonts) written to disk, plus the
+  //    lightweight document snapshot for the Backup UI. If the import fails
+  //    later, the operator re-imports this file.
+  try {
+    writeFileSync(resolve(MEDIA_DIR, '..', 'pre-import-backup.sbbackup'), buildExport(projectId))
+  } catch {
+    throw new ImportError('Could not write the pre-import safety backup — import aborted.')
+  }
+  createBackup(projectId, 'Before import', 'auto')
 
-  // Replace media: drop existing rows + files, then write the bundle's.
-  for (const row of db.select().from(media).where(eq(media.projectId, projectId)).all()) {
-    const p = resolve(MEDIA_DIR, row.filename)
-    if (existsSync(p)) rmSync(p)
+  // 2) Stage all incoming media into a temp dir (validate name + size). Nothing
+  //    existing is touched; any failure just discards the staging dir.
+  const staging = resolve(MEDIA_DIR, '..', `.import-staging-${randomId('imp')}`)
+  const staged: Array<{ tmp: string; filename: string; row: typeof media.$inferSelect }> = []
+  try {
+    mkdirSync(staging, { recursive: true })
+    for (const m of bundle.media ?? []) {
+      const filename = basename(m.row.filename) // block path traversal from a crafted bundle
+      if (!filename || filename !== m.row.filename) continue
+      if ((m.data.length * 3) / 4 > MAX_IMPORT_MEDIA_BYTES) {
+        throw new ImportError(`A media file in the backup exceeds the ${MAX_IMPORT_MEDIA_BYTES / 1024 / 1024} MB per-file limit.`)
+      }
+      const tmp = resolve(staging, filename)
+      writeFileSync(tmp, Buffer.from(m.data, 'base64'))
+      staged.push({ tmp, filename, row: m.row })
+    }
+  } catch (e) {
+    rmSync(staging, { recursive: true, force: true })
+    throw e instanceof ImportError ? e : new ImportError('Failed to read media from the backup.')
   }
-  db.delete(media).where(eq(media.projectId, projectId)).run()
-  db.delete(mediaFolders).where(eq(mediaFolders.projectId, projectId)).run()
-  db.delete(submissions).where(eq(submissions.projectId, projectId)).run()
 
-  for (const m of bundle.media ?? []) {
-    const filename = basename(m.row.filename) // block path traversal from a crafted bundle
-    if (!filename || filename !== m.row.filename) continue
-    writeFileSync(resolve(MEDIA_DIR, filename), Buffer.from(m.data, 'base64'))
-    db.insert(media).values({ ...m.row, projectId }).run()
+  // 3) Swap the rows atomically — rolls back on any error, leaving rows intact.
+  const oldFiles = db
+    .select({ filename: media.filename })
+    .from(media)
+    .where(eq(media.projectId, projectId))
+    .all()
+    .map((r) => r.filename)
+  try {
+    db.transaction((tx) => {
+      tx.delete(media).where(eq(media.projectId, projectId)).run()
+      tx.delete(mediaFolders).where(eq(mediaFolders.projectId, projectId)).run()
+      tx.delete(submissions).where(eq(submissions.projectId, projectId)).run()
+      for (const s of staged) tx.insert(media).values({ ...s.row, projectId }).run()
+      for (const f of bundle.mediaFolders ?? []) tx.insert(mediaFolders).values({ ...f, projectId }).run()
+      for (const s of bundle.submissions ?? []) tx.insert(submissions).values({ ...s, projectId }).run()
+    })
+  } catch {
+    rmSync(staging, { recursive: true, force: true })
+    throw new ImportError('Failed to apply the backup — no changes were made.')
   }
-  for (const f of bundle.mediaFolders ?? []) {
-    db.insert(mediaFolders).values({ ...f, projectId }).run()
+  // Kept out of the transaction: setWorkingDocument mutates a module cache that a
+  // rollback wouldn't revert. Recoverable from the safety backup if it throws.
+  setWorkingDocument(projectId, document)
+
+  // 4) Rows committed → replace files. Remove the old media, move staged in.
+  for (const fn of oldFiles) {
+    const p = resolve(MEDIA_DIR, fn)
+    try {
+      if (existsSync(p)) rmSync(p)
+    } catch {
+      /* best effort */
+    }
   }
-  for (const s of bundle.submissions ?? []) {
-    db.insert(submissions).values({ ...s, projectId }).run()
+  for (const s of staged) {
+    const dest = resolve(MEDIA_DIR, s.filename)
+    try {
+      renameSync(s.tmp, dest)
+    } catch {
+      // cross-device or race → fall back to copy.
+      try {
+        writeFileSync(dest, readFileSync(s.tmp))
+      } catch {
+        /* best effort */
+      }
+    }
   }
+  rmSync(staging, { recursive: true, force: true })
+
+  // 5) Fonts are additive (existing fonts aren't deleted), so write them last.
+  //    Magic-byte validate like the upload path — a crafted bundle can't plant an
+  //    arbitrary blob in the fonts dir.
   for (const ft of bundle.fonts ?? []) {
     const file = basename(ft.file)
     if (!file) continue
-    writeFileSync(resolve(FONTS_DIR, file), Buffer.from(ft.data, 'base64'))
+    try {
+      const bytes = Buffer.from(ft.data, 'base64')
+      if (!looksLikeFont(bytes)) continue
+      writeFileSync(resolve(FONTS_DIR, file), bytes)
+    } catch {
+      /* best effort */
+    }
   }
-
-  setWorkingDocument(projectId, bundle.document)
 }

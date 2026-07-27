@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, statSync } from 'node:fs'
 import sharp from 'sharp'
 import { randomId } from './ids'
 import { eq } from 'drizzle-orm'
@@ -195,13 +195,20 @@ export function deleteMedia(id: string): void {
   db.delete(media).where(eq(media.id, id)).run()
 }
 
-/** Read a stored file for serving. Returns bytes + mime + effective privacy. */
-export function readMediaFile(id: string): { bytes: Buffer; mime: string; private: boolean } | null {
+/** Locate a stored file for serving: its path + mime + size + effective privacy.
+ * Returns the path (not bytes) so the route can stream it instead of buffering
+ * the whole file into memory. */
+export function readMediaFile(id: string): { path: string; mime: string; size: number; private: boolean } | null {
   const row = db.select().from(media).where(eq(media.id, id)).get()
   if (!row) return null
   const path = resolve(MEDIA_DIR, row.filename)
-  if (!existsSync(path)) return null
-  return { bytes: readFileSync(path), mime: row.mime, private: isMediaPrivate(row) }
+  let size: number
+  try {
+    size = statSync(path).size
+  } catch {
+    return null // missing/unreadable
+  }
+  return { path, mime: row.mime, size, private: isMediaPrivate(row) }
 }
 
 // Effective privacy: the item itself, or any ancestor folder, being private

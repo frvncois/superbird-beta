@@ -12,14 +12,18 @@ export function escapeAttr(s: string): string {
 // A syntactically valid HTML attribute name.
 const ATTR_NAME = /^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/
 
-// Author-supplied custom-attribute keys must be syntactically valid AND not a
-// scripting/URL-bearing attribute — otherwise `onclick="…"`, `style`, `href`,
-// `srcdoc`, etc. become a stored-XSS vector on the published page.
+// Custom-attribute keys are an escape hatch for extra attributes the builder has
+// no dedicated field for. Allow-list rather than deny-list: only `data-*`,
+// `aria-*`, and a small set of inert global attributes pass — everything else
+// (event handlers, `style`, and URL/script-bearing attrs like `href`/`src`/
+// `formaction`/`ping`/`poster`/bare `data`) is rejected by default. Dedicated
+// fields already cover id/title/role/aria/classes/links/media, so this stays tight.
+const SAFE_ATTR_ALLOWLIST = new Set(['role', 'title', 'lang', 'dir', 'tabindex', 'translate', 'hidden'])
 export function isSafeAttrName(name: string): boolean {
   if (!ATTR_NAME.test(name)) return false
   const n = name.toLowerCase()
-  if (n.startsWith('on')) return false // event handlers
-  return !['style', 'srcdoc', 'href', 'src', 'xlink:href', 'formaction', 'action', 'background'].includes(n)
+  if (n.startsWith('data-') || n.startsWith('aria-')) return true
+  return SAFE_ATTR_ALLOWLIST.has(n)
 }
 
 // Allow only safe URL schemes for author-set links/embeds. Blocks javascript:,

@@ -37,7 +37,9 @@ export function ensureSchema(): void {
       created_at TEXT NOT NULL,
       totp_secret TEXT,
       totp_enabled INTEGER NOT NULL DEFAULT 0,
-      totp_recovery TEXT
+      totp_recovery TEXT,
+      totp_pending_secret TEXT,
+      totp_last_step INTEGER
     );
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
@@ -152,6 +154,8 @@ export function ensureSchema(): void {
     ['users', 'totp_secret TEXT'],
     ['users', 'totp_enabled INTEGER NOT NULL DEFAULT 0'],
     ['users', 'totp_recovery TEXT'],
+    ['users', 'totp_pending_secret TEXT'],
+    ['users', 'totp_last_step INTEGER'],
   ]
   for (const [table, col] of migrations) {
     try {

@@ -55,19 +55,28 @@ export function totp(secret: string, atMs: number = Date.now()): string {
   return hotp(secret, Math.floor(atMs / 1000 / STEP_SECONDS))
 }
 
-/** Verify a user-entered code against the secret, allowing ±`window` steps for clock skew. */
-export function verifyTotp(secret: string, code: string, atMs: number = Date.now(), window = 1): boolean {
+/**
+ * Verify a code and return the matched time-step counter, or null. Callers that
+ * grant auth persist the returned step and reject any code at or below the
+ * last-accepted one (replay protection within the ±window).
+ */
+export function verifyTotpStep(secret: string, code: string, atMs: number = Date.now(), window = 1): number | null {
   const trimmed = code.replace(/\s/g, '')
-  if (!/^\d{6}$/.test(trimmed)) return false
+  if (!/^\d{6}$/.test(trimmed)) return null
   const counter = Math.floor(atMs / 1000 / STEP_SECONDS)
   for (let w = -window; w <= window; w++) {
     const c = counter + w
     if (c < 0) continue // only meaningful near the Unix epoch; never in practice
     const expected = hotp(secret, c)
     // Constant-time compare (both fixed 6-char length).
-    if (timingSafeEqual(Buffer.from(expected), Buffer.from(trimmed))) return true
+    if (timingSafeEqual(Buffer.from(expected), Buffer.from(trimmed))) return c
   }
-  return false
+  return null
+}
+
+/** Verify a user-entered code against the secret, allowing ±`window` steps for clock skew. */
+export function verifyTotp(secret: string, code: string, atMs: number = Date.now(), window = 1): boolean {
+  return verifyTotpStep(secret, code, atMs, window) !== null
 }
 
 /** `otpauth://` provisioning URI for manual entry / authenticator apps. */

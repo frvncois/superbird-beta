@@ -39,11 +39,13 @@ usersApi.post('/users', async (c) => {
     name,
     email,
     role: 'admin',
-    passwordHash: hashPassword(password),
+    passwordHash: await hashPassword(password),
     createdAt: new Date().toISOString(),
     totpSecret: null,
     totpEnabled: 0,
     totpRecovery: null,
+    totpPendingSecret: null,
+    totpLastStep: null,
   }
   try {
     db.insert(users).values(row).run()

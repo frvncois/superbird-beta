@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { requireAuth } from '../lib/session'
+import { hit, clientIp } from '../lib/rateLimit'
 import { getInstalledProject } from '../lib/project'
 import {
   listMedia,
@@ -25,6 +26,8 @@ mediaApi.get('/media', (c) => {
 })
 
 mediaApi.post('/media', async (c) => {
+  const lim = hit(`media-upload:${clientIp(c)}`, 120, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many uploads. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const body = await c.req.parseBody()

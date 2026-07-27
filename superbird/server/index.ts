@@ -1,7 +1,9 @@
 import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 import { bodyLimit } from 'hono/body-limit'
+import { createReadStream } from 'node:fs'
+import { Readable } from 'node:stream'
 import { ensureSchema } from './db/client'
 import authRoutes from './routes/auth'
 import twoFactorRoutes from './routes/twoFactor'
@@ -90,12 +92,35 @@ app.route('/api', commentsRoutes)
 app.route('/api', snapshotRoutes)
 
 // Document types that would execute as HTML if navigated to — force download.
-const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])
+// SVG is included: it can carry inline <script>, and it's served with an
+// image/* type so it would render as a document inline — force it to download
+// like HTML/XML (the CSP-sandbox header is then a second layer, not the only one).
+const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml', 'image/svg+xml'])
+
+// Public asset serving (media + fonts) is unauthenticated and outside the /api
+// limiter, so it gets its own generous per-IP cap — a backstop against volume
+// abuse (the keys are the real socket peer post trusted-proxy hardening). Well
+// above a content-heavy page load (dozens of assets), which is cache-immutable
+// on repeat views anyway.
+function assetRateLimited(c: Context): Response | null {
+  const lim = hit(`asset:${clientIp(c)}`, 1200, 60_000)
+  if (lim.ok) return null
+  return c.json({ error: 'Too many requests.' }, 429, { 'Retry-After': String(lim.retryAfter) })
+}
+
+// Stream a file from disk (never buffer the whole thing into memory — a large
+// public file was previously read synchronously, blocking the event loop).
+function streamFile(path: string, size: number, headers: Record<string, string>): Response {
+  headers['Content-Length'] = String(size)
+  return new Response(Readable.toWeb(createReadStream(path)) as unknown as ReadableStream, { headers })
+}
 
 // Public media files (no auth — referenced by published pages). Served with
 // nosniff + CSP sandbox so a malicious upload (e.g. an SVG or HTML with script)
 // can't execute in the same origin as the admin/API.
 app.get('/media/:id', (c) => {
+  const limited = assetRateLimited(c)
+  if (limited) return limited
   const file = readMediaFile(c.req.param('id'))
   if (!file) return c.notFound()
   // Private media (flagged, or inside a private folder) is admin-only: hide its
@@ -109,19 +134,19 @@ app.get('/media/:id', (c) => {
     'Cache-Control': file.private ? 'private, no-store' : 'public, max-age=31536000, immutable',
   }
   if (dangerous) headers['Content-Disposition'] = 'attachment'
-  return new Response(file.bytes, { headers })
+  return streamFile(file.path, file.size, headers)
 })
 
 // Public font files (no auth — referenced by @font-face in published pages).
 app.get('/fonts/:file', (c) => {
+  const limited = assetRateLimited(c)
+  if (limited) return limited
   const file = readFontFile(c.req.param('file'))
   if (!file) return c.notFound()
-  return new Response(file.bytes, {
-    headers: {
-      'Content-Type': file.mime,
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
+  return streamFile(file.path, file.size, {
+    'Content-Type': file.mime,
+    'X-Content-Type-Options': 'nosniff',
+    'Cache-Control': 'public, max-age=31536000, immutable',
   })
 })
 

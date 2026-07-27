@@ -3,8 +3,8 @@ import { randomBytes } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { projects, users } from '../db/schema'
-import { verifyTotp, consumeRecoveryCode } from '../lib/totp'
-import { hashPassword, verifyPassword, validatePassword, DUMMY_HASH } from '../lib/password'
+import { verifyTotpStep, consumeRecoveryCode } from '../lib/totp'
+import { hashPassword, verifyPassword, validatePassword, DUMMY_HASH_PROMISE } from '../lib/password'
 import {
   startSession,
   endSession,
@@ -90,18 +90,35 @@ auth.post('/install', async (c) => {
   const now = new Date().toISOString()
   const project: Project = { id: randomId('proj'), name, handle, createdAt: now }
   const userId = randomId('user')
+  const passwordHash = await hashPassword(admin.password)
 
-  db.insert(projects).values(project).run()
-  db.insert(users)
-    .values({
-      id: userId,
-      name: admin.name.trim(),
-      email: admin.email.trim().toLowerCase(),
-      role: 'admin',
-      passwordHash: hashPassword(admin.password),
-      createdAt: now,
+  // Close the check-then-act race: re-check + both inserts run atomically in one
+  // transaction, so two concurrent pre-install requests can't both seat an admin
+  // (the second sees the project and rolls back). Also keeps project+user
+  // all-or-nothing.
+  try {
+    db.transaction(() => {
+      if (getProject()) {
+        const e = new Error('installed') as Error & { code?: string }
+        e.code = 'INSTALLED'
+        throw e
+      }
+      db.insert(projects).values(project).run()
+      db.insert(users)
+        .values({
+          id: userId,
+          name: admin.name.trim(),
+          email: admin.email.trim().toLowerCase(),
+          role: 'admin',
+          passwordHash,
+          createdAt: now,
+        })
+        .run()
     })
-    .run()
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'INSTALLED') return c.json({ error: 'Already installed.' }, 409)
+    throw e // real DB error → global 500 handler
+  }
 
   startSession(c, userId)
 
@@ -130,9 +147,16 @@ auth.post('/login', async (c) => {
   }
 
   const row = db.select().from(users).where(eq(users.email, email)).get()
-  // Always run scrypt (against a dummy hash if the user doesn't exist) so the
-  // response time doesn't reveal whether the email is registered.
-  const valid = row ? verifyPassword(password, row.passwordHash) : (verifyPassword(password, DUMMY_HASH), false)
+  // Always run a real scrypt (against a startup-computed dummy hash if the user
+  // doesn't exist) so the response time doesn't reveal whether the email is
+  // registered. Async → the hash runs on the threadpool, not the event loop.
+  let valid: boolean
+  if (row) {
+    valid = await verifyPassword(password, row.passwordHash)
+  } else {
+    await verifyPassword(password, await DUMMY_HASH_PROMISE)
+    valid = false
+  }
   if (!row || !valid) {
     return c.json({ error: 'Incorrect email or password.' }, 401)
   }
@@ -171,8 +195,15 @@ auth.post('/login/2fa', async (c) => {
   }
 
   const code = String(body.code ?? '').trim()
-  let valid = verifyTotp(row.totpSecret, code)
-  if (!valid) {
+  let valid = false
+  const step = verifyTotpStep(row.totpSecret, code)
+  if (step !== null) {
+    // Replay guard: reject a code from a step already accepted for this user
+    // (the same 6 digits stay valid for the whole ±window otherwise).
+    if (step <= (row.totpLastStep ?? -1)) return c.json({ error: 'Invalid code.' }, 401)
+    valid = true
+    db.update(users).set({ totpLastStep: step }).where(eq(users.id, row.id)).run()
+  } else {
     // Fall back to a single-use recovery code.
     const hashes: string[] = row.totpRecovery ? (JSON.parse(row.totpRecovery) as string[]) : []
     const remaining = consumeRecoveryCode(hashes, code)

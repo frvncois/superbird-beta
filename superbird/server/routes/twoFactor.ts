@@ -7,6 +7,7 @@ import {
   generateSecret,
   otpauthUri,
   verifyTotp,
+  verifyTotpStep,
   generateRecoveryCodes,
   hashRecoveryCode,
   consumeRecoveryCode,
@@ -18,12 +19,26 @@ import type { TwoFactorSetup, TwoFactorEnableResult } from '../../shared/types'
 const twoFactor = new Hono()
 twoFactor.use('*', requireAuth)
 
-// Begin enrollment: mint a pending secret (stored but not yet enabled) and hand
-// back the base32 secret + otpauth URI for manual entry into an authenticator.
-twoFactor.post('/2fa/setup', (c) => {
+// Begin enrollment: stage a PENDING secret (never touches the active secret or
+// the enabled flag) and hand back the base32 secret + otpauth URI. Re-enrolling
+// while 2FA is already on requires a current code, so a session without the
+// device can't quietly rotate 2FA to an attacker's authenticator.
+twoFactor.post('/2fa/setup', async (c) => {
   const me = currentUser(c)!
+  const row = db.select().from(users).where(eq(users.id, me.id)).get()
+  if (!row) return c.json({ error: 'Not found.' }, 404)
+
+  if (row.totpEnabled === 1) {
+    const lim = hit(`2fa-setup:${me.id}`, 10, 5 * 60_000)
+    if (!lim.ok) return c.json({ error: 'Too many attempts. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
+    const { code } = (await c.req.json().catch(() => ({}))) as { code?: string }
+    if (!row.totpSecret || !verifyTotp(row.totpSecret, String(code ?? '').trim())) {
+      return c.json({ error: 'Enter a current code to re-enroll two-factor.' }, 400)
+    }
+  }
+
   const secret = generateSecret()
-  db.update(users).set({ totpSecret: secret, totpEnabled: 0 }).where(eq(users.id, me.id)).run()
+  db.update(users).set({ totpPendingSecret: secret }).where(eq(users.id, me.id)).run()
   return c.json({ secret, otpauthUri: otpauthUri(secret, me.email, 'Superbird') } satisfies TwoFactorSetup)
 })
 
@@ -36,15 +51,27 @@ twoFactor.post('/2fa/enable', async (c) => {
 
   const { code } = (await c.req.json()) as { code?: string }
   const row = db.select().from(users).where(eq(users.id, me.id)).get()
-  if (!row?.totpSecret) return c.json({ error: 'Start setup first.' }, 400)
-  if (row.totpEnabled === 1) return c.json({ error: 'Two-factor is already on.' }, 409)
-  if (!verifyTotp(row.totpSecret, String(code ?? '').trim())) {
+  // Verify against the PENDING secret, then promote it to active. Works for a
+  // first enrollment and for a re-enroll (which replaces the active secret +
+  // issues fresh recovery codes). No pending secret ⇒ setup wasn't started.
+  if (!row?.totpPendingSecret) return c.json({ error: 'Start setup first.' }, 400)
+  const step = verifyTotpStep(row.totpPendingSecret, String(code ?? '').trim())
+  if (step === null) {
     return c.json({ error: 'Incorrect code. Check your authenticator and try again.' }, 400)
   }
 
   const recoveryCodes = generateRecoveryCodes(8)
   const hashes = recoveryCodes.map(hashRecoveryCode)
-  db.update(users).set({ totpEnabled: 1, totpRecovery: JSON.stringify(hashes) }).where(eq(users.id, me.id)).run()
+  db.update(users)
+    .set({
+      totpSecret: row.totpPendingSecret,
+      totpEnabled: 1,
+      totpRecovery: JSON.stringify(hashes),
+      totpPendingSecret: null,
+      totpLastStep: step, // this code is now spent — can't be replayed at login
+    })
+    .where(eq(users.id, me.id))
+    .run()
   return c.json({ recoveryCodes } satisfies TwoFactorEnableResult)
 })
 
@@ -64,7 +91,10 @@ twoFactor.post('/2fa/disable', async (c) => {
   const ok = verifyTotp(row.totpSecret, codeStr) || consumeRecoveryCode(hashes, codeStr) !== null
   if (!ok) return c.json({ error: 'Incorrect code.' }, 400)
 
-  db.update(users).set({ totpSecret: null, totpEnabled: 0, totpRecovery: null }).where(eq(users.id, me.id)).run()
+  db.update(users)
+    .set({ totpSecret: null, totpEnabled: 0, totpRecovery: null, totpPendingSecret: null, totpLastStep: null })
+    .where(eq(users.id, me.id))
+    .run()
   return c.json({ ok: true })
 })
 

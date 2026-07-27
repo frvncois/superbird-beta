@@ -15,11 +15,19 @@ import { defaultFontFamilies } from '@/data/defaultFonts'
 // Cascade widths (max-width) for the tag-based typography media blocks.
 const MEDIA: Record<Exclude<Breakpoint, 'desktop'>, number> = { tablet: 768, mobile: 375 }
 
+// Escape `{`/`}` in an author-set property or value so it can't close the rule
+// and inject extra selectors (`color:red}body{display:none`). CSS unicode escapes
+// are valid in both value and quoted-string contexts, so this never corrupts a
+// legitimate value. (`<` is separately escaped where the sheet is inlined.)
+function cssSafe(s: string): string {
+  return s.replace(/\{/g, '\\7b ').replace(/\}/g, '\\7d ')
+}
+
 function decls(styles: Record<string, string> | undefined): string {
   if (!styles) return ''
   return Object.entries(styles)
     .filter(([, v]) => v !== '' && v != null)
-    .map(([k, v]) => `${k}:${v}`)
+    .map(([k, v]) => `${cssSafe(k)}:${cssSafe(v)}`)
     .join(';')
 }
 
@@ -101,7 +109,7 @@ function diff(a: Record<string, string>, b: Record<string, string>): Record<stri
   return out
 }
 function declsImportant(o: Record<string, string>): string {
-  return Object.entries(o).map(([k, v]) => `${k}:${v} !important`).join(';')
+  return Object.entries(o).map(([k, v]) => `${cssSafe(k)}:${cssSafe(v)} !important`).join(';')
 }
 
 // A style class's effective styles at a breakpoint/state — the per-class

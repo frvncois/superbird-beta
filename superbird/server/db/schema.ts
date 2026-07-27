@@ -22,6 +22,11 @@ export const users = sqliteTable('users', {
   totpSecret: text('totp_secret'),
   totpEnabled: integer('totp_enabled').notNull().default(0),
   totpRecovery: text('totp_recovery'),
+  // Staged secret during (re)enrollment — promoted to totpSecret only after a
+  // code is verified. Keeps `/2fa/setup` from ever disabling active 2FA.
+  totpPendingSecret: text('totp_pending_secret'),
+  // Highest TOTP time-step accepted at login — rejects replay within the window.
+  totpLastStep: integer('totp_last_step'),
 })
 
 export const sessions = sqliteTable('sessions', {

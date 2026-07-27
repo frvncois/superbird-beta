@@ -40,6 +40,8 @@ snapshots.get('/snapshots', (c) => {
 })
 
 snapshots.post('/snapshots', async (c) => {
+  const lim = hit(`snapshot-create:${clientIp(c)}`, 60, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many snapshots. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const body = (await c.req.json().catch(() => ({}))) as SnapshotCreateInput

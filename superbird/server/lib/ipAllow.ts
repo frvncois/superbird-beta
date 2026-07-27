@@ -1,5 +1,5 @@
 import type { Context } from 'hono'
-import { clientIp } from './rateLimit'
+import { resolveClientIp, TRUSTED_PROXY_HOPS } from './rateLimit'
 
 // Optional network lockdown for the ADMIN surface only. Set the env var
 //   SUPERBIRD_ADMIN_ALLOW_IPS="127.0.0.1,10.0.0.0/8,203.0.113.4"
@@ -9,10 +9,10 @@ import { clientIp } from './rateLimit'
 // affected. Env-based on purpose: a wrong entry is fixed by editing env and
 // restarting — it can never be a permanent, self-inflicted UI lockout.
 //
-// Behind a reverse proxy this relies on X-Forwarded-For (see clientIp); on
-// direct exposure the header is absent and the check falls back to 'unknown',
-// so pair this with a proxy that sets XFF, or bind to localhost. The real
-// network boundary is the proxy/firewall — this is a second, in-app layer.
+// IP resolution follows SUPERBIRD_TRUST_PROXY (see resolveClientIp): with trust
+// OFF (default) the check matches the direct socket peer; with trust ON it matches
+// the client behind the configured number of proxy hops. The real network
+// boundary is the proxy/firewall — this is a second, in-app layer.
 
 const raw = (process.env.SUPERBIRD_ADMIN_ALLOW_IPS ?? '')
   .split(',')
@@ -20,6 +20,19 @@ const raw = (process.env.SUPERBIRD_ADMIN_ALLOW_IPS ?? '')
   .filter(Boolean)
 
 export const adminIpLockEnabled = raw.length > 0
+
+// The allow-list can only be as trustworthy as the IP it checks. If it's enabled
+// but no proxy is trusted, it matches the direct socket peer — correct on direct
+// exposure, but WRONG (matches the proxy for every request) if you're actually
+// behind a reverse proxy. Warn the operator once at startup.
+if (adminIpLockEnabled && TRUSTED_PROXY_HOPS === 0) {
+  console.warn(
+    '[superbird] SUPERBIRD_ADMIN_ALLOW_IPS is set but SUPERBIRD_TRUST_PROXY is not — ' +
+      'the allow-list will match the direct socket peer. If Superbird runs behind a reverse ' +
+      'proxy, set SUPERBIRD_TRUST_PROXY=<trusted-hop-count> or the allow-list will see the ' +
+      'proxy IP for every request (and thus allow or deny everyone alike).',
+  )
+}
 
 function ipv4ToInt(ip: string): number | null {
   const parts = ip.split('.')
@@ -66,5 +79,8 @@ function ipMatches(ip: string): boolean {
 /** True if this request's client IP may reach the admin surface. */
 export function adminIpAllowed(c: Context): boolean {
   if (!adminIpLockEnabled) return true
-  return ipMatches(clientIp(c))
+  const { ip, determined } = resolveClientIp(c)
+  // An allow-list that can't identify the caller must not silently pass.
+  if (!determined) return false
+  return ipMatches(ip)
 }

@@ -102,9 +102,11 @@ const srcdoc = computed(() => {
 
     <!-- Rendered past page (isolated iframe) -->
     <div class="flex-1 overflow-auto bg-secondary/5 p-4">
+      <!-- Sandboxed to a null origin (no allow-same-origin) — see PreviewOverlay. -->
       <iframe
         :srcdoc="srcdoc"
         title="Snapshot preview"
+        sandbox="allow-scripts"
         class="mx-auto block h-full border bg-white shadow-sm transition-[width] duration-200"
         :style="{ width: frameWidth ? `${frameWidth}px` : '100%' }"
       />

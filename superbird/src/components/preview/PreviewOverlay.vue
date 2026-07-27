@@ -79,9 +79,13 @@ const srcdoc = computed(() =>
 
     <!-- Rendered page (isolated in an iframe so editor styles can't leak in) -->
     <div class="flex-1 overflow-auto bg-secondary/5 p-4">
+      <!-- sandbox WITHOUT allow-same-origin → the srcdoc runs on a null origin,
+           so a future escaping bug can't reach the admin origin / its cookies.
+           Interactions (WAAPI) still run; only in-preview form POSTs to /api break. -->
       <iframe
         :srcdoc="srcdoc"
         title="Page preview"
+        sandbox="allow-scripts"
         class="mx-auto block h-full border bg-white shadow-sm transition-[width] duration-200"
         :style="{ width: frameWidth ? `${frameWidth}px` : '100%' }"
       />

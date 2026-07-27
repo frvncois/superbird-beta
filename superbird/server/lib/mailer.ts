@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { smtpConfig } from '../db/schema'
+import { assertPublicHost } from './safeFetch'
 
 type Row = typeof smtpConfig.$inferSelect
 
@@ -93,6 +94,14 @@ export async function sendMail(
 ): Promise<SendResult> {
   const row = getRow(projectId)
   if (!row?.host || !row?.fromEmail) return { ok: false, error: 'SMTP is not configured.' }
+  // SSRF guard: refuse to connect to an internal/loopback/metadata host — "send
+  // test email" is otherwise a probe primitive. (Same DNS-rebinding residual as
+  // the webhook guard; nodemailer re-resolves at connect. See docs/security.md.)
+  try {
+    await assertPublicHost(row.host)
+  } catch {
+    return { ok: false, error: 'SMTP host is not allowed (must be a public address).' }
+  }
   try {
     const from = row.fromName ? `"${row.fromName}" <${row.fromEmail}>` : row.fromEmail
     await transportFor(row).sendMail({ from, to: msg.to, subject: msg.subject, text: msg.text, html: msg.html })

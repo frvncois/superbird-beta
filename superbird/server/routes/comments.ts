@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { requireAuth, currentUser } from '../lib/session'
+import { hit, clientIp } from '../lib/rateLimit'
 import { getInstalledProject } from '../lib/project'
 import {
   listComments,
@@ -30,6 +31,8 @@ comments.get('/comments', (c) => {
 })
 
 comments.post('/comments', async (c) => {
+  const lim = hit(`comment:${clientIp(c)}`, 60, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many comments. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const user = currentUser(c)
@@ -66,6 +69,8 @@ comments.delete('/comments/:id', (c) => {
 })
 
 comments.post('/comments/:id/replies', async (c) => {
+  const lim = hit(`comment:${clientIp(c)}`, 60, 60_000)
+  if (!lim.ok) return c.json({ error: 'Too many comments. Try again shortly.' }, 429, { 'Retry-After': String(lim.retryAfter) })
   const proj = getInstalledProject()
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const user = currentUser(c)

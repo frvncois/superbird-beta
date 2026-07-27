@@ -25,7 +25,6 @@ import {
   RectangleGroupIcon,
   RectangleStackIcon,
   CircleStackIcon,
-  ViewColumnsIcon,
   WindowIcon,
   MapPinIcon,
   ArrowsPointingOutIcon,
@@ -171,8 +170,6 @@ export const ICONS: Record<string, Component> = {
   // Element & field types
   section: RectangleStackIcon,
   container: RectangleGroupIcon,
-  columns: ViewColumnsIcon,
-  column: ViewColumnsIcon,
   div: WindowIcon,
   heading: HeadingIcon,
   text: Bars3BottomLeftIcon,

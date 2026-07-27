@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, provide, inject } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
+import { CONTAINER_TYPES } from '@/constants/canvas'
 import type { CanvasNode } from '@/types/canvas'
 import LayerTreeItem from './LayerTreeItem.vue'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
@@ -60,9 +61,8 @@ function handleDragEnd() {
 function getDropPosition(e: DragEvent, node: CanvasNode): 'before' | 'after' | 'inside' {
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
   const y = e.clientY - rect.top
-  const isContainer = ['body', 'container', 'section', 'columns', 'column'].includes(node.type)
-
   if (node.type === 'body') return 'inside'
+  const isContainer = CONTAINER_TYPES.includes(node.type)
 
   const topZone = 6
   const bottomZone = rect.height - 6

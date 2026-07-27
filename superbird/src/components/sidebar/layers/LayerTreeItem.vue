@@ -15,8 +15,6 @@ const TYPE_ICONS: Record<string, string> = {
   container: 'container',
   section: 'section',
   div: 'div',
-  columns: 'columns',
-  column: 'column',
   heading: 'heading',
   text: 'text',
   markdown: 'markdown',

@@ -216,16 +216,6 @@ export const useCanvasStore = defineStore('canvas', () => {
       }
     }
 
-    // Auto-wrap: column needs columns parent
-    if (type === 'column' && targetId) {
-      const target = findNode(activePage.value.body.children, targetId)
-      if (target?.type !== 'columns') {
-        const columnsNode = createNode('columns')
-        columnsNode.children.push(node)
-        return insertNode(columnsNode, targetId, position)
-      }
-    }
-
     // Auto-create: collection list gets a collection item child
     if (type === 'collection-list' && node.children.length === 0) {
       node.children.push(createNode('collection-item'))

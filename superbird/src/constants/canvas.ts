@@ -152,8 +152,6 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
   section: { tag: 'section', label: 'Section' },
   container: { tag: 'div', label: 'Container' },
   div: { tag: 'div', label: 'Div' },
-  columns: { tag: 'div', label: 'Columns' },
-  column: { tag: 'div', label: 'Column' },
   // Typography
   heading: { tag: 'h2', label: 'Heading', content: 'Heading' },
   text: { tag: 'p', label: 'Text', content: 'Start writing here...' },
@@ -184,7 +182,7 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
 }
 
 // Elements that are containers
-export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'columns', 'column', 'div', 'form', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
+export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'div', 'form', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
 
 // Elements that support inline text editing
 export const TEXT_EDITABLE_TYPES: NodeType[] = ['text', 'heading', 'button', 'link', 'span', 'label', 'list-item', 'blockquote']

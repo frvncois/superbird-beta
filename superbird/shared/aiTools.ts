@@ -6,7 +6,7 @@ import type { AiToolDef } from './types'
 // in sync with these names.
 
 const NODE_TYPES = [
-  'container', 'section', 'columns', 'column', 'div', 'heading', 'text', 'markdown',
+  'container', 'section', 'div', 'heading', 'text', 'markdown',
   'link', 'span', 'list', 'list-item', 'blockquote', 'image', 'video', 'embed',
   'form', 'input', 'textarea', 'select', 'checkbox', 'radio', 'label', 'button',
   'collection-list', 'collection-item',

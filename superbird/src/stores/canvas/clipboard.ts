@@ -70,8 +70,7 @@ export function useClipboardOps(activePage: ComputedRef<Page>, selectedNodeId: R
     if (id === body.id) return
     const node = findNode(body.children, id)
     if (!node || node.children.length === 0) return
-    const isContainer = ['container', 'section', 'columns', 'column'].includes(node.type)
-    if (!isContainer) return
+    if (!CONTAINER_TYPES.includes(node.type)) return
 
     const result = findParent(body.children, id)
     if (!result) return

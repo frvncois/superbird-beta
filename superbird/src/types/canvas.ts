@@ -1,15 +1,12 @@
 // Type definitions for the Superbird canvas domain.
 // Runtime constants live in @/constants/canvas; factories in @/lib/nodeFactory.
 
+// User-facing categorization lives in SidebarElements.vue (the palette).
 export type NodeType =
   | 'body'
-  // Layout
   | 'container'
   | 'section'
-  | 'columns'
-  | 'column'
   | 'div'
-  // Typography
   | 'heading'
   | 'text'
   | 'markdown'
@@ -18,11 +15,9 @@ export type NodeType =
   | 'list'
   | 'list-item'
   | 'blockquote'
-  // Media
   | 'image'
   | 'video'
   | 'embed'
-  // Form
   | 'form'
   | 'input'
   | 'textarea'
@@ -31,12 +26,9 @@ export type NodeType =
   | 'radio'
   | 'label'
   | 'file-upload'
-  // Interactive
   | 'button'
-  // Data
   | 'collection-list'
   | 'collection-item'
-  // System
   | 'component'
 
 // --- Styles ---

@@ -22,7 +22,7 @@ export function useNodeSettings() {
   // Only link-ish elements get a Link section (a URL editor makes no sense on a
   // plain div/text). Matches the renderer's isLinked types.
   const isLinkable = computed(
-    () => !!node.value && ['button', 'link', 'link-block'].includes(node.value.type),
+    () => !!node.value && ['button', 'link'].includes(node.value.type),
   )
 
   // Fields of the collection currently being edited (derived from the template's

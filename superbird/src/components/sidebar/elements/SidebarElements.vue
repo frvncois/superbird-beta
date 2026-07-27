@@ -37,7 +37,8 @@ const categories: ElementCategory[] = [
       { type: 'heading', label: 'Heading', icon: 'heading' },
       { type: 'text', label: 'Text', icon: 'text' },
       { type: 'markdown', label: 'Markdown', icon: 'markdown' },
-      { type: 'link', label: 'Link', icon: 'link' },
+      { type: 'link', label: 'Link', icon: 'link', prebuilt: 'link' },
+      { type: 'button', label: 'Button', icon: 'button' },
       { type: 'span', label: 'Span', icon: 'span' },
       { type: 'list', label: 'List', icon: 'list' },
       { type: 'blockquote', label: 'Blockquote', icon: 'blockquote' },
@@ -56,15 +57,14 @@ const categories: ElementCategory[] = [
       { type: 'checkbox', label: 'Checkbox', icon: 'checkbox' },
       { type: 'radio', label: 'Radio', icon: 'radio' },
       { type: 'label', label: 'Label', icon: 'label' },
-      { type: 'file-upload', label: 'File Upload', icon: 'upload' },
+      { type: 'file-upload', label: 'Upload', icon: 'upload' },
     ],
   },
   {
-    label: 'Interactive',
+    label: 'Collection',
     elements: [
-      { type: 'button', label: 'Button', icon: 'button' },
-      { type: 'link-block', label: 'Link Container', icon: 'link-block' },
-      { type: 'collection-list', label: 'Collection List', icon: 'collection' },
+      { type: 'collection-list', label: 'List', icon: 'collection-list' },
+      { type: 'collection-item', label: 'Item', icon: 'collection-item' },
     ],
   },
   {
@@ -129,7 +129,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           :key="el.type"
           variant="bare"
           draggable="true"
-          class="w-full flex-col rounded-lg py-1.5 !cursor-grab active:!cursor-grabbing"
+          class="w-full flex-col rounded-lg py-1.5 !cursor-grab active:!cursor-grabbing font-normal!"
           @dragstart="handleDragStart($event, el)"
           @dragend="handleDragEnd"
           @contextmenu.prevent="handleContextMenu($event, el.type)"
@@ -137,7 +137,7 @@ function handleContextMenu(e: MouseEvent, type: NodeType) {
           <span class="flex size-12 items-center justify-center rounded-md bg-foreground/5 text-secondary">
             <IconUi :name="el.icon" size="size-5" />
           </span>
-          <LabelUi size="xs" class="text-foreground">{{ el.label }}</LabelUi>
+          <LabelUi size="xs">{{ el.label }}</LabelUi>
         </ButtonUi>
       </div>
     </div>

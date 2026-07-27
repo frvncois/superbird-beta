@@ -9,7 +9,7 @@ const NODE_TYPES = [
   'container', 'section', 'columns', 'column', 'div', 'heading', 'text', 'markdown',
   'link', 'span', 'list', 'list-item', 'blockquote', 'image', 'video', 'embed',
   'form', 'input', 'textarea', 'select', 'checkbox', 'radio', 'label', 'button',
-  'link-block', 'collection-list',
+  'collection-list', 'collection-item',
 ]
 
 export const AI_TOOL_DEFS: AiToolDef[] = [

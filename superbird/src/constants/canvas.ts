@@ -149,14 +149,13 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
   'file-upload': { tag: 'input', label: 'File Upload' },
   // Interactive
   button: { tag: 'button', label: 'Button', content: 'Click me' },
-  'link-block': { tag: 'a', label: 'Link Block' },
   // Data
   'collection-list': { tag: 'div', label: 'Collection List', props: { source: 'posts', limit: '3', orderBy: 'date', order: 'desc' } },
   'collection-item': { tag: 'div', label: 'Collection Item' },
 }
 
 // Elements that are containers
-export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'columns', 'column', 'div', 'form', 'link-block', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
+export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'columns', 'column', 'div', 'form', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
 
 // Elements that support inline text editing
 export const TEXT_EDITABLE_TYPES: NodeType[] = ['text', 'heading', 'button', 'link', 'span', 'label', 'list-item', 'blockquote']
@@ -167,7 +166,7 @@ export const TEXT_EDITABLE_TYPES: NodeType[] = ['text', 'heading', 'button', 'li
 export const CONTENT_TYPES: NodeType[] = [
   'heading', 'text', 'markdown', 'link', 'span', 'list', 'list-item', 'blockquote',
   'image', 'video',
-  'button', 'link-block',
+  'button',
 ]
 
 // Form elements that require a form parent

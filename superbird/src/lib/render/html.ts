@@ -99,12 +99,11 @@ function hasLink(node: CanvasNode): boolean {
   return !!(node.link && (node.link.url || node.link.currentEntry))
 }
 
-// Which nodes render as anchors: real links/link-blocks, any <a>, and buttons
-// that have a link (so the button navigates).
+// Which nodes render as anchors: real links, any <a>, and buttons that have a
+// link (so the button navigates).
 function isLinked(node: CanvasNode): boolean {
   return (
     node.type === 'link' ||
-    node.type === 'link-block' ||
     node.tag === 'a' ||
     (node.type === 'button' && hasLink(node))
   )

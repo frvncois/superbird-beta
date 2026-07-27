@@ -33,7 +33,6 @@ export type NodeType =
   | 'file-upload'
   // Interactive
   | 'button'
-  | 'link-block'
   // Data
   | 'collection-list'
   | 'collection-item'
@@ -180,7 +179,7 @@ export interface CanvasNode {
   element?: PrebuiltElementKey
 }
 
-export type PrebuiltElementKey = 'lang-switcher'
+export type PrebuiltElementKey = 'lang-switcher' | 'link'
 
 // --- Locales ---
 

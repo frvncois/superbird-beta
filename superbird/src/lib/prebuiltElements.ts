@@ -11,6 +11,14 @@ export interface PrebuiltDef {
   build: () => CanvasNode
 }
 
+function linkTree(): CanvasNode {
+  // A link that ships with a text item inside (replaces the old link-block).
+  return createNode('link', {
+    label: 'Link',
+    children: [createNode('text', { label: 'Text', content: 'Link text' })],
+  })
+}
+
 function langSwitcherTree(): CanvasNode {
   // Placeholder links for the editor; the published site regenerates them from
   // the site's actual locales.
@@ -26,6 +34,7 @@ function langSwitcherTree(): CanvasNode {
 }
 
 export const PREBUILT_ELEMENTS: PrebuiltDef[] = [
+  { key: 'link', label: 'Link', icon: 'link', build: linkTree },
   { key: 'lang-switcher', label: 'Lang', icon: 'globe', build: langSwitcherTree },
 ]
 

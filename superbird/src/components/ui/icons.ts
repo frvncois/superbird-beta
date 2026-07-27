@@ -1,4 +1,4 @@
-import type { Component } from 'vue'
+import { h, type Component, type FunctionalComponent } from 'vue'
 import {
   PlusIcon,
   XMarkIcon,
@@ -24,6 +24,7 @@ import {
   BoltIcon,
   RectangleGroupIcon,
   RectangleStackIcon,
+  CircleStackIcon,
   ViewColumnsIcon,
   WindowIcon,
   MapPinIcon,
@@ -76,6 +77,15 @@ import {
   SunIcon,
   MoonIcon,
 } from '@heroicons/vue/24/outline'
+
+// Heroicons has no letterform, so draw a proper "H" for the Heading element.
+// `attrs` carries IconUi's size class + aria-hidden through to the <svg>.
+const HeadingIcon: FunctionalComponent = (_props, { attrs }) =>
+  h(
+    'svg',
+    { xmlns: 'http://www.w3.org/2000/svg', fill: 'none', viewBox: '0 0 24 24', 'stroke-width': '2', stroke: 'currentColor', ...attrs },
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M6 5v14M18 5v14M6 12h12' }),
+  )
 
 // Named icons → HeroIcons (24px outline). Rendered by IconUi.
 // New glyphs: import the HeroIcon and add a mapping here — never inline <svg>.
@@ -158,12 +168,11 @@ export const ICONS: Record<string, Component> = {
   columns: ViewColumnsIcon,
   column: ViewColumnsIcon,
   div: WindowIcon,
-  heading: Bars3BottomLeftIcon,
-  text: DocumentTextIcon,
+  heading: HeadingIcon,
+  text: Bars3BottomLeftIcon,
   richtext: DocumentTextIcon,
   markdown: DocumentTextIcon,
   link: LinkIcon,
-  'link-block': LinkIcon,
   span: VariableIcon,
   list: ListBulletIcon,
   blockquote: ChatBubbleBottomCenterTextIcon,
@@ -181,6 +190,8 @@ export const ICONS: Record<string, Component> = {
   label: TagIcon,
   button: CursorArrowRaysIcon,
   collection: ArrowsUpDownIcon,
+  'collection-list': CircleStackIcon,
+  'collection-item': Square2StackIcon,
   number: HashtagIcon,
   date: CalendarDaysIcon,
   'eye-slash': EyeSlashIcon,

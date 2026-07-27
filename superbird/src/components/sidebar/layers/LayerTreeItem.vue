@@ -7,22 +7,36 @@ import type { CanvasNode } from '@/types/canvas'
 import IconUi from '@/components/ui/IconUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 
-// Maps node types to icon registry keys (body reuses the layers glyph,
-// section/column reuse the container square)
+// Maps every node type to an icon registry key so nothing renders iconless.
+// (`body` reuses the layers glyph; icon keys otherwise match the type name.)
 const TYPE_ICONS: Record<string, string> = {
   component: 'component',
   body: 'layers',
   container: 'container',
   section: 'section',
-  column: 'container',
+  div: 'div',
   columns: 'columns',
+  column: 'column',
   heading: 'heading',
   text: 'text',
-  button: 'button',
-  image: 'image',
-  label: 'label',
+  markdown: 'markdown',
   link: 'link',
-  'link-block': 'link',
+  span: 'span',
+  list: 'list',
+  'list-item': 'list',
+  blockquote: 'blockquote',
+  image: 'image',
+  video: 'video',
+  embed: 'embed',
+  form: 'form',
+  input: 'input',
+  textarea: 'textarea',
+  select: 'select',
+  checkbox: 'checkbox',
+  radio: 'radio',
+  label: 'label',
+  'file-upload': 'upload',
+  button: 'button',
 }
 
 const props = defineProps<{
@@ -128,9 +142,9 @@ function remove(e: MouseEvent) {
       <!-- Type icon -->
       <span class="ml-0.5 mr-1.5 shrink-0">
         <!-- Collection list -->
-        <span v-if="node.type === 'collection-list'" class="text-[11px] font-mono font-bold text-amber-fg">&#8634;</span>
+        <IconUi v-if="node.type === 'collection-list'" name="collection-list" size="size-3.5" class="text-amber-fg" />
         <!-- Collection item -->
-        <span v-else-if="node.type === 'collection-item'" class="text-[11px] font-mono font-bold text-amber-fg/60">&#8634;</span>
+        <IconUi v-else-if="node.type === 'collection-item'" name="collection-item" size="size-3.5" class="text-amber-fg/70" />
         <!-- Component instance -->
         <IconUi v-else-if="node.type === 'component'" name="component" size="size-3.5" class="text-green-fg" />
         <!-- Other node types -->

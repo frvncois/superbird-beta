@@ -7,11 +7,11 @@ withDefaults(defineProps<{ wide?: boolean }>(), { wide: false })
 <template>
   <div
     :class="[
-      'grid h-full w-full transition-[grid-template-columns] duration-300 ease-spring gap-3.5 px-3.5 pb-3.5',
+      'grid h-full w-full transition-[grid-template-columns] duration-300 ease-spring px-3.5 pb-3.5',
       wide ? 'grid-cols-[520px_1fr]' : 'grid-cols-[var(--sidebar-width)_1fr]',
     ]"
   >
-    <aside class="col-start-1 overflow-auto">
+    <aside class="col-start-1 overflow-auto pr-3.5">
       <slot name="sidebar" />
     </aside>
 

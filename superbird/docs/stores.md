@@ -1,11 +1,11 @@
 # Stores
 
-Twelve domain Pinia stores (composition `defineStore` with setup fn): `canvas`,
+Thirteen domain Pinia stores (composition `defineStore` with setup fn): `canvas`,
 `globalStyles`, `userComponents`, `collections`, `locales`, `media`,
-`siteSettings`, `submissions`, `comments`, `setup`, `auth`, `mcp`. **All mutations via
+`siteSettings`, `submissions`, `comments`, `snapshots`, `setup`, `auth`, `mcp`. **All mutations via
 actions** — undo depends on it. Dependency graph: `globalStyles → canvas`,
 `locales → canvas`, `collections → canvas`, `userComponents → canvas`;
-`media`/`siteSettings`/`submissions`/`comments`/`setup`/`auth`/`mcp` standalone.
+`media`/`siteSettings`/`submissions`/`comments`/`snapshots`/`setup`/`auth`/`mcp` standalone.
 
 ## `useCanvasStore` — pages, node tree, selection, interactions
 
@@ -52,6 +52,9 @@ API-backed. `items`, `forms`, `loading`, `loaded`, `load`, `loadForms`, `markSee
 
 ## `useCommentsStore` — canvas comment threads (editor-only)
 API-backed (`/api/comments`, own table). `items`, `loading`, `loaded`, `load`, `create(input)`, `setResolved`, `edit`, `addReply`, `removeReply`, `remove`, getters `byPage`/`openByPage`/`unresolvedCount`, and a `focusRequest`/`requestFocus`/`clearFocus` channel (header inbox → canvas: scroll to + open a thread). Each comment is a pin anchored to a node via `{nodeId, nx, ny}` (normalized offset) so it follows the element. **Never** in the project doc, publish snapshot, backups, or undo — a server-side collaboration surface for logged-in users only. Also exports `commentInitials(name)`. Boot-loaded in `main.ts` under the signed-in gate (alongside `media`).
+
+## `useSnapshotsStore` — version history (editor-only)
+API-backed (`/api/snapshots`, own table). `items` (metadata, newest-first), `loading`, `loaded`, `load`, `create({reason,label?})` (server dedups by content hash → `deduped` flag; unshifts only when a row was made), `restore(id)` (→ server overwrites the working doc with a safety-snapshot first, then re-hydrates via `useProjectPersistence().load()` + `useHistory().reset()`), `remove`, `setPinned`, `openPreview(id)`/`closePreview`/`previewDoc`/`previewMeta` (drives `SnapshotPreviewOverlay`), getter `grouped` (by day). Auto-triggered on editor open, publish, every ~20 autosaves / 10 min, and around MCP sessions (server-side). Smart-cap retention: pinned + manual/publish kept; newest 15 auto/open/mcp kept; hard cap 50. Never in the project doc, publish snapshot, portable export, or undo.
 
 ## `useSetupStore` — install + publish state
 `project`, `publishedAt`, `installing`, `error`, `isInstalled`, `isPublished`, `hydrate`, `markPublished`, `install`. Hydrated from `fetchSessionState()` in `main.ts` before routing.

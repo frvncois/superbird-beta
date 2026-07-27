@@ -156,6 +156,37 @@ export interface CommentCreateInput {
   body: string
 }
 
+// ── Snapshots (version history) ──
+// Point-in-time copies of the working document, auto-created on meaningful
+// events + deduped by content hash. Own table; never published or exported.
+
+export type SnapshotReason = 'open' | 'publish' | 'auto' | 'manual' | 'mcp-before' | 'mcp-after'
+
+// Metadata row (the `document` is fetched separately for preview/restore).
+export interface Snapshot {
+  id: string
+  reason: SnapshotReason
+  label: string
+  authorName: string
+  size: number
+  pinned: boolean
+  createdAt: string
+}
+
+export interface SnapshotDetail extends Snapshot {
+  document: ProjectDocument
+}
+
+export interface SnapshotCreateInput {
+  reason?: SnapshotReason
+  label?: string
+}
+
+export interface SnapshotCreateResult {
+  snapshot: Snapshot
+  deduped: boolean // true → identical to the latest, no new row created
+}
+
 // ── AI tools (MCP) ──
 // A tool the assistant/MCP client can call. Shared by shared/aiTools.ts, the
 // browser executors, the headless executor, and the MCP server.

@@ -152,7 +152,7 @@ export function buildNodeActions(
     separator(),
     {
       id: 'create-component',
-      label: 'Create Component',
+      label: 'Create Block',
       icon: 'component',
       handler: () => callbacks?.onCreateComponent?.(),
       hidden: isBody || isComponent,

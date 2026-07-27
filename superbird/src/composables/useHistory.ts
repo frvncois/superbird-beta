@@ -71,6 +71,15 @@ export function useHistory() {
     redoStack.value = []
   }
 
+  // Clear undo/redo and reseed the baseline from the current stores. Call after
+  // a snapshot restore (or any wholesale document swap) so an undo can't pop the
+  // pre-restore document back.
+  function reset() {
+    undoStack.value = []
+    redoStack.value = []
+    lastSnapshot = takeSnapshot()
+  }
+
   function undo() {
     if (undoStack.value.length === 0) return
     redoStack.value.push(lastSnapshot ?? takeSnapshot())
@@ -109,5 +118,5 @@ export function useHistory() {
     )
   }
 
-  return { undo, redo, canUndo, canRedo }
+  return { undo, redo, reset, canUndo, canRedo }
 }

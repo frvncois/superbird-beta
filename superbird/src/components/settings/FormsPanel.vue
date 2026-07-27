@@ -6,7 +6,6 @@ import type { CanvasNode, FormConfig } from '@/types/canvas'
 import SettingsPanel from './SettingsPanel.vue'
 import SettingsSection from './SettingsSection.vue'
 import SettingsRow from './SettingsRow.vue'
-import SmtpSection from './SmtpSection.vue'
 import SubmissionsSection from './SubmissionsSection.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
@@ -68,8 +67,6 @@ function update(formId: string, patch: Partial<FormConfig>) {
     <SubmissionsSection v-if="tab === 'submissions'" />
 
     <template v-else>
-      <SmtpSection />
-
       <SettingsSection
         bare
         title="Form settings"

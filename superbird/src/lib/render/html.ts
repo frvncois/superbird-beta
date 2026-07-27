@@ -16,6 +16,15 @@ function attr(name: string, value: string | undefined | null): string {
   return ` ${name}="${escapeAttr(value)}"`
 }
 
+// Serialize a node's instance styles to an inline `style` value.
+function decls(styles: Record<string, string> | undefined): string {
+  if (!styles) return ''
+  return Object.entries(styles)
+    .filter(([, v]) => v !== '' && v != null)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(';')
+}
+
 function buildAttributes(
   node: CanvasNode,
   ctx: RenderContext,
@@ -34,11 +43,11 @@ function buildAttributes(
   // items (it would produce duplicate ids across every row).
   out += attr('id', repeated ? undefined : node.htmlId)
   out += attr('class', classes.join(' ') || undefined)
-  // Styling comes from per-element CSS keyed to this attribute (compilePageCss),
-  // resolved identically to the editor canvas.
-  if (node.classes.length > 0 || Object.keys(node.styles).length > 0) {
-    out += attr('data-sb-s', node.id)
-  }
+  // Styling is class-based (compilePageCss emits `.className{…}`). A node's own
+  // instance `styles` (rare — the editor migrates them into a class) aren't
+  // shared, so they go inline; inline wins, matching resolveStyles' last-merge.
+  const inline = decls(node.styles)
+  if (inline) out += attr('style', inline)
   out += attr('title', node.htmlTitle)
   out += attr('role', node.accessibility?.role)
   out += attr('aria-label', node.accessibility?.ariaLabel)

@@ -10,6 +10,7 @@ import TypographyPanel from '@/components/settings/TypographyPanel.vue'
 import MediaPanel from '@/components/settings/MediaPanel.vue'
 import SeoPanel from '@/components/settings/SeoPanel.vue'
 import FormsPanel from '@/components/settings/FormsPanel.vue'
+import SmtpPanel from '@/components/settings/SmtpPanel.vue'
 import UsersPanel from '@/components/settings/UsersPanel.vue'
 import SecurityPanel from '@/components/settings/SecurityPanel.vue'
 import BackupPanel from '@/components/settings/BackupPanel.vue'
@@ -23,6 +24,7 @@ const categories = [
   { key: 'media', label: 'Media', icon: 'image', component: MediaPanel },
   { key: 'seo', label: 'SEO', icon: 'search', component: SeoPanel },
   { key: 'forms', label: 'Forms', icon: 'form', component: FormsPanel },
+  { key: 'smtp', label: 'SMTP', icon: 'mail', component: SmtpPanel },
   { key: 'users', label: 'Users', icon: 'users', component: UsersPanel },
   { key: 'security', label: 'Security', icon: 'lock', component: SecurityPanel },
   { key: 'backup', label: 'Backup', icon: 'archive', component: BackupPanel },

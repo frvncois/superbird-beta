@@ -188,7 +188,7 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       'cursor-default transition-[box-shadow,background-color] duration-150 ease-[ease] relative',
       ...node.classes,
       isBody && isBaseViewport && 'bg-background h-full',
-      isBody && !isBaseViewport && 'rounded-2xl border bg-background shadow-sm min-h-full',
+      isBody && !isBaseViewport && 'bg-background shadow-sm min-h-full',
       showOutlines && isSelected && !isComponentInstance && !isDynamic && 'ring-2 ring-primary ring-offset-1',
       showOutlines && isSelected && isComponentInstance && 'ring-2 ring-green-fg ring-offset-1',
       showOutlines && isSelected && isDynamic && !isComponentInstance && 'ring-2 ring-purple-fg ring-offset-1',
@@ -223,7 +223,7 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     <!-- Hover label -->
     <div
       v-if="isHovered && !isSelected && !isBody && !preview && showOutlines"
-      class="pointer-events-none absolute -top-5 left-0 z-20 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono leading-none text-white"
+      class="pointer-events-none absolute -top-5 left-0 z-20 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono font-medium uppercase not-italic tracking-wider leading-none whitespace-nowrap [text-indent:0] [word-spacing:normal] text-white"
       :class="isComponentInstance ? 'bg-green-fg' : isDynamic ? 'bg-purple-fg' : 'bg-primary'"
     >
       <IconUi v-if="isComponentInstance" name="component" size="size-2.5" />

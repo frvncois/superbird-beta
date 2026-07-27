@@ -124,7 +124,7 @@ function handleKeydown(e: KeyboardEvent) {
       :value="parsed.unit === 'auto' ? '' : parsed.num"
       :placeholder="parsed.unit === 'auto' ? 'auto' : placeholder ?? '0'"
       :disabled="parsed.unit === 'auto'"
-      class="h-full flex-1 min-w-0 bg-transparent px-2.5 text-xs text-foreground placeholder:text-secondary/50 outline-none disabled:opacity-40"
+      class="h-full flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-secondary/50 outline-none disabled:opacity-40"
       @input="handleNumInput"
       @keydown="handleKeydown"
     />

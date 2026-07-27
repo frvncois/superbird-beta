@@ -97,6 +97,19 @@ export function ensureSchema(): void {
       emailed_to TEXT,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS snapshots (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id),
+      reason TEXT NOT NULL,
+      label TEXT NOT NULL,
+      document TEXT NOT NULL,
+      hash TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      pinned INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS comments (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),
@@ -127,6 +140,7 @@ export function ensureSchema(): void {
     -- full-scans its table.
     CREATE INDEX IF NOT EXISTS idx_submissions_project_created ON submissions(project_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_comments_project_page ON comments(project_id, page_id);
+    CREATE INDEX IF NOT EXISTS idx_snapshots_project_created ON snapshots(project_id, created_at);
   `)
 
   // Migrate older DBs that predate later columns.

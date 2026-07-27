@@ -5,7 +5,6 @@ import { useUserComponentsStore } from '@/stores/userComponents'
 import ContextMenuUi from '@/components/ui/ContextMenuUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
-import LabelUi from '@/components/ui/LabelUi.vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useToast } from '@/composables/useToast'
 import { separator, filterMenuItems, type ContextMenuItem } from '@/types/contextMenu'
@@ -74,21 +73,19 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
 </script>
 
 <template>
-  <div class="p-4 space-y-6">
     <!-- User components -->
     <div v-if="userComponentsList.length > 0">
-      <LabelUi size="xs">Components</LabelUi>
       <div class="space-y-0.5">
         <div
           v-for="comp in userComponentsList"
           :key="comp.id"
-          class="flex cursor-grab items-center gap-2.5 rounded-xl px-3 py-2 transition-colors duration-150 hover:bg-secondary/10 active:cursor-grabbing"
+          class="flex cursor-grab items-center gap-3.5 rounded-xl py-3.5 px-3.5 transition-colors duration-150 hover:bg-green-bg/50 active:cursor-grabbing"
           draggable="true"
           @dragstart="handleUserComponentDragStart($event, comp.id)"
           @dragend="handleDragEnd"
           @contextmenu.prevent="handleUserComponentContextMenu($event, comp.id)"
         >
-          <div class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-green-bg">
+          <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-green-bg">
             <IconUi name="component" size="size-3" class="text-green-fg" />
           </div>
           <div>
@@ -101,8 +98,8 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
 
     <!-- Empty state -->
     <div v-if="userComponentsList.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-      <div class="text-xs text-secondary">No components yet</div>
-      <div class="text-[10px] text-secondary/50 mt-1">Right-click an element and select "Create Component"</div>
+      <div class="text-xs text-secondary">No blocks yet</div>
+      <div class="text-[10px] text-secondary/50 mt-1">Right-click an element and select "Create Block"</div>
     </div>
 
     <ContextMenuUi
@@ -125,5 +122,4 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       @update:open="pendingDelete = null"
       @confirm="doDeleteComponent"
     />
-  </div>
 </template>

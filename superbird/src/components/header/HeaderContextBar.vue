@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useCollectionsStore } from '@/stores/collections'
+import { useHistory } from '@/composables/useHistory'
 import { PAGE_TYPE_CONFIGS } from '@/constants/canvas'
 import type { Page } from '@/types/canvas'
 import DropdownUi from '@/components/ui/DropdownUi.vue'
@@ -16,8 +17,10 @@ import HeaderPageSettings from './HeaderPageSettings.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
 import HeaderCommentsButton from './HeaderCommentsButton.vue'
+import HeaderSnapshotsButton from './HeaderSnapshotsButton.vue'
 
 const store = useCanvasStore()
+const { undo, redo, canUndo, canRedo } = useHistory()
 const collections = useCollectionsStore()
 
 // Pages / collections navigation dropdown.
@@ -183,7 +186,7 @@ function backToTemplate() {
 </script>
 
 <template>
-  <div class="flex items-center justify-center gap-2">
+  <div class="relative flex w-full items-center justify-center gap-2">
     <!-- Pages / collections navigation -->
     <DropdownUi v-model:open="pagesOpen" class="w-64" panel-class="!max-h-[80vh]">
       <template #trigger="{ open, toggle }">
@@ -374,7 +377,9 @@ function backToTemplate() {
       </div>
     </Teleport>
 
-    <!-- Page settings (status, title, slug, SEO) -->
+    <HeaderViewportSwitch />
+    <HeaderLocaleSwitch />
+    <HeaderCommentsButton />
     <HeaderPageSettings />
 
     <!-- Back to the collection template (only while editing an item) -->
@@ -386,12 +391,13 @@ function backToTemplate() {
     >
       <IconUi name="chevron-down" size="size-3" class="rotate-90" /> Template
     </ButtonUi>
-    <HeaderCommentsButton />
-    <HeaderLocaleSwitch />
-    <HeaderViewportSwitch />
+
+
+    <!-- Left: Design / Content mode toggle -->
     <SegmentedControlUi
       :model-value="store.editorMode"
       :options="editorModeOptions"
+      class="absolute left-0 top-1/2 -translate-y-1/2"
       tooltip-placement="bottom"
       @update:model-value="store.setEditorMode($event as 'design' | 'content')"
     >
@@ -399,5 +405,16 @@ function backToTemplate() {
         <IconUi :name="option.icon!" size="size-3.5" />
       </template>
     </SegmentedControlUi>
+
+    <!-- Right: undo / redo + version history -->
+    <div class="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+      <TooltipUi content="Undo" placement="bottom">
+        <ButtonUi variant="outline" size="sm" square icon="undo" :disabled="!canUndo" @click="undo" />
+      </TooltipUi>
+      <TooltipUi content="Redo" placement="bottom">
+        <ButtonUi variant="outline" size="sm" square icon="redo" :disabled="!canRedo" @click="redo" />
+      </TooltipUi>
+      <HeaderSnapshotsButton />
+    </div>
   </div>
 </template>

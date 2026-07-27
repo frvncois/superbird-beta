@@ -243,8 +243,18 @@ export const STATE_PSEUDO: Record<string, string> = {
 }
 export const ANCESTOR: Record<string, string> = { 'group-hover': '.group:hover ', 'group-focus': '.group:focus ', dark: '.dark ' }
 
-function escapeClass(cls: string): string {
-  return cls.replace(/[:./%[\]!]/g, '\\$&')
+// Escape an authored/utility class name so it's a valid CSS selector: backslash
+// every non-identifier char, and a leading digit as `\3N ` (CSS.escape-style).
+// Shared by the canvas variant sheet and the published class-based sheet.
+export function escapeClass(cls: string): string {
+  let out = ''
+  for (let i = 0; i < cls.length; i++) {
+    const ch = cls[i]!
+    if (i === 0 && ch >= '0' && ch <= '9') out += '\\3' + ch + ' '
+    else if (/[A-Za-z0-9_-]/.test(ch)) out += ch
+    else out += '\\' + ch
+  }
+  return out
 }
 function declsToText(d: Decls): string {
   // !important so variant states/breakpoints win over the inline base styles

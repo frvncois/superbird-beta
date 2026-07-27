@@ -2,6 +2,7 @@
 import { computed, provide, ref, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useUserComponentsStore } from '@/stores/userComponents'
+import { useSnapshotsStore } from '@/stores/snapshots'
 import { useToast } from '@/composables/useToast'
 import { CreateComponentPromptKey } from '@/constants/injectionKeys'
 import { startMcpBridge, stopMcpBridge } from '@/lib/ai/bridge'
@@ -20,6 +21,7 @@ import SidebarSettings from '@/components/sidebar/settings/SidebarSettings.vue'
 import SidebarInteractions from '@/components/sidebar/interactions/SidebarInteractions.vue'
 import TabsUi from '@/components/ui/TabsUi.vue'
 import PreviewOverlay from '@/components/preview/PreviewOverlay.vue'
+import SnapshotPreviewOverlay from '@/components/preview/SnapshotPreviewOverlay.vue'
 import McpOverlay from '@/components/mcp/McpOverlay.vue'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useSelectionSync } from '@/composables/useSelectionSync'
@@ -34,7 +36,22 @@ onMounted(startMcpBridge)
 onUnmounted(stopMcpBridge)
 
 const canvasStore = useCanvasStore()
+const snapshots = useSnapshotsStore()
 const contentMode = computed(() => canvasStore.editorMode === 'content')
+
+// Snapshot on editor open (deduped server-side — no row when nothing changed).
+onMounted(() => {
+  void snapshots.create({ reason: 'open' }).catch(() => {})
+})
+
+// "Restore this version" from the snapshot preview overlay.
+async function restoreFromPreview() {
+  const id = snapshots.previewMeta?.id
+  if (!id) return
+  await snapshots.restore(id)
+  snapshots.closePreview()
+  toast.success('Snapshot restored')
+}
 
 // Create-component name prompt — hosted once here so canvas + layers context
 // menus share a single declarative dialog (see CreateComponentPromptKey).
@@ -73,7 +90,7 @@ const rightCollapsed = ref(false)
 const leftTabs = [
   { key: 'layers', label: 'Layers', icon: 'layers' },
   { key: 'elements', label: 'Elements', icon: 'elements' },
-  { key: 'components', label: 'Components', icon: 'components' },
+  { key: 'components', label: 'Block', icon: 'components' },
 ]
 
 const rightTabs = [
@@ -132,6 +149,15 @@ const rightTabs = [
 
   <PreviewOverlay v-if="canvasStore.previewOpen" />
 
+  <!-- Read-only preview of a past snapshot's document. -->
+  <SnapshotPreviewOverlay
+    v-if="snapshots.previewDoc"
+    :document="snapshots.previewDoc"
+    :meta="snapshots.previewMeta"
+    @close="snapshots.closePreview()"
+    @restore="restoreFromPreview"
+  />
+
   <!-- Locks the editor while the MCP assistant is actively editing. -->
   <McpOverlay />
 
@@ -140,12 +166,12 @@ const rightTabs = [
     :open="!!createComponentNodeId"
     variant="dialog"
     icon="component"
-    title="Create component"
-    description="Save this element as a reusable component."
+    title="Create block"
+    description="Save this element as a reusable block."
     @update:open="createComponentNodeId = null"
   >
     <div ref="componentNameInput">
-      <InputUi v-model="componentName" placeholder="Component name" size="default" @keydown.enter="doCreateComponent" />
+      <InputUi v-model="componentName" placeholder="Block name" size="default" @keydown.enter="doCreateComponent" />
     </div>
     <template #actions>
       <ButtonUi variant="ghost" @click="createComponentNodeId = null">Cancel</ButtonUi>

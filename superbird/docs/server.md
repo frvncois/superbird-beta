@@ -26,7 +26,7 @@ server/
   index.ts            Hono app + @hono/node-server bootstrap (port 3001)
   db/
     client.ts         better-sqlite3 + drizzle instance; ensureSchema()
-    schema.ts         Drizzle tables: projects, users, sessions, media, mediaFolders, backups, submissions, comments, smtpConfig, projectState
+    schema.ts         Drizzle tables: projects, users, sessions, media, mediaFolders, backups, submissions, comments, snapshots, smtpConfig, projectState
   lib/
     password.ts       scrypt hash/verify
     session.ts        session create/read/destroy + cookie helpers
@@ -58,6 +58,8 @@ drizzle.config.ts     drizzle-kit config (for future migrations)
 | `GET /api/forms/submissions` · `PATCH/:id` · `DELETE/:id` | ✓ | Submissions list (form/status/date/search filters), mark-seen, delete |
 | `GET /api/comments` · `POST` · `PATCH/:id` · `DELETE/:id` | ✓ | Editor-only comment threads (canvas pins). `PATCH` = resolve/edit |
 | `POST/DELETE /api/comments/:id/replies[/:replyId]` | ✓ | Add / remove a reply on a thread |
+| `GET /api/snapshots` · `POST` · `GET/:id` · `PATCH/:id` · `DELETE/:id` | ✓ | Version history (own table, hash-deduped). `GET/:id` = full document; `PATCH` = pin/label |
+| `POST /api/snapshots/:id/restore` | ✓ | Safety-snapshot current, then overwrite the working document |
 | `GET /api/forms/submitted-forms` | ✓ | Distinct forms with submissions (filter options) |
 | `GET /api/forms/submissions/export` | ✓ | Scoped CSV/JSON export (rate-limited attachment) |
 | `GET/PUT /api/forms/smtp` · `POST /api/forms/smtp/test` | ✓ | SMTP config (password write-only) + test email |

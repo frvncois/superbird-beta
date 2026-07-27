@@ -130,13 +130,13 @@ defineExpose({ close })
           :class="disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'"
           @click="toggle"
         >
-          <span class="flex min-w-0 items-center gap-1.5">
+          <span class="flex min-w-0 items-center gap-2.5">
             <IconUi v-if="triggerIcon" :name="triggerIcon" size="size-3.5" :class="['shrink-0', triggerAccent ?? 'text-secondary']" />
             <span :class="['truncate', triggerAccent ?? (isPlaceholder ? 'text-foreground/40' : isDefaultSelected ? 'text-secondary/50' : isSelect ? 'text-foreground' : 'font-medium')]">
               {{ triggerLabel }}
             </span>
           </span>
-          <span class="flex shrink-0 items-center gap-1.5">
+          <span class="flex shrink-0 items-center gap-2.5">
             <BadgeUi v-if="triggerBadge" variant="neutral" size="xs" mono>{{ triggerBadge }}</BadgeUi>
             <IconUi name="chevron-down" size="size-3" :class="['text-secondary transition-transform duration-150', open && 'rotate-180']" />
           </span>

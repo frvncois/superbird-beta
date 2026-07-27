@@ -7,6 +7,9 @@ import { runHeadless } from '../lib/mcpHeadless'
 import { requireAuth } from '../lib/session'
 import { randomHex } from '../lib/ids'
 import { hit, clientIp } from '../lib/rateLimit'
+import { getInstalledProject } from '../lib/project'
+import { createSnapshot } from '../lib/snapshots'
+import type { SnapshotReason } from '../../shared/types'
 
 // The MCP bridge. An external MCP client (e.g. Claude Code, via the stdio server)
 // calls POST /api/mcp/tool. If a Superbird editor is connected over SSE we relay
@@ -57,6 +60,40 @@ const pending = new Map<string, (r: { content: string; isError: boolean }) => vo
 
 const RESULT_TIMEOUT_MS = 45000
 
+// Snapshot the project around an AI editing session. This is the single choke
+// point for BOTH the live-bridge and headless paths, so it captures a
+// "Before AI edits" snapshot on the first mutating tool call and an
+// "After AI edits" one once the session goes idle (mirrors the client's
+// idle-timer heuristic). Read-only tools don't start a session.
+const MCP_READONLY_TOOLS = new Set(['get_overview', 'get_page_tree', 'get_node'])
+const MCP_IDLE_MS = 12000
+const MCP_AUTHOR = { id: 'mcp', name: 'AI assistant' }
+let mcpSessionActive = false
+let mcpIdleTimer: ReturnType<typeof setTimeout> | null = null
+
+function mcpSnapshot(reason: SnapshotReason, label: string): void {
+  try {
+    const proj = getInstalledProject()
+    if (proj) createSnapshot(proj.id, { reason, label, author: MCP_AUTHOR })
+  } catch (e) {
+    console.error('[superbird] MCP snapshot failed:', e)
+  }
+}
+
+function noteMcpTool(name: string): void {
+  if (MCP_READONLY_TOOLS.has(name)) return // reads don't open/extend a session
+  if (!mcpSessionActive) {
+    mcpSessionActive = true
+    mcpSnapshot('mcp-before', 'Before AI edits') // captured before this tool runs
+  }
+  if (mcpIdleTimer) clearTimeout(mcpIdleTimer)
+  mcpIdleTimer = setTimeout(() => {
+    mcpIdleTimer = null
+    mcpSessionActive = false
+    mcpSnapshot('mcp-after', 'After AI edits')
+  }, MCP_IDLE_MS)
+}
+
 mcp.get('/mcp/tools', (c) => c.json({ tools: AI_TOOL_DEFS }))
 mcp.get('/mcp/status', (c) => c.json({ editorConnected: editors.size > 0 }))
 
@@ -87,6 +124,7 @@ mcp.post('/mcp/result', async (c) => {
 // An MCP client calls a tool. Live (relay to editor) if connected, else headless.
 mcp.post('/mcp/tool', async (c) => {
   const { name, input } = (await c.req.json()) as { name: string; input: Record<string, unknown> }
+  noteMcpTool(name) // snapshot "before" on first mutation; arm the "after" idle timer
   const editor = [...editors][0]
   if (editor) {
     const id = randomHex(8)

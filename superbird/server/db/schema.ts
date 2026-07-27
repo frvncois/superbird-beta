@@ -102,6 +102,26 @@ export const submissions = sqliteTable('submissions', {
   createdAt: text('created_at').notNull(),
 }, (t) => [index('idx_submissions_project_created').on(t.projectId, t.createdAt)])
 
+// Version-history snapshots of the working document (design + content). Like
+// `backups` but fine-grained + auto-triggered, with a content `hash` for dedup
+// (skip creating one identical to the latest) and a `pinned` protect flag.
+// Editor-only: never published, never bundled into portable exports.
+export const snapshots = sqliteTable('snapshots', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  reason: text('reason').notNull(), // open | publish | auto | manual | mcp-before | mcp-after
+  label: text('label').notNull(),
+  document: text('document').notNull(), // JSON working document
+  hash: text('hash').notNull(), // sha256 hex of `document` — dedup key
+  authorId: text('author_id').notNull(),
+  authorName: text('author_name').notNull(), // "AI assistant" for MCP-triggered
+  size: integer('size').notNull(),
+  pinned: integer('pinned').notNull().default(0), // 1 = protected from auto-prune
+  createdAt: text('created_at').notNull(),
+}, (t) => [index('idx_snapshots_project_created').on(t.projectId, t.createdAt)])
+
 // Editor-only annotation threads ("comments"). Logged-in users drop a pin on
 // the canvas anchored to a node; each row is a thread (replies embedded as JSON).
 // Never served on the public site and never bundled into exports — an editor

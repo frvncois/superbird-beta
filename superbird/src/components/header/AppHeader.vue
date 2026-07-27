@@ -125,9 +125,9 @@ async function publish() {
   <!-- Self-contained app bar: fixed height, sits above the canvas stacking
        context. Same 3-column grid as EditorLayout (left | canvas | right) so the
        menu / context bar / actions align over the sidebars and canvas. -->
-  <header class="relative z-40 grid h-[var(--header-height)] shrink-0 grid-cols-[var(--sidebar-width)_1fr_var(--sidebar-width)] items-center gap-3.5 px-3.5">
+  <header class="relative z-40 grid h-[var(--header-height)] shrink-0 grid-cols-[var(--sidebar-width)_1fr_var(--sidebar-width)] items-center px-3.5">
     <!-- Left: app menu (aligns with the left sidebar) -->
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 pr-3.5">
       <DropdownUi v-model:open="menuOpen" class="w-full" :icon="routeInfo.icon" :label="routeInfo.label" :items="menuItems" />
     </div>
 

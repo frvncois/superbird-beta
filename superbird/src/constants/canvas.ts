@@ -30,7 +30,7 @@ export const BREAKPOINTS: { key: Breakpoint; label: string; icon: string; width:
 
 // The breakpoint registry seeded into a fresh project (styling breakpoints).
 export const DEFAULT_BREAKPOINTS: BreakpointDef[] = [
-  { id: 'desktop', name: 'Desktop', width: 1280 },
+  { id: 'desktop', name: 'Desktop', width: 1440 },
   { id: 'tablet', name: 'Tablet', width: 768 },
   { id: 'mobile', name: 'Mobile', width: 375 },
 ]

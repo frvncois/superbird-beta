@@ -65,7 +65,7 @@ const colorClasses = computed(() => {
 })
 
 const classes = computed(() => [
-  'inline-flex items-center font-medium cursor-pointer gap-1.5 transition-[background-color,color,border-color,opacity] duration-[250ms] ease',
+  'inline-flex items-center font-medium cursor-pointer gap-2.5 transition-[background-color,color,border-color,opacity] duration-[250ms] ease',
   props.align === 'start' ? 'justify-start' : 'justify-center',
   // `bare` has no box: no height/padding/rounded, just the content + colour.
   props.variant === 'bare' ? '' : props.square ? squareClasses[props.size] : sizeClasses[props.size],

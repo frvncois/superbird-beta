@@ -2,6 +2,7 @@ import { watch, nextTick } from 'vue'
 import { apiGet, apiPut, apiPost } from '@/lib/api'
 import { useToast } from '@/composables/useToast'
 import { useSetupStore } from '@/stores/setup'
+import { useSnapshotsStore } from '@/stores/snapshots'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import { useUserComponentsStore } from '@/stores/userComponents'
@@ -27,6 +28,23 @@ import type {
 let watching = false
 let suspend = false // true while hydrating, so we don't autosave the load
 let timer: ReturnType<typeof setTimeout> | null = null
+
+// Periodic "auto" version snapshot: after this many autosave bursts OR this much
+// elapsed editing time (whichever first), snapshot the (already-saved) document.
+// Dedup on the server means an unchanged document never creates a row.
+const AUTO_SNAPSHOT_CHANGES = 20
+const AUTO_SNAPSHOT_INTERVAL_MS = 10 * 60_000
+let sinceLastAuto = 0
+let lastAutoAt = Date.now()
+function maybeAutoSnapshot(): void {
+  sinceLastAuto++
+  const now = Date.now()
+  if (sinceLastAuto >= AUTO_SNAPSHOT_CHANGES || now - lastAutoAt >= AUTO_SNAPSHOT_INTERVAL_MS) {
+    sinceLastAuto = 0
+    lastAutoAt = now
+    void useSnapshotsStore().create({ reason: 'auto' }).catch(() => {})
+  }
+}
 
 function buildSnapshot(): ProjectDocument {
   const canvas = useCanvasStore()
@@ -94,6 +112,7 @@ async function autosave(): Promise<void> {
   try {
     await save()
     autosaveWarned = false
+    maybeAutoSnapshot()
   } catch {
     if (!autosaveWarned) {
       autosaveWarned = true
@@ -151,6 +170,8 @@ export function useProjectPersistence() {
     await save()
     const { publishedAt } = await apiPost<PublishResult>('/api/publish')
     useSetupStore().markPublished(publishedAt)
+    // Mark this published state in version history (best-effort; deduped).
+    void useSnapshotsStore().create({ reason: 'publish' }).catch(() => {})
   }
 
   return { load, save, publish }

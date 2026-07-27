@@ -97,6 +97,19 @@ export function ensureSchema(): void {
       emailed_to TEXT,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS comments (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES projects(id),
+      page_id TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      body TEXT NOT NULL,
+      anchor TEXT NOT NULL,
+      replies TEXT NOT NULL DEFAULT '[]',
+      resolved INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS smtp_config (
       project_id TEXT PRIMARY KEY REFERENCES projects(id),
       host TEXT NOT NULL DEFAULT '',
@@ -113,6 +126,7 @@ export function ensureSchema(): void {
     -- index() declaration in schema.ts). Without it, the submissions query
     -- full-scans its table.
     CREATE INDEX IF NOT EXISTS idx_submissions_project_created ON submissions(project_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_comments_project_page ON comments(project_id, page_id);
   `)
 
   // Migrate older DBs that predate later columns.

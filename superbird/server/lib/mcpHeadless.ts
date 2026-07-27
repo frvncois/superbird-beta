@@ -319,9 +319,10 @@ function ensureClass(doc: Doc, name: string): void {
 
 function applyClassStyles(doc: Doc, name: string, styles: Record<string, string>, input: Input): void {
   const cls = doc.design.styleClasses[name]!
-  const bp = (input.breakpoint as Breakpoint) ?? 'desktop'
+  const bp = (input.breakpoint as string) ?? 'desktop'
   const state = (input.state as StyleState) ?? 'default'
-  const target = cls.styles[bp][state]
+  const bpStyles = (cls.styles[bp] ??= { default: {}, hover: {}, focus: {}, active: {}, visited: {} })
+  const target = bpStyles[state]
   for (const [k, v] of Object.entries(styles)) target[k] = String(v)
 }
 

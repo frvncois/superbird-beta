@@ -102,6 +102,26 @@ export const submissions = sqliteTable('submissions', {
   createdAt: text('created_at').notNull(),
 }, (t) => [index('idx_submissions_project_created').on(t.projectId, t.createdAt)])
 
+// Editor-only annotation threads ("comments"). Logged-in users drop a pin on
+// the canvas anchored to a node; each row is a thread (replies embedded as JSON).
+// Never served on the public site and never bundled into exports — an editor
+// collaboration surface that stays on the server.
+export const comments = sqliteTable('comments', {
+  id: text('id').primaryKey(),
+  projectId: text('project_id')
+    .notNull()
+    .references(() => projects.id),
+  pageId: text('page_id').notNull(), // which page's canvas the pin lives on
+  authorId: text('author_id').notNull(),
+  authorName: text('author_name').notNull(), // snapshot of the author's name
+  body: text('body').notNull(),
+  anchor: text('anchor').notNull(), // JSON: { nodeId, nx, ny } (nx/ny = 0..1 of node rect)
+  replies: text('replies').notNull().default('[]'), // JSON CommentReply[]
+  resolved: integer('resolved').notNull().default(0), // 1 once marked resolved
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+}, (t) => [index('idx_comments_project_page').on(t.projectId, t.pageId)])
+
 export const mediaFolders = sqliteTable('media_folders', {
   id: text('id').primaryKey(),
   projectId: text('project_id')

@@ -56,7 +56,7 @@ No test runner or linter is configured yet. Reset the app to first-run by deleti
   - `sidebar/` — `layers/`, `elements/`, `components/`, `properties/`, `settings/`, `interactions/`
   - `canvas/` — Artboard, node renderer, drag & drop
   - `modals/` — `global-styles/`, `media-library/`
-- `src/stores/` — Domain Pinia stores (composition API `defineStore` with setup function): `canvas`, `globalStyles`, `media`, `siteSettings`, `locales`, `userComponents`, `collections`, `submissions`, `setup`, `auth`, `mcp`. All mutations go through actions (undo/redo depends on it).
+- `src/stores/` — Domain Pinia stores (composition API `defineStore` with setup function): `canvas`, `globalStyles`, `media`, `siteSettings`, `locales`, `userComponents`, `collections`, `submissions`, `comments`, `setup`, `auth`, `mcp`. All mutations go through actions (undo/redo depends on it).
 - `src/lib/` — Pure helper functions: `tree`, `ids`, `nodeFactory`, `styles`, `animations`, `unitValue`, `media`, `siteDefaults`
 - `src/constants/` — `canvas.ts` (runtime constants), `propertyOptions.ts`, `injectionKeys.ts`
 - `src/types/` — Types only: `canvas.ts`, `contextMenu.ts`

@@ -67,7 +67,7 @@ const isDragged = computed(() => store.draggedNodeId === props.node.id)
 const isHiddenAtBreakpoint = computed(() => {
   const vis = props.node.visibility
   if (!vis) return false
-  const bp = globalStylesStore.activeBreakpoint
+  const bp = globalStylesStore.activeDevice
   return (bp === 'desktop' && vis.hideDesktop) ||
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)

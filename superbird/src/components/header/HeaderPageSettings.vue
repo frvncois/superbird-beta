@@ -10,6 +10,7 @@ import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import ToggleUi from '@/components/ui/ToggleUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import TooltipUi from '@/components/ui/TooltipUi.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -78,15 +79,15 @@ function updateSeo(patch: Partial<PageSeo>) {
 
 <template>
   <div class="relative">
-    <ButtonUi
-      variant="ghost"
-      size="sm"
-      icon="settings"
-      title="Page settings"
-      class="size-7 px-0"
-      :class="open ? 'bg-secondary/10' : 'text-secondary'"
-      @click="open = !open"
-    />
+    <TooltipUi content="Page settings" placement="bottom" :disabled="open">
+      <ButtonUi
+        variant="outline"
+        icon="settings"
+        size="sm"
+        :class="open ? 'bg-secondary/10' : 'text-secondary'"
+        @click="open = !open"
+      />
+    </TooltipUi>
 
     <PopoverUi v-model:open="open" align="left" panel-class="w-72 rounded-2xl p-3">
       <div class="space-y-3">

@@ -1,6 +1,7 @@
 import type {
   ActionProperty,
   Breakpoint,
+  BreakpointDef,
   CanvasNode,
   Locale,
   NodeType,
@@ -19,11 +20,39 @@ export const STYLE_STATES: { key: StyleState; label: string; color: string }[] =
   { key: 'active', label: 'Active', color: '#f59e0b' },
 ]
 
+// Coarse device buckets — drive responsive typography + element visibility, and
+// the device icon a breakpoint shows (inferred from its width via deviceType).
 export const BREAKPOINTS: { key: Breakpoint; label: string; icon: string; width: number }[] = [
   { key: 'desktop', label: 'Desktop', icon: 'desktop', width: 1280 },
   { key: 'tablet', label: 'Tablet', icon: 'tablet', width: 768 },
   { key: 'mobile', label: 'Mobile', icon: 'mobile', width: 375 },
 ]
+
+// The breakpoint registry seeded into a fresh project (styling breakpoints).
+export const DEFAULT_BREAKPOINTS: BreakpointDef[] = [
+  { id: 'desktop', name: 'Desktop', width: 1280 },
+  { id: 'tablet', name: 'Tablet', width: 768 },
+  { id: 'mobile', name: 'Mobile', width: 375 },
+]
+
+// Common presets offered in the "Add breakpoint" menu (id assigned when added).
+export const BREAKPOINT_PRESETS: { name: string; width: number }[] = [
+  { name: 'Large', width: 1440 },
+  { name: 'Laptop', width: 1024 },
+  { name: 'Small mobile', width: 320 },
+]
+
+// Infer the device bucket from a width — the thresholds also pick the icon.
+export function deviceType(width: number): Breakpoint {
+  if (width >= 1024) return 'desktop'
+  if (width >= 640) return 'tablet'
+  return 'mobile'
+}
+
+// Icon-registry key for a breakpoint of the given width (desktop/tablet/mobile).
+export function deviceIcon(width: number): string {
+  return deviceType(width)
+}
 
 // --- Interactions ---
 

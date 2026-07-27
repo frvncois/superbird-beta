@@ -59,7 +59,8 @@ export function useClassBindings(activePage: ComputedRef<Page>, pages: Ref<Page[
     if (hasInstanceStyles) {
       if (isNew) {
         const cls = globalStylesStore.styleClasses[className]!
-        Object.assign(cls.styles.desktop.default, node.styles)
+        const desktop = (cls.styles.desktop ??= { default: {}, hover: {}, focus: {}, active: {}, visited: {} })
+        Object.assign(desktop.default, node.styles)
       }
       node.styles = {}
     }

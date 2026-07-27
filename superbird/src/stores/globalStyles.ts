@@ -2,9 +2,10 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { createStyleClassStyles } from '@/lib/nodeFactory'
 import { resolveStyles as resolveNodeStyles } from '@/lib/styles'
-import { BREAKPOINTS } from '@/constants/canvas'
+import { deviceType, DEFAULT_BREAKPOINTS } from '@/constants/canvas'
+import { generateBreakpointId } from '@/lib/ids'
 import { demoGlobalStyles, demoStyleClasses } from '@/data/demo'
-import type { Breakpoint, CanvasNode, FontFamily, GlobalStyles, HeadingStyle, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
+import type { Breakpoint, BreakpointDef, BreakpointId, CanvasNode, FontFamily, GlobalStyles, HeadingStyle, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
 
 /**
  * Design tokens (colors/fonts/sizes/typography) and the global style-class
@@ -19,6 +20,10 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
 
   // Replace tokens + style-class registry from a loaded project document.
   function hydrate(loaded: { globalStyles: GlobalStyles; styleClasses: Record<string, StyleClass> }) {
+    // Backfill the breakpoint registry for docs saved before it existed.
+    if (!loaded.globalStyles.breakpoints?.length) {
+      loaded.globalStyles.breakpoints = DEFAULT_BREAKPOINTS.map((b) => ({ ...b }))
+    }
     globalStyles.value = loaded.globalStyles
     styleClasses.value = loaded.styleClasses
   }
@@ -120,10 +125,20 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
   const styleClasses = ref<Record<string, StyleClass>>(demoStyleClasses)
   const activeClassName = ref<string | null>(null)
   const activeState = ref<StyleState>('default')
-  const activeBreakpoint = ref<Breakpoint>('desktop')
+  const activeBreakpoint = ref<BreakpointId>('desktop')
 
+  // The project's breakpoint registry (styling), widest→narrowest is the cascade.
+  const breakpoints = computed<BreakpointDef[]>(() =>
+    globalStyles.value.breakpoints?.length ? globalStyles.value.breakpoints : DEFAULT_BREAKPOINTS,
+  )
   const activeViewportWidth = computed(() =>
-    BREAKPOINTS.find((b) => b.key === activeBreakpoint.value)?.width ?? 1280,
+    breakpoints.value.find((b) => b.id === activeBreakpoint.value)?.width ?? 1280,
+  )
+  // Coarse device of the active breakpoint — drives visibility + typography reads.
+  const activeDevice = computed<Breakpoint>(() => deviceType(activeViewportWidth.value))
+  // The widest breakpoint is the base; the canvas shows it unconstrained.
+  const isBaseViewport = computed(() =>
+    activeViewportWidth.value >= Math.max(...breakpoints.value.map((b) => b.width)),
   )
 
   const allClassNames = computed(() => Object.keys(styleClasses.value).sort())
@@ -140,11 +155,48 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     return cls
   }
 
-  function setActiveBreakpoint(bp: Breakpoint) {
-    activeBreakpoint.value = bp
+  function setActiveBreakpoint(id: BreakpointId) {
+    activeBreakpoint.value = id
   }
 
-  function updateClassStyle(name: string, key: string, value: string, state?: StyleState, breakpoint?: Breakpoint) {
+  // Add a breakpoint to the registry and switch to it. A narrower/middle
+  // breakpoint needs no styles — it cascades from the next-wider one until set.
+  // But a new *widest* breakpoint becomes the base rule (nothing wider to cascade
+  // from), so seed every class's styles at it from the previous widest — otherwise
+  // elements would render bare above the old top width. We copy (not move) so
+  // removing this breakpoint later restores the previous base intact.
+  function addBreakpoint(name: string, width: number): BreakpointDef {
+    const existing = breakpoints.value
+    const prevWidest = existing.reduce<BreakpointDef | null>((m, b) => (!m || b.width > m.width ? b : m), null)
+    const bp: BreakpointDef = { id: generateBreakpointId(), name: name.trim() || `${width}px`, width }
+    globalStyles.value.breakpoints = [...existing, bp]
+
+    if (prevWidest && width > prevWidest.width) {
+      for (const cls of Object.values(styleClasses.value)) {
+        const src = cls.styles[prevWidest.id]
+        if (src) cls.styles[bp.id] = JSON.parse(JSON.stringify(src)) as typeof src
+      }
+    }
+
+    activeBreakpoint.value = bp.id
+    return bp
+  }
+
+  function removeBreakpoint(id: BreakpointId) {
+    const next = breakpoints.value.filter((b) => b.id !== id)
+    if (next.length === 0) return // keep at least the base breakpoint
+    globalStyles.value.breakpoints = next
+    if (activeBreakpoint.value === id) {
+      activeBreakpoint.value = [...next].sort((a, b) => b.width - a.width)[0]!.id
+    }
+  }
+
+  function updateBreakpoint(id: BreakpointId, patch: Partial<Pick<BreakpointDef, 'name' | 'width'>>) {
+    const bp = breakpoints.value.find((b) => b.id === id)
+    if (bp) Object.assign(bp, patch)
+  }
+
+  function updateClassStyle(name: string, key: string, value: string, state?: StyleState, breakpoint?: BreakpointId) {
     const cls = styleClasses.value[name]
     if (!cls) return
     const bp = breakpoint ?? activeBreakpoint.value
@@ -167,7 +219,7 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
   }
 
   function resolveStyles(node: CanvasNode, state: StyleState = 'default'): Record<string, string> {
-    return resolveNodeStyles(node, styleClasses.value, activeBreakpoint.value, state)
+    return resolveNodeStyles(node, styleClasses.value, activeBreakpoint.value, state, breakpoints.value)
   }
 
   return {
@@ -196,7 +248,10 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     activeClassName,
     activeState,
     activeBreakpoint,
+    breakpoints,
     activeViewportWidth,
+    activeDevice,
+    isBaseViewport,
     allClassNames,
     recentClasses,
     noteClassUsed,
@@ -204,6 +259,9 @@ export const useGlobalStylesStore = defineStore('globalStyles', () => {
     updateClassStyle,
     setActiveState,
     setActiveBreakpoint,
+    addBreakpoint,
+    removeBreakpoint,
+    updateBreakpoint,
     setActiveClass,
     resolveStyles,
   }

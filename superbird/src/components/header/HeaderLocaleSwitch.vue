@@ -8,6 +8,7 @@ import IconUi from '@/components/ui/IconUi.vue'
 import IconButtonUi from '@/components/ui/IconButtonUi.vue'
 import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
+import TooltipUi from '@/components/ui/TooltipUi.vue'
 
 const store = useLocalesStore()
 const isOpen = ref(false)
@@ -61,9 +62,11 @@ watch(isOpen, (open) => {
 <template>
   <div class="relative">
     <!-- Trigger -->
-    <ButtonUi variant="outline" size="sm" icon="globe" @click="isOpen = !isOpen">
-      <span class="font-mono text-[10px] font-medium">{{ currentLocale?.flag }}</span>
-    </ButtonUi>
+    <TooltipUi content="Translations" placement="bottom" :disabled="isOpen">
+      <ButtonUi variant="outline" size="sm" icon="globe" @click="isOpen = !isOpen">
+        {{ currentLocale?.flag }}
+      </ButtonUi>
+    </TooltipUi>
 
     <PopoverUi v-model:open="isOpen" align="right" panel-class="w-52 p-1.5 rounded-2xl">
       <div>

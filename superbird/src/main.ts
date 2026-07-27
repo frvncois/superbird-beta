@@ -7,6 +7,7 @@ import { fetchSessionState } from '@/lib/api'
 import { useSetupStore } from '@/stores/setup'
 import { useAuthStore } from '@/stores/auth'
 import { useMediaStore } from '@/stores/media'
+import { useCommentsStore } from '@/stores/comments'
 import { useProjectPersistence } from '@/composables/useProjectPersistence'
 import { useToast } from '@/composables/useToast'
 import { initAutoHideScrollbars } from '@/lib/autoHideScrollbars'
@@ -30,6 +31,7 @@ try {
   if (state.user) {
     await useProjectPersistence().load()
     await useMediaStore().load()
+    await useCommentsStore().load()
   }
 } catch (e) {
   console.error('[superbird] Could not reach the API on startup.', e)

@@ -13,6 +13,7 @@ import mcpRoutes from './routes/mcp'
 import backupRoutes from './routes/backup'
 import publicFormsRoutes from './routes/publicForms'
 import formsRoutes from './routes/forms'
+import commentsRoutes from './routes/comments'
 import siteRoutes from './routes/site'
 import { readMediaFile } from './lib/media'
 import { readFontFile } from './lib/fonts'
@@ -84,6 +85,7 @@ app.route('/api', fontsRoutes)
 app.route('/api', usersRoutes)
 app.route('/api', backupRoutes)
 app.route('/api', formsRoutes)
+app.route('/api', commentsRoutes)
 
 // Document types that would execute as HTML if navigated to — force download.
 const DANGEROUS_MIME = new Set(['text/html', 'application/xhtml+xml', 'text/xml', 'application/xml'])

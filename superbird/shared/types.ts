@@ -118,6 +118,44 @@ export interface ProjectDocument {
   content: ProjectContent
 }
 
+// ── Comments (editor-only annotations) ──
+// Logged-in editors drop pins on the canvas; each pin is a thread. Anchored to a
+// node via a normalized offset so the pin follows the element when it moves.
+// Never published, never exported — its own table + auth-gated /api/comments.
+
+export interface CommentAnchor {
+  nodeId: string
+  nx: number // 0..1 fraction of the node's rect width
+  ny: number // 0..1 fraction of the node's rect height
+}
+
+export interface CommentReply {
+  id: string
+  authorId: string
+  authorName: string
+  body: string
+  createdAt: string
+}
+
+export interface Comment {
+  id: string
+  pageId: string
+  authorId: string
+  authorName: string
+  body: string
+  anchor: CommentAnchor
+  replies: CommentReply[]
+  resolved: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CommentCreateInput {
+  pageId: string
+  anchor: CommentAnchor
+  body: string
+}
+
 // ── AI tools (MCP) ──
 // A tool the assistant/MCP client can call. Shared by shared/aiTools.ts, the
 // browser executors, the headless executor, and the MCP server.

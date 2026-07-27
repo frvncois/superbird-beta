@@ -1,10 +1,23 @@
-import type { Breakpoint, CanvasNode, StyleClass, StyleState } from '@/types/canvas'
+import type { BreakpointDef, BreakpointId, CanvasNode, StyleClass, StyleState } from '@/types/canvas'
 import { classToDecls } from '@/lib/tailwindToStyles'
+
+// Cascade for the active breakpoint: every breakpoint at least as wide as it,
+// ordered widest→narrowest, so a narrower breakpoint overrides a wider base
+// (e.g. active `mobile` → [desktop, tablet, mobile]). Falls back to the active
+// id alone when the registry isn't supplied.
+export function breakpointCascade(breakpoint: BreakpointId, breakpoints: BreakpointDef[]): BreakpointId[] {
+  const activeWidth = breakpoints.find((b) => b.id === breakpoint)?.width
+  if (activeWidth == null) return [breakpoint]
+  return breakpoints
+    .filter((b) => b.width >= activeWidth)
+    .sort((a, b) => b.width - a.width)
+    .map((b) => b.id)
+}
 
 /**
  * Resolve the effective styles for a node: each class applied in the order it
  * appears on the node (later overrides earlier), cascaded across breakpoints
- * (desktop base → tablet → mobile) with the active state layered on default;
+ * (widest base → narrower overrides) with the active state layered on default;
  * instance styles last. Custom style classes and base Tailwind utilities are
  * resolved together so a Tailwind class added after a custom one overrides it
  * (variant utilities like hover:/md: are handled by generated CSS instead).
@@ -12,15 +25,13 @@ import { classToDecls } from '@/lib/tailwindToStyles'
 export function resolveStyles(
   node: CanvasNode,
   styleClasses: Record<string, StyleClass>,
-  breakpoint: Breakpoint,
+  breakpoint: BreakpointId,
   state: StyleState = 'default',
+  breakpoints: BreakpointDef[] = [],
 ): Record<string, string> {
   const merged: Record<string, string> = {}
 
-  const cascade: Breakpoint[] =
-    breakpoint === 'mobile' ? ['desktop', 'tablet', 'mobile'] :
-    breakpoint === 'tablet' ? ['desktop', 'tablet'] :
-    ['desktop']
+  const cascade = breakpointCascade(breakpoint, breakpoints)
 
   for (const className of node.classes) {
     const cls = styleClasses[className]

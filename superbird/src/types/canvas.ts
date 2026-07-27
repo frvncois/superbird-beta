@@ -43,13 +43,27 @@ export type NodeType =
 
 export type StyleState = 'default' | 'hover' | 'focus' | 'active' | 'visited'
 
+// Coarse device buckets — used for responsive typography, element visibility,
+// and inferring a breakpoint's device icon from its width.
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile'
+
+// A breakpoint's stable key in a class's style map: the three seeded device ids
+// (`desktop`/`tablet`/`mobile`) plus any user-added custom breakpoints.
+export type BreakpointId = string
+
+// A responsive breakpoint in the project's registry — a name + a max-width. Its
+// device type (and icon) is inferred from the width (see `deviceType`).
+export interface BreakpointDef {
+  id: BreakpointId
+  name: string
+  width: number
+}
 
 export type StateStyles = Record<StyleState, Record<string, string>>
 
 export interface StyleClass {
   name: string
-  styles: Record<Breakpoint, StateStyles>
+  styles: Record<BreakpointId, StateStyles>
 }
 
 // --- Node settings ---
@@ -397,4 +411,7 @@ export interface GlobalStyles {
   // Fonts added to the project (self-hosted), surfaced in the font-family picker.
   fontSet: FontFamily[]
   typography: Record<Breakpoint, TypographySettings>
+  // Responsive breakpoints (styling): the seeded desktop/tablet/mobile plus any
+  // user-added custom breakpoints. Ordered/consumed widest→narrowest.
+  breakpoints: BreakpointDef[]
 }

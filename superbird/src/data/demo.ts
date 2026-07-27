@@ -44,6 +44,11 @@ export const demoGlobalStyles: GlobalStyles = {
     secondary: '"Lora", serif',
   },
   fontSet: [],
+  breakpoints: [
+    { id: 'desktop', name: 'Desktop', width: 1280 },
+    { id: 'tablet', name: 'Tablet', width: 768 },
+    { id: 'mobile', name: 'Mobile', width: 375 },
+  ],
   sizes: {
     xs: '4px',
     sm: '8px',

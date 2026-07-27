@@ -8,12 +8,14 @@ import DropdownUi from '@/components/ui/DropdownUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 import InputUi from '@/components/ui/InputUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
+import TooltipUi from '@/components/ui/TooltipUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import LabelUi from '@/components/ui/LabelUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 import HeaderPageSettings from './HeaderPageSettings.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
+import HeaderCommentsButton from './HeaderCommentsButton.vue'
 
 const store = useCanvasStore()
 const collections = useCollectionsStore()
@@ -168,10 +170,10 @@ watch(pagesOpen, (open) => {
   }
 })
 
-// Design / Content editor mode.
+// Design / Content editor mode (icon-only; hover tooltips label them).
 const editorModeOptions = [
-  { value: 'design', label: 'Design' },
-  { value: 'content', label: 'Content' },
+  { value: 'design', icon: 'swatch', title: 'Design', tooltip: 'Design mode' },
+  { value: 'content', icon: 'text', title: 'Content', tooltip: 'Content mode' },
 ]
 
 // Back to the collection template (only while editing an item).
@@ -185,18 +187,20 @@ function backToTemplate() {
     <!-- Pages / collections navigation -->
     <DropdownUi v-model:open="pagesOpen" class="w-64" panel-class="!max-h-[80vh]">
       <template #trigger="{ open, toggle }">
-        <button
-          type="button"
-          class="flex h-8 w-full items-center justify-between gap-1.5 px-3 text-xs font-medium cursor-pointer"
-          @click="toggle"
-        >
-          <span class="truncate">{{ label }}</span>
-          <IconUi
-            name="chevron-down"
-            size="size-3"
-            :class="['shrink-0 text-secondary transition-transform duration-150', open && 'rotate-180']"
-          />
-        </button>
+        <TooltipUi content="Pages & collections" placement="bottom" :disabled="open" class="w-full">
+          <button
+            type="button"
+            class="flex h-8 w-full items-center justify-between gap-1.5 px-3 text-xs font-medium cursor-pointer"
+            @click="toggle"
+          >
+            <span class="truncate">{{ label }}</span>
+            <IconUi
+              name="chevron-down"
+              size="size-3"
+              :class="['shrink-0 text-secondary transition-transform duration-150', open && 'rotate-180']"
+            />
+          </button>
+        </TooltipUi>
       </template>
 
       <!-- Pages (user-created) -->
@@ -382,12 +386,18 @@ function backToTemplate() {
     >
       <IconUi name="chevron-down" size="size-3" class="rotate-90" /> Template
     </ButtonUi>
+    <HeaderCommentsButton />
     <HeaderLocaleSwitch />
     <HeaderViewportSwitch />
     <SegmentedControlUi
       :model-value="store.editorMode"
       :options="editorModeOptions"
+      tooltip-placement="bottom"
       @update:model-value="store.setEditorMode($event as 'design' | 'content')"
-    />
+    >
+      <template #option="{ option }">
+        <IconUi :name="option.icon!" size="size-3.5" />
+      </template>
+    </SegmentedControlUi>
   </div>
 </template>

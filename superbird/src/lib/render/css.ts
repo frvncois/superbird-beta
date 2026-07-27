@@ -1,5 +1,6 @@
-import type { Breakpoint, CanvasNode, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
+import type { Breakpoint, BreakpointDef, CanvasNode, GlobalStyles, StyleClass, StyleState, TypographySettings } from '@/types/canvas'
 import { resolveStyles } from '@/lib/styles'
+import { DEFAULT_BREAKPOINTS } from '@/constants/canvas'
 import { classToDecls, MIN_BP, STATE_PSEUDO, ANCESTOR } from '@/lib/tailwindToStyles'
 import { fontFaceCss } from '@/lib/fonts'
 import { defaultFontFamilies } from '@/data/defaultFonts'
@@ -117,30 +118,32 @@ function elementRules(
   base: string[],
   maxMedia: Record<string, string[]>,
   minMedia: Record<string, string[]>,
+  breakpoints: BreakpointDef[],
 ) {
   const sel = `[data-sb-s="${node.id}"]`
-  const resolved: Record<Breakpoint, Record<string, string>> = {
-    desktop: resolveStyles(node, styleClasses, 'desktop', 'default'),
-    tablet: resolveStyles(node, styleClasses, 'tablet', 'default'),
-    mobile: resolveStyles(node, styleClasses, 'mobile', 'default'),
-  }
-  // Base (desktop) + responsive deltas (desktop-first, max-width).
-  if (Object.keys(resolved.desktop).length) base.push(`${sel}{${decls(resolved.desktop)}}`)
-  const tDelta = diff(resolved.tablet, resolved.desktop)
-  if (Object.keys(tDelta).length) (maxMedia['768px'] ??= []).push(`${sel}{${decls(tDelta)}}`)
-  const mDelta = diff(resolved.mobile, resolved.tablet)
-  if (Object.keys(mDelta).length) (maxMedia['375px'] ??= []).push(`${sel}{${decls(mDelta)}}`)
+  // Widest → narrowest: the widest breakpoint is the base; each narrower one
+  // emits a max-width delta vs the next-wider (desktop-first cascade).
+  const ordered = [...breakpoints].sort((a, b) => b.width - a.width)
+  const resolved: Record<string, Record<string, string>> = {}
+  for (const bp of ordered) resolved[bp.id] = resolveStyles(node, styleClasses, bp.id, 'default', breakpoints)
 
-  // Custom class states per breakpoint (delta vs that breakpoint's default).
-  for (const bp of ['desktop', 'tablet', 'mobile'] as const) {
+  ordered.forEach((bp, i) => {
+    const cur = resolved[bp.id]!
+    if (i === 0) {
+      if (Object.keys(cur).length) base.push(`${sel}{${decls(cur)}}`)
+    } else {
+      const d = diff(cur, resolved[ordered[i - 1]!.id]!)
+      if (Object.keys(d).length) (maxMedia[`${bp.width}px`] ??= []).push(`${sel}{${decls(d)}}`)
+    }
+    // Custom class states at this breakpoint (delta vs its default).
     for (const st of CUSTOM_STATES) {
-      const d = diff(resolveStyles(node, styleClasses, bp, st), resolved[bp])
+      const d = diff(resolveStyles(node, styleClasses, bp.id, st, breakpoints), cur)
       if (!Object.keys(d).length) continue
       const rule = `${sel}:${st}{${decls(d)}}`
-      if (bp === 'desktop') base.push(rule)
-      else (maxMedia[bp === 'tablet' ? '768px' : '375px'] ??= []).push(rule)
+      if (i === 0) base.push(rule)
+      else (maxMedia[`${bp.width}px`] ??= []).push(rule)
     }
-  }
+  })
 
   // Tailwind variant utilities → pseudo / min-width media, !important.
   for (const cls of node.classes) {
@@ -174,18 +177,23 @@ function compileBodiesCss(
   const base: string[] = []
   const maxMedia: Record<string, string[]> = {}
   const minMedia: Record<string, string[]> = {}
+  // Fall back to the seeded breakpoints for docs published before the registry.
+  const breakpoints = globalStyles.breakpoints?.length ? globalStyles.breakpoints : DEFAULT_BREAKPOINTS
 
   const walk = (node: CanvasNode, depth: number) => {
     if (depth > 64) return // stack-overflow guard (mirrors render/html.ts)
     if (node.classes.length > 0 || Object.keys(node.styles).length > 0) {
-      elementRules(node, styleClasses, base, maxMedia, minMedia)
+      elementRules(node, styleClasses, base, maxMedia, minMedia, breakpoints)
     }
     for (const child of node.children) walk(child, depth + 1)
   }
   for (const body of bodies) walk(body, 0)
 
   const parts = [baseCss(globalStyles), base.join('')]
-  for (const w of ['768px', '375px']) if (maxMedia[w]) parts.push(`@media (max-width:${w}){${maxMedia[w]!.join('')}}`)
+  // Widest max-width first so a narrower breakpoint's rules override it.
+  for (const w of Object.keys(maxMedia).sort((a, b) => parseInt(b) - parseInt(a))) {
+    parts.push(`@media (max-width:${w}){${maxMedia[w]!.join('')}}`)
+  }
   for (const w of ['640px', '768px', '1024px', '1280px', '1536px']) if (minMedia[w]) parts.push(`@media (min-width:${w}){${minMedia[w]!.join('')}}`)
   return parts.join('\n')
 }

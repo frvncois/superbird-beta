@@ -1,16 +1,37 @@
 <script setup lang="ts">
-import { computed, watchEffect, onBeforeUnmount } from 'vue'
+import { ref, computed, watchEffect, onBeforeUnmount } from 'vue'
 import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
+import { useAuthStore } from '@/stores/auth'
 import { compileTailwindCss } from '@/lib/tailwindToStyles'
 import { fontFaceCss } from '@/lib/fonts'
 import { defaultFontFamilies } from '@/data/defaultFonts'
 import type { CanvasNode } from '@/types/canvas'
 import CanvasNodeRenderer from './CanvasNodeRenderer.vue'
+import CommentsLayer from './CommentsLayer.vue'
 
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
-const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
+const auth = useAuthStore()
+const isBaseViewport = computed(() => globalStylesStore.isBaseViewport)
+
+// ⌘/Ctrl-click drops a comment pin anchored to the node under the cursor. A
+// capture-phase listener runs before the node's own (bubble) click, so
+// stopPropagation here suppresses selection for this gesture only.
+const commentsLayer = ref<InstanceType<typeof CommentsLayer> | null>(null)
+function onCanvasClickCapture(e: MouseEvent) {
+  if (!(e.metaKey || e.ctrlKey) || !auth.currentUser) return
+  const el = (e.target as HTMLElement).closest('.canvas-artboard [data-node-id]') as HTMLElement | null
+  if (!el?.dataset.nodeId) return
+  e.preventDefault()
+  e.stopPropagation()
+  const r = el.getBoundingClientRect()
+  commentsLayer.value?.startDraft({
+    nodeId: el.dataset.nodeId,
+    nx: r.width ? (e.clientX - r.left) / r.width : 0.5,
+    ny: r.height ? (e.clientY - r.top) / r.height : 0.5,
+  })
+}
 
 // Compile the page's Tailwind classes (incl. variants like md:/hover:) to real
 // CSS scoped under .canvas-artboard, so utilities render live in the canvas
@@ -42,7 +63,7 @@ onBeforeUnmount(() => fontEl.remove())
 
 const artboardStyle = computed(() => {
   const vars = { ...globalStylesStore.globalCssVars }
-  if (!isDesktop.value) {
+  if (!isBaseViewport.value) {
     Object.assign(vars, {
       width: `${globalStylesStore.activeViewportWidth}px`,
       maxWidth: '100%',
@@ -59,21 +80,24 @@ function handleClick() {
 
 <template>
   <div
-    :class="['h-full overflow-auto', isDesktop ? '' : 'p-8']"
+    :class="['h-full overflow-auto', isBaseViewport ? '' : 'p-8']"
     data-canvas-scroll
     @click.self="handleClick"
+    @click.capture="onCanvasClickCapture"
   >
     <!-- `canvas-artboard` is a structural hook (selection sync + scoped compiled
          CSS); the arbitrary props force light-theme tokens inside the artboard
-         regardless of app dark mode (inline :style / user tokens still win). -->
+         regardless of app dark mode (inline :style / user tokens still win).
+         `relative` makes it the positioning context for the comment pin overlay. -->
     <div
       :class="[
-        'mx-auto canvas-artboard [--color-background:#ffffff] [--color-foreground:#0a0a0a] [--color-border:#e5e7eb] [--color-secondary:#a0a3a6] text-[#0a0a0a]',
-        isDesktop ? 'h-full' : 'min-h-full',
+        'relative mx-auto canvas-artboard [--color-background:#ffffff] [--color-foreground:#0a0a0a] [--color-border:#e5e7eb] [--color-secondary:#a0a3a6] text-[#0a0a0a]',
+        isBaseViewport ? 'h-full' : 'min-h-full',
       ]"
       :style="artboardStyle"
     >
       <CanvasNodeRenderer :node="store.bodyNode" />
+      <CommentsLayer v-if="auth.currentUser" ref="commentsLayer" />
     </div>
   </div>
 </template>

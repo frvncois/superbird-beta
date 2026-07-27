@@ -1,11 +1,11 @@
 # Stores
 
-Eleven domain Pinia stores (composition `defineStore` with setup fn): `canvas`,
+Twelve domain Pinia stores (composition `defineStore` with setup fn): `canvas`,
 `globalStyles`, `userComponents`, `collections`, `locales`, `media`,
-`siteSettings`, `submissions`, `setup`, `auth`, `mcp`. **All mutations via
+`siteSettings`, `submissions`, `comments`, `setup`, `auth`, `mcp`. **All mutations via
 actions** — undo depends on it. Dependency graph: `globalStyles → canvas`,
 `locales → canvas`, `collections → canvas`, `userComponents → canvas`;
-`media`/`siteSettings`/`submissions`/`setup`/`auth`/`mcp` standalone.
+`media`/`siteSettings`/`submissions`/`comments`/`setup`/`auth`/`mcp` standalone.
 
 ## `useCanvasStore` — pages, node tree, selection, interactions
 
@@ -49,6 +49,9 @@ Node settings edits (`visibility`, `link`, `accessibility`, `advanced`, `htmlId`
 
 ## `useSubmissionsStore` — form submissions (admin)
 API-backed. `items`, `forms`, `loading`, `loaded`, `load`, `loadForms`, `markSeen`, `remove`. Read-only view of the server's `submissions` table (never served publicly).
+
+## `useCommentsStore` — canvas comment threads (editor-only)
+API-backed (`/api/comments`, own table). `items`, `loading`, `loaded`, `load`, `create(input)`, `setResolved`, `edit`, `addReply`, `removeReply`, `remove`, getters `byPage`/`openByPage`/`unresolvedCount`, and a `focusRequest`/`requestFocus`/`clearFocus` channel (header inbox → canvas: scroll to + open a thread). Each comment is a pin anchored to a node via `{nodeId, nx, ny}` (normalized offset) so it follows the element. **Never** in the project doc, publish snapshot, backups, or undo — a server-side collaboration surface for logged-in users only. Also exports `commentInitials(name)`. Boot-loaded in `main.ts` under the signed-in gate (alongside `media`).
 
 ## `useSetupStore` — install + publish state
 `project`, `publishedAt`, `installing`, `error`, `isInstalled`, `isPublished`, `hydrate`, `markPublished`, `install`. Hydrated from `fetchSessionState()` in `main.ts` before routing.

@@ -97,11 +97,11 @@ const previewEntries = computed<Entry[]>(() => {
   return collectionsStore.entriesByCollection(col.id).slice(0, limit)
 })
 
-const isDesktop = computed(() => globalStylesStore.activeBreakpoint === 'desktop')
+const isBaseViewport = computed(() => globalStylesStore.isBaseViewport)
 const isHiddenAtBreakpoint = computed(() => {
   const vis = props.node.visibility
   if (!vis) return false
-  const bp = globalStylesStore.activeBreakpoint
+  const bp = globalStylesStore.activeDevice
   return (bp === 'desktop' && vis.hideDesktop) ||
     (bp === 'tablet' && vis.hideTablet) ||
     (bp === 'mobile' && vis.hideMobile)
@@ -187,8 +187,8 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     :class="[
       'cursor-default transition-[box-shadow,background-color] duration-150 ease-[ease] relative',
       ...node.classes,
-      isBody && isDesktop && 'bg-background h-full',
-      isBody && !isDesktop && 'rounded-2xl border bg-background shadow-sm min-h-full',
+      isBody && isBaseViewport && 'bg-background h-full',
+      isBody && !isBaseViewport && 'rounded-2xl border bg-background shadow-sm min-h-full',
       showOutlines && isSelected && !isComponentInstance && !isDynamic && 'ring-2 ring-primary ring-offset-1',
       showOutlines && isSelected && isComponentInstance && 'ring-2 ring-green-fg ring-offset-1',
       showOutlines && isSelected && isDynamic && !isComponentInstance && 'ring-2 ring-purple-fg ring-offset-1',

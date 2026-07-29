@@ -27,7 +27,7 @@ app.use(createPinia())
 // signed-out) and surfaces the error at the gate.
 try {
   const state = await fetchSessionState()
-  useSetupStore().hydrate(state.project, state.publishedAt)
+  useSetupStore().hydrate(state.project, state.publishedAt, state.draftSavedAt)
   useAuthStore().hydrate(state.user)
   if (state.user) {
     await useProjectPersistence().load()

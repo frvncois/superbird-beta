@@ -23,7 +23,6 @@ import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 const store = useGlobalStylesStore()
 const toast = useToast()
 
-// ── Uploaded font families ──
 const uploadName = ref('')
 const uploadWeight = ref('400')
 const uploadStyle = ref<'normal' | 'italic'>('normal')
@@ -79,21 +78,17 @@ async function doRemoveFamily() {
   pendingRemoveFamily.value = null
   store.removeFontFamily(id)
   toast.success(`“${family?.name ?? 'Font'}” removed`)
-  // Reclaim the self-hosted files (best-effort; the family is already removed).
   const urls = family?.faces.map((f) => f.url).filter(Boolean) ?? []
   if (urls.length) {
     try {
       await deleteFontFiles(urls)
     } catch {
-      /* files are orphaned at worst; not worth blocking the UI */
     }
   }
 }
 
-// ── Font variables (design tokens) ──
 const fontVars = computed(() => Object.entries(store.globalStyles.fonts))
 
-// Value options for a variable: uploaded fonts + the default fonts.
 const fontValueOptions = computed(() => [
   ...(store.globalStyles.fontSet ?? []).map((f) => ({ value: fontSetStack(f), label: f.name })),
   ...DEFAULT_FONTS.map((b) => ({ value: b.value, label: b.name })),
@@ -109,7 +104,6 @@ function addVar() {
   newVarValue.value = ''
 }
 
-// ── Type scale ──
 const typoBp = ref<Breakpoint>('desktop')
 const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const
 const breakpointOptions = BREAKPOINTS.map((bp) => ({ value: bp.key, label: bp.label }))
@@ -118,7 +112,6 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
 
 <template>
   <SettingsPanel title="Typography">
-    <!-- Uploaded fonts -->
     <SettingsSection title="Fonts" description="Upload your own font files (.woff2, .woff, .ttf, .otf). They're self-hosted on your site.">
       <div v-if="store.globalStyles.fontSet?.length" class="divide-y">
         <div v-for="family in store.globalStyles.fontSet" :key="family.id" class="flex items-center gap-3 px-4 py-2.5">
@@ -147,7 +140,6 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
       </div>
     </SettingsSection>
 
-    <!-- Font variables -->
     <SettingsSection title="Font variables" description="Named fonts you reuse across the design (e.g. body, heading).">
       <div v-for="[name, value] in fontVars" :key="name" class="flex items-center gap-2 px-4 py-2.5">
         <span class="w-24 shrink-0 font-mono text-xs text-foreground">{{ name }}</span>
@@ -175,7 +167,6 @@ const headingWeightOptions = FONT_WEIGHTS.filter((w) => Number(w) >= 400).map((w
       </div>
     </SettingsSection>
 
-    <!-- Type scale -->
     <SettingsSection title="Type scale" description="Base text and heading scale, per breakpoint.">
       <div class="space-y-4 px-4 py-3.5">
         <SegmentedControlUi

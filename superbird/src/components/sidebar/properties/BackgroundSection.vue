@@ -18,7 +18,6 @@ const mediaStore = useMediaStore()
 
 const backgroundKeys = ['background-color', 'background-image', 'background-size', 'background-position', 'background-repeat']
 
-// Bridge the CSS `background-image: url(...)` value to UploadUi's plain URL.
 const backgroundImageUrl = computed(() => {
   const raw = activeStyles.value['background-image'] ?? ''
   const match = raw.match(/url\((['"]?)(.*?)\1\)/)

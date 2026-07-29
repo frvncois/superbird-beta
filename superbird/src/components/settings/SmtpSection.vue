@@ -37,7 +37,7 @@ async function save() {
   saving.value = true
   try {
     const payload: Record<string, unknown> = { ...config }
-    if (password.value) payload.password = password.value // omit → keep existing
+    if (password.value) payload.password = password.value
     const c = await apiPut<SmtpConfig>('/api/forms/smtp', payload)
     hasPassword.value = c.hasPassword
     password.value = ''

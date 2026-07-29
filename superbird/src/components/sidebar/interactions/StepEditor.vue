@@ -31,7 +31,6 @@ function removeStep() {
   store.removeStep(props.nodeId, props.ixId, props.step.id)
 }
 
-// Action picker
 const showActionPicker = ref(false)
 const pickerPos = ref({ x: 0, y: 0 })
 function openActionPicker(e: MouseEvent) {
@@ -63,7 +62,6 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
 <template>
   <PropertySectionUi :title="`Step ${index + 1}`" icon="effects">
     <div class="space-y-2">
-      <!-- Target -->
       <FieldRowUi label="Target" label-width="sm">
         <DropdownUi
           class="w-full"
@@ -84,7 +82,6 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
         />
       </FieldRowUi>
 
-      <!-- Timing -->
       <div class="grid grid-cols-3 gap-1.5">
         <div class="space-y-0.5">
           <LabelUi size="xs">Delay</LabelUi>
@@ -100,12 +97,10 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
         </div>
       </div>
 
-      <!-- Easing -->
       <FieldRowUi label="Easing" label-width="sm">
         <DropdownUi class="w-full" :model-value="step.easing" :options="easingOptions" @update:model-value="(v: string) => updateStep({ easing: v })" />
       </FieldRowUi>
 
-      <!-- Actions -->
       <div class="space-y-1.5 pt-1">
         <div class="flex items-center justify-between">
           <LabelUi size="xs">Actions</LabelUi>
@@ -130,7 +125,6 @@ function addAction(choice: { kind: 'animate'; property: ActionProperty } | { kin
         />
       </div>
 
-      <!-- Remove step -->
       <ButtonUi variant="danger" size="sm" icon="delete" class="w-full" @click="removeStep">Remove step</ButtonUi>
     </div>
 

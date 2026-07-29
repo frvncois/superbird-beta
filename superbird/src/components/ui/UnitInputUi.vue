@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, inject } from 'vue'
-import { parseUnitValue, nextUnitValue, stepUnitValue } from '@/lib/unitValue'
+import { parseUnitValue, readUnitInput, commitUnitInput, stepUnitValue } from '@/lib/unitValue'
 import { GlobalTokensKey, type GlobalTokens } from '@/constants/injectionKeys'
 import PopoverUi from './PopoverUi.vue'
 import IconUi from './IconUi.vue'
 import ButtonUi from './ButtonUi.vue'
 import BadgeUi from './BadgeUi.vue'
 
-// Number + unit input with arrow-key stepping. When size tokens are available
-// (via the `tokens` prop or the injected `GlobalTokensKey`) it also offers a
-// token picker and renders `var(--global-size-*)` values as a badge — token
-// support is inert when no tokens are provided, so it doubles as a plain unit input.
 const props = withDefaults(
   defineProps<{
     placeholder?: string
@@ -30,12 +26,15 @@ const injectedTokens = inject(GlobalTokensKey, undefined)
 const tokenOpen = ref(false)
 const unitOpen = ref(false)
 
+// While the user types a unit inline (e.g. "90em"), the field holds the raw text
+// until the unit completes; otherwise it shows the number only. Non-null = draft.
+const draft = ref<string | null>(null)
+
 const sizeTokens = computed(() =>
   Object.entries(props.tokens?.sizes ?? injectedTokens?.value.sizes ?? {}),
 )
 const hasTokens = computed(() => sizeTokens.value.length > 0)
 
-// Detect a token value first, otherwise parse the number/unit (auto/none keywords).
 const parsed = computed(() => {
   const val = model.value
   if (val.startsWith('var(--global-size-')) return { num: val, unit: 'token' }
@@ -51,19 +50,42 @@ const allUnits = computed(() =>
   props.allowAuto ? [...props.units, 'auto'] : props.units,
 )
 
+// The unit to combine a typed number with (never 'auto'/'token').
+const currentUnit = computed(() =>
+  parsed.value.unit === 'auto' || parsed.value.unit === 'token' ? 'px' : parsed.value.unit,
+)
+
+// What the number field displays: the live draft while typing a unit, else the number.
+const displayNum = computed(() =>
+  draft.value ?? (parsed.value.unit === 'auto' ? '' : parsed.value.num),
+)
+
 function clearToken() {
+  draft.value = null
   model.value = ''
 }
 
 function handleNumInput(e: Event) {
   const el = e.target as HTMLInputElement
-  const { model: next, force } = nextUnitValue(el.value, parsed.value.unit)
+  const { model: next, draft: d } = readUnitInput(el.value, currentUnit.value, props.units)
+  draft.value = d
   model.value = next
-  if (force !== null && el.value !== force) el.value = force
+  // Unit adopted or stray text stripped → make the DOM match the number now, so
+  // a stripped suffix doesn't linger a frame.
+  if (d === null && el.value !== displayNum.value) el.value = displayNum.value
+}
+
+// Blur: resolve any half-typed unit (adopt if complete, else drop) and collapse
+// the field back to the number.
+function finalizeInput(e: Event) {
+  if (draft.value === null) return
+  draft.value = null
+  model.value = commitUnitInput((e.target as HTMLInputElement).value, currentUnit.value, props.units)
 }
 
 function selectUnit(unit: string) {
   unitOpen.value = false
+  draft.value = null
   if (unit === 'auto') {
     model.value = 'auto'
     return
@@ -77,19 +99,19 @@ function selectUnit(unit: string) {
 }
 
 function selectToken(name: string) {
+  draft.value = null
   model.value = `var(--global-size-${name})`
   tokenOpen.value = false
 }
 
 function handleKeydown(e: KeyboardEvent) {
   if (parsed.value.unit === 'token') return
-  stepUnitValue(e, parsed.value.unit, (value) => { model.value = value })
+  stepUnitValue(e, currentUnit.value, (value) => { draft.value = null; model.value = value })
 }
 </script>
 
 <template>
   <div class="relative flex h-8 min-w-0 items-center font-mono bg-input rounded-xl border border-input-border focus-within:border-input-border-focus outline-3 outline-transparent focus-within:outline-secondary/10 transition-colors duration-150">
-    <!-- Token button (only if tokens exist and no token active) -->
     <ButtonUi
       v-if="hasTokens && !tokenName"
       variant="bare"
@@ -100,7 +122,6 @@ function handleKeydown(e: KeyboardEvent) {
       @click.stop="tokenOpen = !tokenOpen"
     />
 
-    <!-- Token badge (when a token is active) -->
     <div v-if="tokenName" class="flex flex-1 items-center justify-between gap-1 px-1.5 min-w-0">
       <BadgeUi variant="primary" size="xs" class="min-w-0">
         <span class="truncate">{{ tokenName }}</span>
@@ -118,18 +139,17 @@ function handleKeydown(e: KeyboardEvent) {
       />
     </div>
 
-    <!-- Number input (when not using a token) -->
     <input
       v-else
-      :value="parsed.unit === 'auto' ? '' : parsed.num"
+      :value="displayNum"
       :placeholder="parsed.unit === 'auto' ? 'auto' : placeholder ?? '0'"
       :disabled="parsed.unit === 'auto'"
       class="h-full flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-secondary/50 outline-none disabled:opacity-40"
       @input="handleNumInput"
       @keydown="handleKeydown"
+      @blur="finalizeInput"
     />
 
-    <!-- Unit selector (hidden when token active) -->
     <button
       v-if="!tokenName"
       class="flex h-full shrink-0 items-center gap-0.5 border-l border-foreground/10 px-1.5 text-[10px] text-secondary cursor-pointer hover:text-foreground transition-colors duration-100"

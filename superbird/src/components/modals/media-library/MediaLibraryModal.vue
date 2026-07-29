@@ -28,7 +28,6 @@ async function onUploadFiles(e: Event) {
   input.value = ''
 }
 
-// Type filter.
 const typeFilterOptions = [
   { value: 'all', label: 'All types', icon: 'layers' },
   { value: 'image', label: 'Images', icon: 'image' },
@@ -38,7 +37,6 @@ const typeFilterOptions = [
 ]
 const filterTypeProxy = computed<string>({ get: () => filterType.value, set: (v) => (filterType.value = v as MediaType | 'all') })
 
-// View + sort.
 type SortKey = 'name' | 'date' | 'type' | 'weight'
 const viewMode = ref<'grid' | 'list'>('grid')
 const sortBy = ref<SortKey>('name')
@@ -79,7 +77,6 @@ const libraryOpen = computed({
 
 const isSearching = computed(() => searchQuery.value.trim().length > 0)
 
-// Subfolders of the folder we're viewing (sorted by name, honoring direction).
 const foldersInView = computed(() => {
   let folders = store.mediaFolders.filter((f) => (f.parentId ?? undefined) === currentFolder.value)
   if (isSearching.value) {
@@ -90,7 +87,6 @@ const foldersInView = computed(() => {
   return folders.slice().sort((a, b) => a.name.localeCompare(b.name) * dir)
 })
 
-// Files in the folder we're viewing, after type + search filters, then sorted.
 const itemsInView = computed(() => {
   let items = store.mediaItems.filter((m) => (m.folderId ?? undefined) === currentFolder.value)
   if (filterType.value !== 'all') items = items.filter((m) => m.type === filterType.value)
@@ -133,7 +129,6 @@ function doCreateFolder() {
   createFolderOpen.value = false
 }
 
-// If the current folder disappears (deleted, or reset), fall back to root.
 watch(
   () => store.mediaFolders,
   () => {
@@ -154,7 +149,6 @@ watch(
     panel-class="h-full max-h-[80vh]"
     body-class="flex min-h-0 flex-1 flex-col"
   >
-    <!-- Toolbar: search · type · order by · grid/list · create/upload -->
     <div class="flex shrink-0 items-center gap-2 border-b p-3.5">
       <div class="relative min-w-0 flex-1">
         <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
@@ -197,7 +191,6 @@ watch(
       <input ref="uploadInput" type="file" multiple class="hidden" @change="onUploadFiles" />
     </div>
 
-    <!-- Files (breadcrumb + grid), detail panel beside it -->
     <div class="flex min-h-0 flex-1">
       <div class="flex min-w-0 flex-1 flex-col">
         <MediaBreadcrumb :current-folder="currentFolder" @navigate="navigate" />
@@ -214,7 +207,6 @@ watch(
         />
       </div>
 
-      <!-- Detail panel (when item selected) -->
       <MediaDetailPanel
         v-if="selectedMedia"
         :item="selectedMedia"
@@ -223,7 +215,6 @@ watch(
     </div>
   </ModalUi>
 
-  <!-- Create folder -->
   <ModalUi v-model:open="createFolderOpen" variant="dialog" title="Create folder">
     <div ref="createFolderInput">
       <InputUi v-model="createFolderName" placeholder="Folder name" size="default" @keydown.enter="doCreateFolder" />

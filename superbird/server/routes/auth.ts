@@ -16,7 +16,7 @@ import {
   SESSION_TTL_LONG_MS,
 } from '../lib/session'
 import { adminIpAllowed } from '../lib/ipAllow'
-import { getPublishedAt } from '../lib/project'
+import { getPublishedAt, getDraftSavedAt } from '../lib/project'
 import { randomId } from '../lib/ids'
 import { hit, clientIp } from '../lib/rateLimit'
 import type {
@@ -65,6 +65,7 @@ auth.get('/session', (c) => {
     project,
     user: currentUser(c),
     publishedAt: project ? getPublishedAt(project.id) : null,
+    draftSavedAt: project ? getDraftSavedAt(project.id) : null,
   }
   return c.json(state)
 })

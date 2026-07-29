@@ -26,7 +26,6 @@ const props = withDefaults(
   { viewMode: 'grid' },
 )
 
-
 const selectedId = defineModel<string | null>('selectedId', { required: true })
 
 const emit = defineEmits<{
@@ -38,7 +37,6 @@ const store = useMediaStore()
 const ctx = useContextMenu()
 const toast = useToast()
 
-// Custom MIME so internal media drags are distinguishable from OS file drops.
 const MEDIA_DND = 'application/superbird-media'
 
 function isMediaDrag(e: DragEvent): boolean {
@@ -50,7 +48,6 @@ function onItemDragStart(e: DragEvent, id: string) {
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
 }
 
-// Folder cards accept a dropped file → move it in.
 const dragOverFolderId = ref<string | null>(null)
 
 function onFolderDragOver(e: DragEvent, folderId: string) {
@@ -69,7 +66,6 @@ function onFolderDrop(e: DragEvent, folderId: string) {
   if (id) store.moveMediaToFolder(id, folderId)
 }
 
-// In-flight uploads for the folder currently being viewed.
 const pending = computed(() =>
   store.pendingUploads.filter((p) => (p.folderId ?? undefined) === props.currentFolder),
 )
@@ -78,7 +74,6 @@ const isEmpty = computed(
   () => props.folders.length === 0 && props.items.length === 0 && pending.value.length === 0,
 )
 
-// Whether the folder we're viewing is private (itself or via an ancestor).
 const currentFolderPrivate = computed(() => {
   let id = props.currentFolder
   const seen = new Set<string>()
@@ -95,7 +90,6 @@ const currentFolderPrivate = computed(() => {
 const isDragOver = ref(false)
 
 async function onFilesDrop(e: DragEvent) {
-  // Only OS file drops upload here; internal media drags are handled elsewhere.
   if (!e.dataTransfer?.files.length) return
   e.preventDefault()
   isDragOver.value = false
@@ -112,7 +106,6 @@ function onItemClick(item: MediaItem) {
   selectedId.value = selectedId.value === item.id ? null : item.id
 }
 
-// ── Uploads + context menus ──
 const uploadInput = ref<HTMLInputElement | null>(null)
 
 async function onUploadInput(e: Event) {
@@ -178,7 +171,6 @@ function onEmptyContextMenu(e: MouseEvent) {
   ctx.open(e, items)
 }
 
-// ── Rename (file or folder) — one dialog, discriminated payload ──
 const renameTarget = ref<{ kind: 'file' | 'folder'; id: string; original: string } | null>(null)
 const renameValue = ref('')
 const renameInput = ref<HTMLElement | null>(null)
@@ -200,7 +192,6 @@ function doRename() {
   renameTarget.value = null
 }
 
-// ── Item actions ──
 function renameItem(item: MediaItem) {
   renameTarget.value = { kind: 'file', id: item.id, original: item.name }
   renameValue.value = item.name
@@ -231,7 +222,6 @@ function doDeleteItem() {
   pendingDeleteItem.value = null
 }
 
-// ── Folder actions ──
 function renameFolder(folder: MediaFolder) {
   renameTarget.value = { kind: 'folder', id: folder.id, original: folder.name }
   renameValue.value = folder.name
@@ -268,7 +258,6 @@ function doDeleteFolder() {
     </EmptyStateUi>
 
     <template v-else>
-      <!-- Private-folder note -->
       <div
         v-if="currentFolderPrivate"
         class="mb-3 flex items-center gap-2 rounded-lg bg-secondary/8 px-3 py-2 text-[11px] text-secondary"
@@ -278,7 +267,6 @@ function doDeleteFolder() {
       </div>
 
       <div v-if="viewMode === 'grid'" class="grid grid-cols-4 gap-3">
-        <!-- Folder cards (drop a file here to move it in) -->
         <button
           v-for="folder in folders"
           :key="folder.id"
@@ -305,7 +293,6 @@ function doDeleteFolder() {
           <span class="max-w-full truncate px-2 text-[11px] font-medium">{{ folder.name }}</span>
         </button>
 
-        <!-- Uploading + converting skeletons -->
         <div
           v-for="p in pending"
           :key="p.id"
@@ -320,7 +307,6 @@ function doDeleteFolder() {
           </div>
         </div>
 
-        <!-- File cards (draggable → drop onto a folder or breadcrumb) -->
         <div
           v-for="item in items"
           :key="item.id"
@@ -334,7 +320,6 @@ function doDeleteFolder() {
           @contextmenu="(e) => onItemContextMenu(e, item)"
           @dragstart="(e) => onItemDragStart(e, item.id)"
         >
-          <!-- Thumbnail -->
           <div class="relative flex aspect-square items-center justify-center bg-secondary/5">
             <img v-if="item.type === 'image' && item.url" :src="item.url" :alt="item.alt ?? item.name" class="h-full w-full object-cover" />
             <IconUi v-else-if="item.type === 'image'" name="image" size="size-8" class="text-secondary/30" />
@@ -348,7 +333,6 @@ function doDeleteFolder() {
             </span>
           </div>
 
-          <!-- Info -->
           <div class="px-2 py-1.5">
             <div class="truncate text-[10px] font-medium">{{ item.name }}</div>
             <div class="text-[9px] text-secondary">{{ formatFileSize(item.size) }}</div>
@@ -356,9 +340,7 @@ function doDeleteFolder() {
         </div>
       </div>
 
-      <!-- List view -->
       <div v-else class="space-y-0.5">
-        <!-- Folder rows (drop target) -->
         <div
           v-for="folder in folders"
           :key="folder.id"
@@ -382,7 +364,6 @@ function doDeleteFolder() {
           <span class="w-28 shrink-0 text-right text-[11px] text-secondary">—</span>
         </div>
 
-        <!-- Pending rows -->
         <div v-for="p in pending" :key="p.id" class="flex items-center gap-3 rounded-lg px-2.5 py-1.5">
           <div class="flex size-9 shrink-0 items-center justify-center">
             <span class="size-5 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary/70" />
@@ -391,7 +372,6 @@ function doDeleteFolder() {
           <span class="text-[11px] text-secondary/60">Converting…</span>
         </div>
 
-        <!-- File rows -->
         <div
           v-for="item in items"
           :key="item.id"
@@ -418,7 +398,6 @@ function doDeleteFolder() {
         </div>
       </div>
 
-      <!-- Empty -->
       <EmptyStateUi v-if="isEmpty" class="mt-12">
         <template v-if="searching">
           <IconUi name="search" size="size-10" class="text-secondary/30" />
@@ -442,7 +421,6 @@ function doDeleteFolder() {
       @close="ctx.close"
     />
 
-    <!-- Rename file / folder -->
     <ModalUi
       :open="!!renameTarget"
       variant="dialog"
@@ -463,7 +441,6 @@ function doDeleteFolder() {
       </template>
     </ModalUi>
 
-    <!-- Delete media -->
     <ConfirmDialogUi
       :open="!!pendingDeleteItem"
       title="Delete media"
@@ -477,7 +454,6 @@ function doDeleteFolder() {
       @confirm="doDeleteItem"
     />
 
-    <!-- Delete folder -->
     <ConfirmDialogUi
       :open="!!pendingDeleteFolder"
       title="Delete folder"

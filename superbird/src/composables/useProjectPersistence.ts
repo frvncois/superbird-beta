@@ -1,4 +1,4 @@
-import { watch, nextTick } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { apiGet, apiPut, apiPost } from '@/lib/api'
 import { useToast } from '@/composables/useToast'
 import { useSetupStore } from '@/stores/setup'
@@ -9,7 +9,7 @@ import { useUserComponentsStore } from '@/stores/userComponents'
 import { useSiteSettingsStore } from '@/stores/siteSettings'
 import { useLocalesStore } from '@/stores/locales'
 import { useCollectionsStore } from '@/stores/collections'
-import type { ProjectDocument, PublishResult } from '@shared/types'
+import type { ProjectDocument, PublishResult, SaveResult } from '@shared/types'
 import type {
   Page,
   StyleClass,
@@ -28,6 +28,13 @@ import type {
 let watching = false
 let suspend = false // true while hydrating, so we don't autosave the load
 let timer: ReturnType<typeof setTimeout> | null = null
+
+// Save status for the header badge. Autosave IS the save (Figma/Webflow model):
+// every edit persists after a short debounce and stamps draftSavedAt, so the
+// badge reflects draft-vs-published, never a manual checkpoint. `changeSeq` lets
+// a write settle to 'idle' only when no newer edit is still pending.
+const saveState = ref<'idle' | 'saving'>('idle')
+let changeSeq = 0
 
 // Periodic "auto" version snapshot: after this many autosave bursts OR this much
 // elapsed editing time (whichever first), snapshot the (already-saved) document.
@@ -101,8 +108,22 @@ function applyDocument(doc: ProjectDocument): void {
   })
 }
 
+// The one write path: persist the working document and advance draftSavedAt.
+// Used by autosave (debounced on every edit), the first-run seed, publish (to
+// flush before snapshotting), and manual snapshots. Cancels any pending debounce
+// so we don't write twice, and settles the badge to 'idle' only when no newer
+// edit arrived while the request was in flight. On failure the badge still
+// settles (autosave surfaces a toast); markSaved runs only on success.
 async function save(): Promise<void> {
-  await apiPut('/api/project', buildSnapshot())
+  if (timer) { clearTimeout(timer); timer = null }
+  const seq = changeSeq
+  saveState.value = 'saving'
+  try {
+    const { savedAt } = await apiPut<SaveResult>('/api/project', buildSnapshot())
+    useSetupStore().markSaved(savedAt)
+  } finally {
+    if (changeSeq === seq) saveState.value = 'idle'
+  }
 }
 
 // Surface a failed autosave once, so silent data loss can't go unnoticed. We
@@ -148,6 +169,8 @@ function startAutosave(): void {
     ],
     () => {
       if (suspend) return
+      changeSeq++
+      saveState.value = 'saving'
       if (timer) clearTimeout(timer)
       timer = setTimeout(() => void autosave(), 800)
     },
@@ -174,5 +197,5 @@ export function useProjectPersistence() {
     void useSnapshotsStore().create({ reason: 'publish' }).catch(() => {})
   }
 
-  return { load, save, publish }
+  return { load, save, publish, saveState }
 }

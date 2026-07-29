@@ -34,7 +34,7 @@ function pageName(id: string): string {
 
 function select(c: Comment) {
   if (canvas.activePageId !== c.pageId) canvas.setActivePage(c.pageId)
-  store.requestFocus(c.id) // canvas scrolls to + opens the thread
+  store.requestFocus(c.id)
   isOpen.value = false
 }
 </script>
@@ -49,7 +49,6 @@ function select(c: Comment) {
 
     <PopoverUi v-model:open="isOpen" align="right" panel-class="w-80 rounded-2xl p-1.5">
       <div class="space-y-1.5">
-        <!-- Filter -->
         <div class="px-1 pt-0.5">
           <SegmentedControlUi
             v-model="filter"
@@ -59,7 +58,6 @@ function select(c: Comment) {
           />
         </div>
 
-        <!-- Threads -->
         <div class="max-h-[60vh] space-y-0.5 overflow-y-auto">
           <button
             v-for="c in filtered"
@@ -92,7 +90,6 @@ function select(c: Comment) {
           />
         </div>
 
-        <!-- Gesture hint -->
         <div class="flex items-center gap-1.5 border-t border-foreground/8 px-2 py-1.5 text-[11px] text-secondary">
           <IconUi name="comment" size="size-3" />
           <span>{{ hint }}</span>

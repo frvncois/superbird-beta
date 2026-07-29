@@ -11,9 +11,6 @@ import DropdownUi from '@/components/ui/DropdownUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 import BadgeUi from '@/components/ui/BadgeUi.vue'
 
-// Renders an arbitrary past document read-only — a pure renderDocument() call
-// off the snapshot's JSON + the shared (read-only) media store. Touches no
-// editing store, so the live canvas is unaffected.
 const props = defineProps<{
   document: ProjectDocument
   meta: Snapshot | null
@@ -79,7 +76,6 @@ const srcdoc = computed(() => {
 
 <template>
   <div class="fixed inset-0 z-[90] flex flex-col bg-background">
-    <!-- Toolbar -->
     <div class="flex h-12 shrink-0 items-center gap-3 border-b px-4">
       <div class="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground">
         <IconUi name="history" size="size-4" class="text-secondary" />
@@ -100,9 +96,7 @@ const srcdoc = computed(() => {
       <ButtonUi variant="outline" size="sm" icon="close" @click="emit('close')">Close</ButtonUi>
     </div>
 
-    <!-- Rendered past page (isolated iframe) -->
     <div class="flex-1 overflow-auto bg-secondary/5 p-4">
-      <!-- Sandboxed to a null origin (no allow-same-origin) — see PreviewOverlay. -->
       <iframe
         :srcdoc="srcdoc"
         title="Snapshot preview"

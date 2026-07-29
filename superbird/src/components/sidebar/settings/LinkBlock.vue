@@ -15,8 +15,6 @@ const node = computed(() => store.selectedNode)
 type LinkType = 'url' | 'page' | 'post' | 'current'
 const linkType = ref<LinkType>('url')
 
-// "Current post" is only offered when the element repeats per entry: inside a
-// collection-list, or on a collection template.
 function isUnderCollectionList(nodeId: string): boolean {
   let pid = store.getParentId(nodeId)
   while (pid) {
@@ -32,7 +30,6 @@ const inCollectionContext = computed(
 
 const typeOptions = computed(() => {
   const opts: { value: string; label: string; icon?: string; accentClass?: string }[] = []
-  // The dynamic "current post" choice leads, styled purple like other bindings.
   if (inCollectionContext.value) {
     opts.push({ value: 'current', label: 'Current post', icon: 'link', accentClass: 'text-purple-fg' })
   }
@@ -58,7 +55,6 @@ function pagePath(p: Page): string {
   return p.slug === '/' ? '/' : `/${p.slug.replace(/^\//, '')}`
 }
 
-// Selectable destinations.
 const pageOptions = computed(() => [
   { value: '', label: 'Select a page…' },
   ...store.pages.filter((p) => p.pageType !== 'collection').map((p) => ({ value: pagePath(p), label: p.name })),
@@ -73,7 +69,6 @@ const postOptions = computed(() => {
   return opts
 })
 
-// Infer the link type from the stored URL when the selection changes.
 watch(
   () => node.value?.id,
   () => {

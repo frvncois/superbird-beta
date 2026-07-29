@@ -35,12 +35,10 @@ function closeFloating() {
 
 <template>
   <div class="relative flex h-full">
-    <!-- EXPANDED: normal content with border handle -->
     <template v-if="!collapsed">
-      <div class="flex-1 overflow-y-auto" :data-sidebar-scroll="side">
+      <div class="min-w-0 flex-1">
         <slot />
       </div>
-      <!-- Border handle to collapse -->
       <div
         v-if="side === 'right'"
         class="sidebar-handle group absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10"
@@ -57,7 +55,6 @@ function closeFloating() {
       </div>
     </template>
 
-    <!-- COLLAPSED: icon strip only -->
     <template v-else>
       <div class="flex w-full flex-col items-center pt-1">
         <ButtonUi
@@ -73,7 +70,6 @@ function closeFloating() {
         />
       </div>
 
-      <!-- Border handle to expand -->
       <div
         v-if="side === 'right'"
         class="sidebar-handle group absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-10"
@@ -91,7 +87,6 @@ function closeFloating() {
     </template>
   </div>
 
-  <!-- Floating panel (when collapsed and a tab is clicked) -->
   <Teleport to="body">
     <template v-if="collapsed && floatingTab">
       <div class="fixed inset-0 z-[80]" @click="closeFloating" />

@@ -1,34 +1,21 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, useSlots } from 'vue'
+import { computed, onBeforeUnmount, useSlots, watch } from 'vue'
+import { registerOverlay } from '@/composables/useOverlayStack'
 import IconUi from './IconUi.vue'
 import IconButtonUi from './IconButtonUi.vue'
 
-// Overlay surface with three regions — Header, Content (default slot), Actions —
-// mirroring CardUi. Two variants:
-//   • 'modal'  — larger panel, title-bar header with a close (X), bordered
-//                regions; supports a right-side drawer via `position`.
-//   • 'dialog' — compact centered panel, icon-chip header + description, footer
-//                buttons (confirm/cancel), no close (X).
-// The header can be fully overridden with a `#header` slot; otherwise it's built
-// from `title` / `description` / `icon` (or an `#icon` slot) like CardUi.
 const props = withDefaults(
   defineProps<{
     title?: string
     description?: string
     icon?: string
     variant?: 'modal' | 'dialog'
-    // Centered panel, or a right-side drawer (modal variant).
     position?: 'center' | 'right'
-    // Max-width preset for a centered panel.
     size?: 'sm' | 'md' | 'lg' | 'xl'
     panelClass?: string
-    // Content region padding/scroll override.
     bodyClass?: string
-    // Show the header close (X). Defaults: modal → true, dialog → false.
     closable?: boolean
-    // Backdrop click / Escape dismiss.
     dismissible?: boolean
-    // Dialog variant: render the icon chip in the red danger tone.
     danger?: boolean
   }>(),
   {
@@ -37,8 +24,6 @@ const props = withDefaults(
     size: 'md',
     panelClass: '',
     bodyClass: '',
-    // undefined (not false) so an absent `closable` isn't boolean-coerced to
-    // false — that would defeat the `?? variant === 'modal'` default below.
     closable: undefined,
     dismissible: true,
     danger: false,
@@ -70,13 +55,10 @@ const sizeClass = computed(() => {
   return { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-5xl' }[props.size]
 })
 
-// Content region styling. `bodyClass` replaces the default entirely (like CardUi)
-// so callers can drop the padding/scroll and lay the body out themselves.
 const contentClass = computed(
   () => props.bodyClass || `min-h-0 flex-1 overflow-auto ${isDialog.value ? 'px-6 py-4' : 'p-4'}`,
 )
 
-// Panel entrance: center = gentle scale/fade; right = slide-in drawer.
 const panelTransition = computed(() =>
   isDrawer.value
     ? {
@@ -100,54 +82,48 @@ const panelTransition = computed(() =>
 function dismiss() {
   if (props.dismissible) open.value = false
 }
-function onKeydown(e: KeyboardEvent) {
-  if (open.value && e.key === 'Escape') dismiss()
-}
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
+let release: (() => void) | null = null
+watch(
+  open,
+  (isOpen) => {
+    if (isOpen && !release) release = registerOverlay(isDialog.value ? 'dialog' : 'modal', dismiss)
+    if (!isOpen && release) {
+      release()
+      release = null
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  release?.()
+  release = null
+})
 </script>
 
 <template>
-  <Teleport to="body">
-    <div
-      class="pointer-events-none fixed inset-0 flex"
-      :class="[isDialog ? 'z-[105]' : 'z-[100]', isDrawer ? 'justify-end' : 'items-center justify-center p-8']"
-    >
-      <!-- Backdrop: tint + blur ramp in and out together so it never pops.
-           Explicit backdrop-filter (not `backdrop-blur-*`, whose composed var
-           collapses when transition classes are stripped) so blur ramps on
-           enter/leave AND persists while open. -->
-      <Transition
-        enter-from-class="opacity-0 [--sb-backdrop-blur:0px]"
-        leave-to-class="opacity-0 [--sb-backdrop-blur:0px]"
+  <Teleport defer :to="isDialog ? '#overlay-dialogs' : '#overlay-modals'">
+    <Transition v-bind="panelTransition">
+      <div
+        v-if="open"
+        class="pointer-events-none absolute inset-0 flex"
+        :class="isDrawer ? 'justify-end' : 'items-center justify-center p-8'"
       >
         <div
-          v-if="open"
-          class="pointer-events-auto absolute inset-0 bg-foreground/20 [--sb-backdrop-blur:4px] [backdrop-filter:blur(var(--sb-backdrop-blur))] [-webkit-backdrop-filter:blur(var(--sb-backdrop-blur))] [transition:opacity_300ms_ease-out,backdrop-filter_300ms_ease-out,-webkit-backdrop-filter_300ms_ease-out]"
-          @click="dismiss"
-        />
-      </Transition>
-
-      <!-- Panel -->
-      <Transition v-bind="panelTransition">
-        <div
-          v-if="open"
           role="dialog"
           aria-modal="true"
           :class="[
-            'pointer-events-auto relative z-10 flex max-h-2xl w-full flex-col overflow-hidden bg-background shadow-lg',
+            'pointer-events-auto relative flex max-h-2xl w-full flex-col overflow-hidden bg-background shadow-lg',
             isDrawer ? 'h-full' : 'rounded-2xl',
             sizeClass,
             panelClass,
           ]"
         >
-          <!-- Header -->
           <header
             v-if="hasHeader"
             :class="isDialog ? 'flex items-start gap-3.5 p-6 pb-0' : 'flex items-center gap-3 border-b p-4'"
           >
             <slot name="header">
-              <!-- Dialog → icon chip; modal → inline icon -->
               <span
                 v-if="isDialog && (icon || slots.icon)"
                 class="flex size-9 shrink-0 items-center justify-center rounded-full"
@@ -173,12 +149,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             </slot>
           </header>
 
-          <!-- Content -->
           <div :class="contentClass">
             <slot />
           </div>
 
-          <!-- Actions -->
           <footer
             v-if="slots.actions"
             :class="
@@ -188,7 +162,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             <slot name="actions" />
           </footer>
         </div>
-      </Transition>
-    </div>
+      </div>
+    </Transition>
   </Teleport>
 </template>

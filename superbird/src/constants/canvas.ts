@@ -150,7 +150,6 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
   component: { tag: 'div', label: 'Component' },
   // Layout
   section: { tag: 'section', label: 'Section' },
-  container: { tag: 'div', label: 'Container' },
   div: { tag: 'div', label: 'Div' },
   // Typography
   heading: { tag: 'h2', label: 'Heading', content: 'Heading' },
@@ -182,7 +181,7 @@ export const nodeDefaults: Partial<Record<NodeType, Partial<Omit<CanvasNode, 'id
 }
 
 // Elements that are containers
-export const CONTAINER_TYPES: NodeType[] = ['body', 'container', 'section', 'div', 'form', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
+export const CONTAINER_TYPES: NodeType[] = ['body', 'section', 'div', 'form', 'list', 'blockquote', 'component', 'collection-list', 'collection-item']
 
 // Elements that support inline text editing
 export const TEXT_EDITABLE_TYPES: NodeType[] = ['text', 'heading', 'button', 'link', 'span', 'label', 'list-item', 'blockquote']

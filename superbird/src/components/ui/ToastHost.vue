@@ -5,7 +5,6 @@ import ButtonUi from './ButtonUi.vue'
 
 const { toasts, dismiss, runAction } = useToast()
 
-// icon + color token per toast type (semantic pairs from the design system).
 const STYLES: Record<ToastType, { icon: string; chip: string }> = {
   success: { icon: 'check-circle', chip: 'bg-green-bg text-green-fg' },
   error: { icon: 'alert', chip: 'bg-red-bg text-red-fg' },

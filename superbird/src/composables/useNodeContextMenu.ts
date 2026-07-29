@@ -105,7 +105,7 @@ export function buildNodeActions(
     separator(),
     {
       id: 'wrap',
-      label: 'Wrap in Container',
+      label: 'Wrap in Div',
       icon: 'wrap',
       handler: () => store.wrapInContainer(node.id),
       hidden: isBody,

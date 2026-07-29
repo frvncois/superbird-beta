@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// A row inside a SettingsSection card. Default: label (+ description) on the
-// left, control on the right. `stacked` puts the control full-width below the
-// label — for textareas, lists, and multi-control groups.
 withDefaults(
   defineProps<{
     label?: string

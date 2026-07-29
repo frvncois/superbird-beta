@@ -33,7 +33,6 @@ const categories = [
 
 type CatKey = (typeof categories)[number]['key']
 const route = useRoute()
-// Deep-link support: /settings?tab=typography (e.g. from "Manage font family").
 const initialTab = categories.some((c) => c.key === route.query.tab)
   ? (route.query.tab as CatKey)
   : 'general'
@@ -44,7 +43,6 @@ const activePanel = computed(() => categories.find((c) => c.key === active.value
 <template>
   <AppShell>
     <SettingsLayout>
-      <!-- Left nav -->
       <template #nav>
         <div class="flex-1 space-y-0.5 overflow-y-auto">
           <ButtonUi
@@ -61,11 +59,9 @@ const activePanel = computed(() => categories.find((c) => c.key === active.value
           </ButtonUi>
         </div>
 
-        <!-- Bottom: editor theme -->
         <ThemeToggle />
       </template>
 
-      <!-- Content — each panel owns its own frame via SettingsPanel -->
       <component :is="activePanel" />
     </SettingsLayout>
   </AppShell>

@@ -20,7 +20,6 @@ const email = ref('')
 const password = ref('')
 const remember = ref(false)
 
-// Two-step flow: credentials → (if 2FA on) a TOTP/recovery code.
 const step = ref<'credentials' | 'twofactor'>('credentials')
 const challenge = ref('')
 const code = ref('')
@@ -48,7 +47,6 @@ async function submit() {
     }
     await finishSession()
   } catch {
-    // auth.error is shown inline
   }
 }
 
@@ -58,7 +56,6 @@ async function submitCode() {
     await auth.verifyTwoFactor(challenge.value, code.value.trim())
     await finishSession()
   } catch {
-    // auth.error is shown inline
   }
 }
 
@@ -72,10 +69,8 @@ function backToCredentials() {
 <template>
   <AuthShell>
     <CardUi title="Superbird" :description="description">
-      <!-- Header icon (in CardUi's chip span) -->
       <template #icon><div class="size-4"><SuperbirdIcon /></div></template>
 
-      <!-- Step 1: credentials -->
       <form v-if="step === 'credentials'" @submit.prevent="submit" class="space-y-4">
         <InputUi v-model="email" label="Email" size="default" type="email" placeholder="you@example.com" />
         <InputUi v-model="password" label="Password" size="default" type="password" placeholder="Your password" />
@@ -86,7 +81,6 @@ function backToCredentials() {
         <p v-if="auth.error" class="rounded-lg bg-red-bg px-3 py-2 text-xs text-red-fg">{{ auth.error }}</p>
       </form>
 
-      <!-- Step 2: two-factor code -->
       <form v-else @submit.prevent="submitCode" class="space-y-4">
         <InputUi
           v-model="code"
@@ -100,7 +94,6 @@ function backToCredentials() {
         <p v-if="auth.error" class="rounded-lg bg-red-bg px-3 py-2 text-xs text-red-fg">{{ auth.error }}</p>
       </form>
 
-      <!-- Actions -->
       <template #actions>
         <ButtonUi
           v-if="step === 'credentials'"

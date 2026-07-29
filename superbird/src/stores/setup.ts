@@ -8,19 +8,29 @@ import type { Project, SetupPayload } from '@shared/types'
 export const useSetupStore = defineStore('setup', () => {
   const project = ref<Project | null>(null)
   const publishedAt = ref<string | null>(null)
+  const draftSavedAt = ref<string | null>(null)
   const installing = ref(false)
   const error = ref<string | null>(null)
 
   const isInstalled = computed(() => project.value !== null)
   const isPublished = computed(() => publishedAt.value !== null)
+  // Saved draft newer than the published snapshot (ISO strings order lexically).
+  const hasUnpublishedChanges = computed(
+    () => draftSavedAt.value !== null && (publishedAt.value === null || draftSavedAt.value > publishedAt.value),
+  )
 
-  function hydrate(p: Project | null, published: string | null = null) {
+  function hydrate(p: Project | null, published: string | null = null, draftSaved: string | null = null) {
     project.value = p
     publishedAt.value = published
+    draftSavedAt.value = draftSaved
   }
 
   function markPublished(at: string) {
     publishedAt.value = at
+  }
+
+  function markSaved(at: string) {
+    draftSavedAt.value = at
   }
 
   async function install(payload: SetupPayload) {
@@ -38,5 +48,5 @@ export const useSetupStore = defineStore('setup', () => {
     }
   }
 
-  return { project, publishedAt, installing, error, isInstalled, isPublished, hydrate, markPublished, install }
+  return { project, publishedAt, draftSavedAt, installing, error, isInstalled, isPublished, hasUnpublishedChanges, hydrate, markPublished, markSaved, install }
 })

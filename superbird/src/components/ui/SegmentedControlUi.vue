@@ -6,7 +6,6 @@ export interface SegmentedOption {
   label?: string
   title?: string
   icon?: string
-  // Rich hover tooltip (TooltipUi). When set, the native `title` is suppressed.
   tooltip?: string
 }
 

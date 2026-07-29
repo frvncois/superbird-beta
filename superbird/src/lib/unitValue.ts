@@ -19,31 +19,54 @@ export function parseUnitValue(val: string, keywords: string[] = []): ParsedUnit
 }
 
 /**
- * Compute the next model value from the raw text of a unit input's number
- * field, given the current unit. The number field must only ever hold the
- * numeric part — the unit lives in the dropdown — so this strips any stray
- * non-numeric text (preventing the "pxpxpx" append cascade).
+ * Interpret the raw text of a unit input's number field on each keystroke. The
+ * field only ever *displays* the number — the unit lives in the dropdown — but
+ * a user may type the unit inline (e.g. "90em"): we detect it and move it to
+ * the dropdown. `units` is the set of selectable units (matched case-insensitively).
  *
- * Returns `model` (the new "<num><unit>" value, or "" when cleared) and
- * `force`: the string the DOM input should be reset to when it contained
- * junk, or `null` to leave the DOM alone (so the cursor and in-progress
- * values like "-" or "5." aren't disturbed).
+ * Returns:
+ *  - `model`: the new "<num><unit>" value ("" when blank/cleared)
+ *  - `draft`: the exact text the field should keep showing while a unit is still
+ *     being typed — i.e. a suffix that could still become a valid unit (a prefix
+ *     of one). `null` means snap the field back to the number (unit adopted,
+ *     plain number, or stray text stripped).
  */
-export function nextUnitValue(rawInput: string, currentUnit: string): { model: string; force: string | null } {
+export function readUnitInput(
+  raw: string,
+  currentUnit: string,
+  units: string[],
+): { model: string; draft: string | null } {
   const unit = currentUnit === 'auto' || currentUnit === 'token' ? 'px' : currentUnit
+  const m = raw.match(/^\s*(-?\d*\.?\d*)\s*([a-zA-Z%]*)\s*$/)
+  if (!m) return { model: '', draft: raw } // unparseable — leave it for blur to fix
 
-  // Pure or partial numeric ("", "-", ".", "5.", "-5", "12.5"): trust the DOM
-  if (/^-?\d*\.?\d*$/.test(rawInput)) {
-    if (rawInput === '' || rawInput === '-' || rawInput === '.' || rawInput === '-.') {
-      return { model: '', force: null }
-    }
-    return { model: rawInput + unit, force: null }
-  }
+  const numStr = m[1] ?? ''
+  const suffix = (m[2] ?? '').toLowerCase()
+  const hasNum = /^-?\d*\.?\d+$/.test(numStr)
+  const numModel = hasNum ? numStr + unit : ''
 
-  // Contains stray characters (e.g. a typed unit): keep only the number
-  const match = rawInput.match(/-?\d*\.?\d+/)
-  const num = match ? match[0] : ''
-  return { model: num ? num + unit : '', force: num }
+  if (!suffix) return { model: numModel, draft: null } // plain (or partial "-", "5.")
+
+  // A complete, recognized unit → adopt it and strip it from the field.
+  const exact = units.find((u) => u.toLowerCase() === suffix)
+  if (exact && hasNum) return { model: numStr + exact, draft: null }
+
+  // Non-exact suffix: keep showing it only while it could still complete into a
+  // valid unit (typing "e" toward "em"); otherwise strip it now.
+  const couldComplete = units.some((u) => u.toLowerCase().startsWith(suffix))
+  return { model: numModel, draft: couldComplete ? raw : null }
+}
+
+/**
+ * Finalize a unit field on blur/commit: adopt a fully-typed unit if one is
+ * present, else keep the current unit; always collapse back to "<num><unit>".
+ */
+export function commitUnitInput(raw: string, currentUnit: string, units: string[]): string {
+  const unit = currentUnit === 'auto' || currentUnit === 'token' ? 'px' : currentUnit
+  const m = raw.match(/(-?\d*\.?\d+)\s*([a-zA-Z%]*)/)
+  if (!m) return ''
+  const exact = units.find((u) => u.toLowerCase() === (m[2] ?? '').toLowerCase())
+  return m[1]! + (exact ?? unit)
 }
 
 /**

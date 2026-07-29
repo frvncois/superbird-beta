@@ -7,7 +7,6 @@ const props = withDefaults(
   defineProps<{
     content?: string
     placement?: Placement
-    // Hover/focus dwell before the tip appears (ms).
     delay?: number
     disabled?: boolean
   }>(),
@@ -19,9 +18,6 @@ const props = withDefaults(
   },
 )
 
-// Nothing to show → the wrapper is skipped entirely (see template), so a
-// tooltip-less trigger adds zero DOM/layout. Fallthrough attrs (e.g. a `flex-1`
-// class) land on the wrapper, so we bind them manually.
 defineOptions({ inheritAttrs: false })
 
 const enabled = computed(() => !props.disabled && !!props.content)
@@ -33,9 +29,6 @@ let openTimer: ReturnType<typeof setTimeout> | null = null
 
 const GAP = 6
 
-// Fixed-position the tip from the wrapper's rect (teleported to <body> so no
-// overflow ancestor can clip it). The centering transform lives here; the
-// enter/leave transition only touches opacity, so the two never fight.
 function measure() {
   const el = anchor.value
   if (!el) return
@@ -95,7 +88,6 @@ watch(visible, (v) => {
     window.removeEventListener('resize', onReposition)
   }
 })
-// A disabled/emptied tooltip while shown should vanish.
 watch(enabled, (v) => {
   if (!v) hide()
 })
@@ -107,7 +99,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- No content/disabled → render the trigger with no wrapper at all. -->
   <slot v-if="!enabled" />
   <template v-else>
     <span

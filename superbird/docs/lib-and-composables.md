@@ -13,7 +13,7 @@
 
 **`styles.ts`** — `resolveStyles(node, styleClasses, breakpoint, state?)` — pure resolver. The `globalStyles` store wraps it with its reactive state; use the store's `resolveStyles(node, state?)` from components.
 
-**`unitValue.ts`** — `parseUnitValue(val, keywords?)` → `{num, unit}`; `stepUnitValue(e, unit, apply)` (arrow-key ±1 / shift ±10 / alt ±0.1). Shared by unit inputs & `LabelUi`'s drag scrub.
+**`unitValue.ts`** — `parseUnitValue(val, keywords?)` → `{num, unit}`; `readUnitInput(raw, unit, units)` → `{model, draft}` (per-keystroke: adopts a unit typed inline like `90em`, keeps a half-typed suffix as `draft` until it completes into a valid unit); `commitUnitInput(raw, unit, units)` (blur finalizer — adopt a fully-typed unit or drop it); `stepUnitValue(e, unit, apply)` (arrow-key ±1 / shift ±10 / alt ±0.1). Shared by unit inputs & `LabelUi`'s drag scrub.
 
 **`autoHideScrollbars.ts`** — `initAutoHideScrollbars()` (called once in `main.ts`). A global capture `scroll` listener that tags the scrolled element `.is-scrolling` and clears it after an idle delay, so scrollbars (styled transparent-at-rest in `main.css`) show only while scrolling. DOM-touching by design (like `theme.ts`), not a pure helper.
 
@@ -23,7 +23,7 @@
 
 ## `constants/`
 
-- **`canvas.ts`** — runtime constants: `STYLE_STATES`, `BREAKPOINTS`, `TRIGGER_TYPES`, `TARGET_TYPES`, `ACTION_PROPERTIES`, `EASING_OPTIONS`, `DEFAULT_LOCALES`, `PAGE_TYPE_CONFIGS`, `COLLECTION_SOURCES`, `nodeDefaults`, `CONTAINER_TYPES`, `TEXT_EDITABLE_TYPES`, `FORM_CHILD_TYPES`, `PARENT_CONSTRAINTS`; helpers `getPageTypeConfig`, `getCollectionSource`, `getDynamicFieldsForPageType`, `getDynamicField`, `fieldTypeToNodeType`, `fieldTypeToTag`.
+- **`canvas.ts`** — runtime constants: `STYLE_STATES`, `BREAKPOINTS`, `TRIGGER_TYPES`, `TARGET_TYPES`, `ACTION_PROPERTIES`, `EASING_OPTIONS`, `DEFAULT_LOCALES`, `PAGE_TYPE_CONFIGS`, `COLLECTION_SOURCES`, `nodeDefaults`, `CONTAINER_TYPES`, `TEXT_EDITABLE_TYPES`, `FORM_CHILD_TYPES`; helpers `getPageTypeConfig`, `getCollectionSource`, `getDynamicFieldsForPageType`, `getDynamicField`, `fieldTypeToNodeType`, `fieldTypeToTag`.
 - **`propertyOptions.ts`** — the 18 `<select>` option arrays for SidebarProperties (`displayOptions`, `positionOptions`, `flexDirectionOptions`, … `cursorOptions`).
 - **`injectionKeys.ts`** — `GlobalTokensKey: InjectionKey<ComputedRef<GlobalTokens>>` where `GlobalTokens = {colors, sizes}`. Provided once in `EditorView`; consumed by `ColorInputUi`/`UnitInputUi`.
 
@@ -37,6 +37,7 @@
 | `useNodeContextMenu` | `buildNodeActions(node, 'canvas'\|'layers', callbacks?)`, `buildElementActions(type)`, `deleteNodeWithUndo(id)` | builds `ContextMenuItem[]`; `deleteNodeWithUndo` removes + shows an Undo toast (re-inserts via `store.restoreNode`) |
 | `useToast()` | → `{toasts, success(msg,opts?), error(...), info(...), dismiss, runAction}` | **module-scope singleton**; queue rendered by `ToastHost` (mounted in `App.vue`). `opts.action = {label, handler}` = e.g. Undo; `opts.duration = 0` keeps it until dismissed |
 | `useInteractionRunner(elRef, interactions)` | attaches WAAPI animations | targets `[data-canvas-node]` / `[data-canvas-scroll]` — keep those attrs on canvas markup |
+| `useOverlayStack` | `overlayStack`, `registerOverlay(layer, dismiss)` → release fn, `dismissTop(layer)`, `dismissTopmost()` | **module-scope** stack of open overlays (`'modal'`\|`'dialog'` layers). `ModalUi` registers while open; `OverlayHostUi` (mounted in `App.vue`) renders the per-layer backdrop and owns Escape/backdrop-click dismissal |
 
 **Feature-scoped composables** (co-located, not in `composables/`): `canvas/useNodeDnD.ts` (`useNodeDnD(node)` → drop handlers + `dropPosition`), `sidebar/properties/useNodeStyles.ts` (selected-node style editing surface), `sidebar/settings/useNodeSettings.ts` (node/type predicates + collection/field helpers).
 

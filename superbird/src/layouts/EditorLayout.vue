@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Editor body grid (left | canvas | right). Header is owned by AppShell. Each
-// rail collapses to a thin strip; content-mode hides both rails entirely.
 const props = defineProps<{
   leftCollapsed?: boolean
   rightCollapsed?: boolean
@@ -22,12 +20,6 @@ const gridTemplateColumns = computed(() =>
       <slot name="sidebar-left" />
     </aside>
 
-    <!--
-      The canvas is `isolate`d into its own stacking context pinned at z-0, so a
-      user element's z-index (even a sticky site header) can never escape above the
-      sidebars/header and their dropdowns. `col-start-*` pins each rail to its
-      column so `v-show` (display:none) can't shift auto-placement.
-    -->
     <main class="col-start-2 relative z-0 isolate overflow-auto border rounded-xl mb-3.5">
       <slot name="canvas" />
     </main>

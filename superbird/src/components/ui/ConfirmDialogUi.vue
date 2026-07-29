@@ -2,11 +2,6 @@
 import ModalUi from './ModalUi.vue'
 import ButtonUi from './ButtonUi.vue'
 
-// The standard confirm/cancel dialog — a thin wrapper over `ModalUi
-// variant="dialog"` that supplies the Cancel + Confirm footer every destructive
-// action used to hand-roll. Drive `open` from local ref state (there is
-// deliberately no imperative dialog service) and listen to `@confirm`.
-// Optional default slot renders extra body content above the actions.
 withDefaults(
   defineProps<{
     title: string

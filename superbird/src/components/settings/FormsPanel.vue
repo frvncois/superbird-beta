@@ -32,7 +32,6 @@ interface FoundForm {
   fields: string[]
 }
 
-// Every form element placed across all pages (config is keyed by node id).
 const forms = computed<FoundForm[]>(() => {
   const out: FoundForm[] = []
   const walk = (node: CanvasNode, pageName: string) => {
@@ -84,7 +83,6 @@ function update(formId: string, patch: Partial<FormConfig>) {
         :key="form.formId"
         class="overflow-hidden rounded-xl border border-border/70 bg-background"
       >
-        <!-- Header: name + page -->
         <div class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
           <IconUi name="form" size="size-4" class="shrink-0 text-secondary" />
           <div class="min-w-0 flex-1">
@@ -97,7 +95,6 @@ function update(formId: string, patch: Partial<FormConfig>) {
           <span class="shrink-0 font-mono text-[10px] uppercase tracking-wider text-secondary">On {{ form.pageName }}</span>
         </div>
 
-        <!-- Field preview -->
         <div v-if="form.fields.length" class="flex flex-wrap gap-1.5 border-b border-border/60 px-4 py-2.5">
           <span
             v-for="(f, i) in form.fields"
@@ -106,7 +103,6 @@ function update(formId: string, patch: Partial<FormConfig>) {
           >{{ f }}</span>
         </div>
 
-        <!-- Settings -->
         <div class="divide-y divide-border/60">
           <SettingsRow label="Save submissions to database" description="Keep every submission in the Submissions list below.">
             <ToggleUi

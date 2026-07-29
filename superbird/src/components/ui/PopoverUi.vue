@@ -8,10 +8,7 @@ const props = withDefaults(
   defineProps<{
     align?: PopoverAlign
     panelClass?: string
-    // 'slide' (default) or 'scale' (origin-top zoom, used by the select dropdowns).
     transition?: PopoverTransition
-    // Render the fixed click-away backdrop. Turn OFF for focus-driven popovers
-    // (e.g. type-in-place inputs) where a backdrop would block the field.
     backdrop?: boolean
   }>(),
   {
@@ -24,9 +21,6 @@ const props = withDefaults(
 
 const open = defineModel<boolean>('open', { default: false })
 
-// The panel is teleported to <body> and positioned `fixed` from the trigger's
-// rect, so it's never clipped by a scrollable/overflow ancestor (e.g. the
-// sidebar panels) and always stacks above the canvas.
 const anchor = ref<HTMLElement | null>(null)
 const panelStyle = ref<Record<string, string>>({})
 
@@ -54,7 +48,6 @@ watch(open, async (v) => {
   if (v) {
     await nextTick()
     measure()
-    // `capture` so we catch scrolling of any ancestor (the sidebar panel).
     window.addEventListener('scroll', onReposition, true)
     window.addEventListener('resize', onReposition)
   } else {
@@ -84,13 +77,7 @@ const tx = computed(() =>
 )
 </script>
 
-<!--
-  Anchored popover: render inside the trigger's wrapper. The panel teleports to
-  <body> (fixed-positioned from the trigger) so overflow ancestors can't clip it
-  and it always sits above the canvas.
--->
 <template>
-  <!-- Inline zero-size anchor: its parent is the trigger wrapper we measure. -->
   <span ref="anchor" aria-hidden="true" class="hidden" />
 
   <Teleport to="body">

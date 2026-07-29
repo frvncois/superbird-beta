@@ -14,10 +14,7 @@ const emit = defineEmits<{
 
 const store = useMediaStore()
 
-// Breadcrumb segments accept a dropped file → move it to that folder (root =
-// undefined). This is how a file is dragged back out to a parent.
 const MEDIA_DND = 'application/superbird-media'
-// null = nothing, 'root' = the Media crumb, else a folder id.
 const dropTarget = ref<string | null>(null)
 
 function onCrumbDragOver(e: DragEvent, key: string) {
@@ -34,7 +31,6 @@ function onCrumbDrop(e: DragEvent, folderId: string | undefined) {
   if (id) store.moveMediaToFolder(id, folderId)
 }
 
-// Root → current, walking up the parentId chain (cycle-guarded).
 const trail = computed(() => {
   const path: { id: string; name: string }[] = []
   let id = props.currentFolder

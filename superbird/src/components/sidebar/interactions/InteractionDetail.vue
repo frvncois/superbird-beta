@@ -31,7 +31,6 @@ function addStep() {
 
 <template>
   <div>
-    <!-- Header: back + interaction name (like the Settings/Properties top block) -->
     <div class="space-y-3 p-4">
       <ButtonUi
         variant="ghost"
@@ -54,7 +53,6 @@ function addStep() {
       </div>
     </div>
 
-    <!-- Accordion sections -->
     <div class="border-y">
       <PropertySectionUi title="Trigger" icon="settings">
         <div class="space-y-1.5">
@@ -96,7 +94,6 @@ function addStep() {
       />
     </div>
 
-    <!-- Add step -->
     <div class="p-4">
       <ButtonUi
         variant="outline"

@@ -267,7 +267,7 @@ function n(type: NodeType, label: string, opts: NodeOpts = {}): CanvasNode {
 }
 
 const box = (label: string, classes: string[], children: CanvasNode[], opts: NodeOpts = {}) =>
-  n('container', label, { classes, children, ...opts })
+  n('div', label, { classes, children, ...opts })
 const sec = (label: string, classes: string[], children: CanvasNode[], opts: NodeOpts = {}) =>
   n('section', label, { tag: 'section', classes, children, ...opts })
 const h = (tag: string, label: string, content: string, classes: string[] = [], opts: NodeOpts = {}) =>

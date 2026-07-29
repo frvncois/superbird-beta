@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// Chrome-free centered frame for the unauthenticated screens (login / setup):
-// a single card slotted dead-center on the app background.
+
 </script>
 
 <template>

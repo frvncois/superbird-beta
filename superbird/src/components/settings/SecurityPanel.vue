@@ -29,8 +29,6 @@ async function signOutEverywhere() {
 
 const enabled = computed(() => auth.currentUser?.twoFactorEnabled ?? false)
 
-// Local state machine: idle → setup (secret shown, confirm code) → recovery
-// (one-time codes shown after enabling).
 type Mode = 'idle' | 'setup' | 'recovery'
 const mode = ref<Mode>('idle')
 const busy = ref(false)
@@ -113,7 +111,6 @@ async function copy(text: string, label: string) {
       title="Two-factor authentication"
       description="Require a time-based code from an authenticator app (Google Authenticator, 1Password, …) in addition to your password."
     >
-      <!-- Status + primary action -->
       <SettingsRow label="Authenticator app">
         <template v-if="enabled">
           <BadgeUi variant="success" size="xs" dot>On</BadgeUi>
@@ -124,7 +121,6 @@ async function copy(text: string, label: string) {
         <BadgeUi v-else variant="default" size="xs" dot>Setting up…</BadgeUi>
       </SettingsRow>
 
-      <!-- Setup: show secret + confirm a code -->
       <SettingsRow v-if="mode === 'setup'" stacked>
         <div class="space-y-3">
           <p class="text-xs leading-relaxed text-secondary">
@@ -151,7 +147,6 @@ async function copy(text: string, label: string) {
         </div>
       </SettingsRow>
 
-      <!-- Recovery codes: shown once, right after enabling -->
       <SettingsRow v-if="mode === 'recovery'" stacked>
         <div class="space-y-3">
           <div class="flex items-start gap-2 rounded-lg bg-amber-bg px-3 py-2 text-xs text-amber-fg">
@@ -172,7 +167,6 @@ async function copy(text: string, label: string) {
         </div>
       </SettingsRow>
 
-      <!-- Disable: needs a current code -->
       <SettingsRow v-if="enabled" stacked>
         <div class="space-y-2">
           <label class="block text-xs text-foreground">Turn off two-factor</label>

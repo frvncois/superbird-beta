@@ -2,9 +2,6 @@
 import { ref } from 'vue'
 import { parseUnitValue } from '@/lib/unitValue'
 
-// Mono uppercase micro-label. With `drag`, horizontal dragging on the label
-// scrubs the bound `v-model` numeric value (shift ×10, alt ×0.1) — the old
-// DragLabelUi folded in here. The label text is the slot; the value is v-model.
 const props = withDefaults(
   defineProps<{
     size?: 'default' | 'sm' | 'xs'
@@ -24,7 +21,6 @@ const sizeClasses: Record<'default' | 'sm' | 'xs', string> = {
   xs: 'text-[9px]',
 }
 
-// ── Drag scrub (only wired when `drag`) ──
 const isDragging = ref(false)
 let startX = 0
 let startValue = 0

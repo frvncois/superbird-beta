@@ -1,10 +1,5 @@
 <script setup lang="ts">
 import AppHeader from '@/components/header/AppHeader.vue'
-
-// The single app chrome: a self-contained AppHeader on top of a full-height body
-// region. Views drop their body layout (DashboardLayout / EditorLayout /
-// SettingsLayout) into the default slot. AppHeader configures itself from the
-// route, so there is nothing to wire here.
 </script>
 
 <template>

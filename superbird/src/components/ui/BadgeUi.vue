@@ -27,8 +27,8 @@ const styles = {
 } as const
 
 const sizes = {
-  xs: 'text-[10px] px-1.5 py-0.5 rounded-md gap-1',
-  sm: 'text-xs px-2 py-0.5 rounded-lg gap-1.5',
+  xs: 'text-[10px] px-1.5 py-0.5 rounded-xl gap-1',
+  sm: 'text-xs px-2 py-0.5 rounded-xl gap-1.5',
 } as const
 </script>
 

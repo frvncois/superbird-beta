@@ -33,7 +33,6 @@ async function load() {
 }
 onMounted(load)
 
-// Add
 const name = ref('')
 const email = ref('')
 const password = ref('')
@@ -62,7 +61,6 @@ async function add() {
   }
 }
 
-// Remove
 const removingId = ref<string | null>(null)
 const pendingRemove = ref<User | null>(null)
 function remove(user: User) {

@@ -14,12 +14,10 @@ const store = useGlobalStylesStore()
 const isOpen = ref(false)
 const showAdd = ref(false)
 
-// Widest → narrowest, matching the cascade order.
 const sorted = computed(() => [...store.breakpoints].sort((a, b) => b.width - a.width))
 const active = computed(() => store.breakpoints.find((b) => b.id === store.activeBreakpoint))
 const canRemove = computed(() => store.breakpoints.length > 1)
 
-// Presets not already in the registry (matched by width).
 const availablePresets = computed(() =>
   BREAKPOINT_PRESETS.filter((p) => !store.breakpoints.some((b) => b.width === p.width)),
 )
@@ -68,7 +66,6 @@ watch(isOpen, (open) => {
 
 <template>
   <div class="relative">
-    <!-- Trigger: icon of the selected breakpoint's device + its name -->
     <TooltipUi content="Breakpoints" placement="bottom" :disabled="isOpen">
       <ButtonUi variant="outline" size="sm" :icon="deviceIcon(active?.width ?? 1280)" @click="isOpen = !isOpen">
         <span class="text-xs font-medium">{{ active?.name ?? 'Desktop' }}</span>
@@ -77,7 +74,6 @@ watch(isOpen, (open) => {
 
     <PopoverUi v-model:open="isOpen" align="right" panel-class="w-60 p-1.5 rounded-2xl">
       <div>
-        <!-- Active breakpoints -->
         <div class="space-y-0.5">
           <div v-for="bp in sorted" :key="bp.id" class="flex items-center gap-0.5">
             <ButtonUi
@@ -106,7 +102,6 @@ watch(isOpen, (open) => {
 
         <div class="my-1.5 border-t border-foreground/8" />
 
-        <!-- Add a breakpoint -->
         <template v-if="showAdd">
           <div v-if="availablePresets.length" class="space-y-0.5">
             <ButtonUi

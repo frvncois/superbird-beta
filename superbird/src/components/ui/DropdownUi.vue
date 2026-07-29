@@ -1,5 +1,4 @@
 <script lang="ts">
-// A menu row (`items`) — `separator: true` renders a divider instead of a button.
 export interface DropdownItem {
   label?: string
   icon?: string
@@ -8,17 +7,13 @@ export interface DropdownItem {
   handler?: () => void
 }
 
-// A select option (`options`) — turns the dropdown into a value picker (v-model).
 export interface DropdownOption {
   value: string
   label: string
   icon?: string
   accentClass?: string
-  // Section header: a header renders whenever `group` changes between rows.
   group?: string
-  // Trailing mono badge on the row (and on the trigger when selected).
   badge?: string
-  // Inline style / class on the label — e.g. previewing a font in its own family.
   labelStyle?: Record<string, string>
   labelClass?: string
 }
@@ -31,10 +26,6 @@ import ButtonUi from './ButtonUi.vue'
 import BadgeUi from './BadgeUi.vue'
 import LabelUi from './LabelUi.vue'
 
-// One dropdown primitive, unfolding inside its own border. Two modes:
-//   • menu   — pass `items` (with handlers) and/or default-slot content.
-//   • select — pass `options` + `v-model`; the trigger shows the selection.
-// Width comes from a fallthrough `class` on the tag (e.g. `class="w-full"`).
 const props = withDefaults(
   defineProps<{
     label?: string
@@ -57,16 +48,14 @@ const props = withDefaults(
 )
 
 const open = defineModel<boolean>('open', { default: false })
-const model = defineModel<string>({ default: '' }) // selected value (select mode)
+const model = defineModel<string>({ default: '' })
 const root = ref<HTMLElement | null>(null)
 
 const isSelect = computed(() => props.options.length > 0)
 const selectedOption = computed(() => props.options.find((o) => o.value === model.value))
 const isPlaceholder = computed(() => isSelect.value && !selectedOption.value)
-// A selected empty value is the "Default"/unset state — shown muted in the trigger.
 const isDefaultSelected = computed(() => isSelect.value && !!selectedOption.value && model.value === '')
 
-// Trigger reflects the selection in select mode, else the label/icon props.
 const triggerLabel = computed(() => (isSelect.value ? (selectedOption.value?.label ?? props.placeholder) : props.label))
 const triggerIcon = computed(() => (isSelect.value ? selectedOption.value?.icon : props.icon))
 const triggerAccent = computed(() => (isSelect.value ? selectedOption.value?.accentClass : undefined))
@@ -91,8 +80,6 @@ function selectOption(opt: DropdownOption) {
 function onPointer(e: PointerEvent) {
   const target = e.target as Node | null
   if (!root.value || root.value.contains(target)) return
-  // Content teleported out of the panel (submenus, flyouts, nested popovers) can
-  // opt to keep the dropdown open by marking a `data-dropdown-keep` ancestor.
   if (target instanceof Element && target.closest('[data-dropdown-keep]')) return
   close()
 }
@@ -143,11 +130,9 @@ defineExpose({ close })
         </button>
       </slot>
 
-      <!-- Panel unfolds (0fr → 1fr) inside the shared border; long lists scroll. -->
       <div class="grid transition-all duration-200 ease-out" :class="open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'">
         <div class="overflow-hidden">
           <div :class="['flex max-h-72 flex-col overflow-y-auto p-1', panelClass]">
-            <!-- Select options (grouped when `group` is set) -->
             <template v-if="isSelect">
               <template v-for="(opt, i) in options" :key="opt.value">
                 <LabelUi
@@ -173,7 +158,6 @@ defineExpose({ close })
               <slot name="footer" :close="close" />
             </template>
 
-            <!-- Menu items + custom content -->
             <template v-else>
               <template v-for="(item, i) in items" :key="i">
                 <div v-if="item.separator" class="my-1 border-t border-foreground/8" />

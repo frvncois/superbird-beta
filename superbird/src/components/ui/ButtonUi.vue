@@ -55,8 +55,6 @@ const variantClasses: Record<ButtonVariant, string> = {
   bare: 'text-foreground hover:text-foreground',
 }
 
-// Colour treatment: `bare` = no bg, hover colour only (primary when active);
-// else `active` (selected) wins, then `tone=primary` accent, then the variant.
 const colorClasses = computed(() => {
   if (props.variant === 'bare') return props.active ? 'text-primary' : 'text-secondary hover:text-foreground'
   if (props.active) return 'bg-primary/10 text-primary hover:bg-primary/15'
@@ -67,7 +65,6 @@ const colorClasses = computed(() => {
 const classes = computed(() => [
   'inline-flex items-center font-medium cursor-pointer gap-2.5 transition-[background-color,color,border-color,opacity] duration-[250ms] ease',
   props.align === 'start' ? 'justify-start' : 'justify-center',
-  // `bare` has no box: no height/padding/rounded, just the content + colour.
   props.variant === 'bare' ? '' : props.square ? squareClasses[props.size] : sizeClasses[props.size],
   colorClasses.value,
   props.disabled && 'pointer-events-none opacity-50',

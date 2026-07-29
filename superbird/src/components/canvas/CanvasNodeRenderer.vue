@@ -20,9 +20,6 @@ import { CreateComponentPromptKey } from '@/constants/injectionKeys'
 const props = defineProps<{
   node: CanvasNode
   depth?: number
-  // When set, this subtree is a read-only collection-list preview populated by
-  // this entry: field-bound nodes resolve their content from it, and all
-  // editor interactions (select / edit / drag / context menu) are disabled.
   renderEntry?: Entry | null
   preview?: boolean
 }>()
@@ -37,14 +34,11 @@ const isHovered = ref(false)
 const editableRef = ref<HTMLElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const nodeRef = ref<HTMLElement | null>(null)
-// In-progress markdown source while editing (drives the live preview).
 const draft = ref('')
 
-// Run interactions (never in a preview copy — they'd double up).
 const nodeInteractions = computed(() => (props.preview ? undefined : props.node.interactions))
 useInteractionRunner(nodeRef, nodeInteractions)
 
-// Drag & drop (drag source + drop target)
 const { dropPosition, handleDragStart, handleDragOver, handleDragLeave, handleDrop } =
   useNodeDnD(toRef(props, 'node'))
 
@@ -58,16 +52,10 @@ const isPlaceholder = computed(() =>
   ['image', 'video', 'embed', 'input', 'textarea', 'select', 'checkbox', 'radio', 'file-upload'].includes(props.node.type),
 )
 const isDynamic = computed(() => !!props.node.dynamicField)
-// In content mode, only content-bearing elements (typography, media,
-// interactive) show selection / hover outlines — structural elements stay
-// visually quiet so the user can focus on editing content.
 const showOutlines = computed(
   () => store.editorMode === 'design' || CONTENT_TYPES.includes(props.node.type),
 )
 
-// Resolve a node's content, preferring the preview entry when this subtree is
-// a collection-list preview; otherwise the store (which handles the active entry
-// / locale). Used for text and image fields.
 function nodeContent(node: CanvasNode): string {
   if (node.dynamicField && props.renderEntry) {
     return props.renderEntry.values[node.dynamicField] ?? node.content ?? ''
@@ -75,8 +63,6 @@ function nodeContent(node: CanvasNode): string {
   return store.getNodeContent(node)
 }
 
-// Markdown: committed content rendered for display; draft rendered for the
-// live preview while editing.
 const markdownHtml = computed(() => renderMarkdown(nodeContent(props.node)))
 const draftHtml = computed(() => renderMarkdown(draft.value))
 
@@ -87,12 +73,10 @@ const imageMedia = computed(() => {
   return mediaStore.mediaItems.find((m) => m.id === value) ?? null
 })
 
-// Real entries to populate a collection-list preview (capped at its limit).
 const previewEntries = computed<Entry[]>(() => {
   if (props.node.type !== 'collection-list') return []
   const col = collectionsStore.collectionById(props.node.props.source)
   if (!col) return []
-  // Match the SSR/html.ts clamp so the canvas preview count can't drift from it.
   const limit = Math.min(100, Math.max(0, parseInt(props.node.props.limit ?? '3', 10) || 3))
   return collectionsStore.entriesByCollection(col.id).slice(0, limit)
 })
@@ -107,6 +91,21 @@ const isHiddenAtBreakpoint = computed(() => {
     (bp === 'mobile' && vis.hideMobile)
 })
 const computedStyles = computed(() => globalStylesStore.resolveStyles(props.node))
+
+// The editor renders every node as a <div>, so heading/text elements lose the
+// browser's tag defaults; we fake a heading/body look on the editable content
+// with utility classes — but ONLY where the node has no font-size/weight of its
+// own (from a class or instance style, both surfaced in computedStyles), so real
+// typography edits win instead of being clobbered by the fallback.
+const contentDefaults = computed(() => {
+  const s = computedStyles.value
+  if (props.node.type === 'heading') {
+    return [!s['font-size'] && 'text-2xl', !s['font-weight'] && 'font-semibold']
+  }
+  if (props.node.type === 'text' && !s['font-size']) return ['text-sm']
+  return []
+})
+
 const ctx = useContextMenu()
 
 function onClick(e: MouseEvent) {
@@ -126,13 +125,11 @@ function onContextMenu(e: MouseEvent) {
 
 function onDoubleClick(e: MouseEvent) {
   if (props.preview) return
-  // Image nodes: double-click to choose media (stored per-entry or on template).
   if (props.node.type === 'image') {
     e.stopPropagation()
     mediaStore.openPicker((item) => store.setNodeContent(props.node.id, item.id))
     return
   }
-  // Markdown nodes: edit the raw source in a mono field with a live preview.
   if (isMarkdown.value) {
     e.stopPropagation()
     draft.value = nodeContent(props.node)
@@ -164,7 +161,6 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-// Markdown source is multi-line — Enter inserts a newline; only Escape commits.
 function onMarkdownKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
@@ -172,7 +168,6 @@ function onMarkdownKeydown(e: KeyboardEvent) {
   }
 }
 
-// Drag & drop wrappers — inert on preview copies.
 function onDragStart(e: DragEvent) { if (props.preview) { e.preventDefault(); return } handleDragStart(e) }
 function onDragOver(e: DragEvent) { if (props.preview) return; handleDragOver(e) }
 function onDragLeave(e: DragEvent) { if (props.preview) return; handleDragLeave(e) }
@@ -213,14 +208,12 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
     @dragleave="onDragLeave"
     @drop="onDrop"
   >
-    <!-- Hover outline -->
     <div
       v-if="isHovered && !isSelected && !isBody && !preview && showOutlines"
       class="pointer-events-none absolute inset-0 z-20 rounded-[inherit]"
       :class="isComponentInstance ? 'ring-1 ring-green-fg/50' : isDynamic ? 'ring-1 ring-purple-fg/50' : 'ring-1 ring-primary/50'"
     />
 
-    <!-- Hover label -->
     <div
       v-if="isHovered && !isSelected && !isBody && !preview && showOutlines"
       class="pointer-events-none absolute -top-5 left-0 z-20 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono font-medium uppercase not-italic tracking-wider leading-none whitespace-nowrap [text-indent:0] [word-spacing:normal] text-white"
@@ -230,13 +223,11 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       <IconUi v-else-if="isDynamic" name="link" size="size-2.5" />
       {{ node.label }}
     </div>
-    <!-- Drop indicator: before (not for body) -->
     <div
       v-if="!isBody && !preview && dropPosition === 'before'"
       class="absolute -top-px left-0 right-0 h-0.5 bg-primary z-10"
     />
 
-    <!-- Markdown: rendered result, or source + live preview while editing -->
     <div v-if="isMarkdown" class="w-full">
       <template v-if="isEditing">
         <textarea
@@ -255,15 +246,13 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       <div v-else class="markdown-body" v-html="markdownHtml" />
     </div>
 
-    <!-- Node content (only when it has no children of its own) -->
     <div
       v-else-if="isTextEditable && node.children.length === 0"
       ref="editableRef"
       :contenteditable="isEditing"
       :class="[
         'outline-none',
-        node.type === 'heading' && 'text-2xl font-semibold',
-        node.type === 'text' && 'text-sm',
+        contentDefaults,
         isEditing && 'cursor-text ring-1 ring-primary/30 rounded px-1',
       ]"
       @blur="onBlur"
@@ -271,22 +260,17 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       v-text="nodeContent(node)"
     />
 
-    <!-- Container / body, or any node that has children (e.g. a list-item with
-         spans) — render the children. Matches the published renderer (html.ts). -->
     <template v-else-if="isContainer || node.children.length > 0">
-      <!-- Collection List indicator -->
       <div v-if="node.type === 'collection-list' && !preview" class="flex items-center gap-1.5 px-2 py-1 mb-1 rounded-lg bg-amber-bg/50 text-[10px] font-mono text-amber-fg">
         <span>&#8634;</span>
         <span>{{ collectionsStore.collectionById(node.props.source)?.name ?? node.props.source ?? 'Collection' }}</span>
         <span class="text-amber-fg/50">&#183; {{ previewEntries.length || (node.props.limit ?? '3') }} items</span>
       </div>
 
-      <!-- Collection Item indicator (only on the editable template, not previews) -->
       <div v-if="node.type === 'collection-item' && !preview" class="flex items-center gap-1 px-2 py-0.5 mb-1 rounded bg-amber-bg/30 text-[9px] font-mono text-amber-fg/70">
         Repeating item
       </div>
 
-      <!-- Collection list with real entries → one read-only copy of the item template per entry -->
       <template v-if="node.type === 'collection-list' && previewEntries.length > 0">
         <template v-for="entry in previewEntries" :key="entry.id">
           <CanvasNodeRenderer
@@ -300,7 +284,6 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
         </template>
       </template>
 
-      <!-- Normal children (editable, or a preview subtree threading its entry down) -->
       <template v-else>
         <CanvasNodeRenderer
           v-for="child in node.children"
@@ -312,7 +295,6 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
         />
       </template>
 
-      <!-- Empty state -->
       <div
         v-if="node.children.length === 0 && !preview"
         :class="[
@@ -324,16 +306,13 @@ function onDrop(e: DragEvent) { if (props.preview) return; handleDrop(e) }
       </div>
     </template>
 
-    <!-- Image / media / form placeholders -->
     <NodePlaceholder v-else-if="isPlaceholder" :node="node" :media="imageMedia" />
 
-    <!-- Drop indicator: after (not for body) -->
     <div
       v-if="!isBody && !preview && dropPosition === 'after'"
       class="absolute -bottom-px left-0 right-0 h-0.5 bg-primary z-10"
     />
 
-    <!-- Context menu -->
     <ContextMenuUi
       v-if="ctx.visible.value"
       :items="ctx.items.value"

@@ -10,7 +10,6 @@ const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
 const { node } = useNodeStyles()
 
-// After Duplicate, ask the input to open the new class in inline-rename mode.
 const pendingRename = ref<string | null>(null)
 
 function addClass(name: string) {
@@ -29,7 +28,6 @@ function selectClass(name: string) {
   globalStylesStore.noteClassUsed(name)
 }
 
-// Delete entirely — from the registry and every element that uses it.
 const pendingDelete = ref<string | null>(null)
 function deleteClass(name: string) {
   pendingDelete.value = name
@@ -41,8 +39,6 @@ function doDelete() {
   pendingDelete.value = null
 }
 
-// Duplicate into a new class (styles copied), swapped in on this element, then
-// opened for renaming.
 function duplicateClass(name: string) {
   if (!node.value) return
   const newName = store.duplicateClass(node.value.id, name)
@@ -52,7 +48,6 @@ function duplicateClass(name: string) {
   }
 }
 
-// Rename everywhere it's used.
 function renameClass(oldName: string, newName: string) {
   store.renameClass(oldName, newName)
   globalStylesStore.noteClassUsed(newName)

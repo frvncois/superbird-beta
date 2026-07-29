@@ -7,8 +7,6 @@ const props = withDefaults(
   defineProps<{
     label: string
     labelWidth?: LabelWidth
-    // When true, dragging the label scrubs the bound `v-model` numeric value
-    // (the label doubles as the drag handle — no separate DragLabel needed).
     drag?: boolean
   }>(),
   {
@@ -17,7 +15,6 @@ const props = withDefaults(
   },
 )
 
-// Scrub value (only meaningful with `drag`).
 const model = defineModel<string>({ default: '' })
 
 const widthClasses: Record<LabelWidth, string> = {

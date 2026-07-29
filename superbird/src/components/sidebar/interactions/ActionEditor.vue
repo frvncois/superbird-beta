@@ -38,14 +38,11 @@ const classOpOptions: { value: ClassOp; label: string }[] = [
   { value: 'toggle', label: 'Toggle' },
 ]
 
-// The "variant set" = existing project classes, plus a custom-entry option.
 const classOptions = computed(() => [
   { value: '__custom__', label: 'Custom…', icon: 'plus', accentClass: 'text-purple-fg' },
   ...styles.allClassNames.map((c) => ({ value: c, label: c })),
 ])
 
-// Custom vs pick-from-existing. Seed from the stored value; only re-derive when
-// the underlying action changes (not while typing a custom name).
 const custom = ref(false)
 watch(
   () => props.index,
@@ -75,7 +72,6 @@ function removeAction() {
 </script>
 
 <template>
-  <!-- Class action -->
   <div v-if="isClass" class="flex items-center gap-1 rounded-lg bg-purple-bg/40 px-2 py-1.5">
     <div class="w-16 shrink-0">
       <DropdownUi
@@ -110,7 +106,6 @@ function removeAction() {
     </IconButtonUi>
   </div>
 
-  <!-- Animate action -->
   <div v-else class="flex items-center gap-1 rounded-lg bg-secondary/5 px-2 py-1.5">
     <span class="w-12 shrink-0 truncate font-mono text-[9px] text-secondary">{{ propertyLabel }}</span>
     <template v-if="isColorAction">

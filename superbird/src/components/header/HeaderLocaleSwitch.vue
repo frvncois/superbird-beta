@@ -61,7 +61,6 @@ watch(isOpen, (open) => {
 
 <template>
   <div class="relative">
-    <!-- Trigger -->
     <TooltipUi content="Translations" placement="bottom" :disabled="isOpen">
       <ButtonUi variant="outline" size="sm" icon="globe" @click="isOpen = !isOpen">
         {{ currentLocale?.flag }}
@@ -70,7 +69,6 @@ watch(isOpen, (open) => {
 
     <PopoverUi v-model:open="isOpen" align="right" panel-class="w-52 p-1.5 rounded-2xl">
       <div>
-        <!-- Active locales -->
         <div class="space-y-0.5">
           <div
             v-for="locale in store.locales"
@@ -103,7 +101,6 @@ watch(isOpen, (open) => {
 
         <div class="my-1.5 border-t border-foreground/8" />
 
-        <!-- Add language -->
         <template v-if="showAdd">
           <div class="max-h-48 overflow-y-auto space-y-0.5">
             <ButtonUi

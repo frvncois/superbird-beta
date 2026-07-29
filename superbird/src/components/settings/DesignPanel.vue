@@ -11,7 +11,6 @@ import IconUi from '@/components/ui/IconUi.vue'
 
 const store = useGlobalStylesStore()
 
-// Colors
 const newColorName = ref('')
 const newColorValue = ref('#000000')
 function addColor() {
@@ -22,7 +21,6 @@ function addColor() {
   newColorValue.value = '#000000'
 }
 
-// Sizes
 const newSizeName = ref('')
 const newSizeValue = ref('')
 function addSize() {
@@ -36,7 +34,6 @@ function addSize() {
 
 <template>
   <SettingsPanel title="Design">
-    <!-- Colors -->
     <SettingsSection title="Color palette" description="Reusable colors available across the editor.">
       <div
         v-for="(value, name) in store.globalStyles.colors"
@@ -60,7 +57,6 @@ function addSize() {
       </div>
     </SettingsSection>
 
-    <!-- Sizes -->
     <SettingsSection title="Size scale" description="Named spacing/size tokens.">
       <div
         v-for="(value, name) in store.globalStyles.sizes"

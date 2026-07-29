@@ -4,7 +4,6 @@
 // User-facing categorization lives in SidebarElements.vue (the palette).
 export type NodeType =
   | 'body'
-  | 'container'
   | 'section'
   | 'div'
   | 'heading'

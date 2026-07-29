@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import LabelUi from './LabelUi.vue'
 
-// Vertical field: label stacked above its control — the column counterpart to
-// FieldRowUi (which lays label + control side by side). With `drag`, the label
-// doubles as the scrub handle for the bound `v-model`, same contract as FieldRowUi.
 withDefaults(
   defineProps<{
     label: string
@@ -14,7 +11,6 @@ withDefaults(
   },
 )
 
-// Scrub value (only meaningful with `drag`).
 const model = defineModel<string>({ default: '' })
 </script>
 

@@ -60,9 +60,9 @@ export function useClipboardOps(activePage: ComputedRef<Page>, selectedNodeId: R
     const result = findParent(body.children, id)
     if (!result) return
     const node = result.parent[result.index]!
-    const container = createNode('container', { children: [node] })
-    result.parent[result.index] = container
-    selectedNodeId.value = container.id
+    const wrapper = createNode('div', { children: [node] })
+    result.parent[result.index] = wrapper
+    selectedNodeId.value = wrapper.id
   }
 
   function unwrapNode(id: string) {

@@ -4,11 +4,6 @@ import ModalUi from './ModalUi.vue'
 import ButtonUi from './ButtonUi.vue'
 import IconUi from './IconUi.vue'
 
-// A busy → success/error status dialog (spinner while working, a coloured chip +
-// dismiss button when done). Driven by local reactive state; the default slot
-// takes phase-specific extras (a success link, a progress bar) and receives
-// `{ busy }`. Replaces the hand-rolled copies in AppHeader (publish) and
-// BackupPanel (backup/restore/import).
 const props = withDefaults(
   defineProps<{
     open: boolean

@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// The shared frame for every Settings page: a centered, padded column with an
-// optional title/description header above the section stack. Panels root in
-// this so page width, padding, the title style and the section rhythm all live
-// in one place instead of being re-invented per panel.
 defineProps<{
   title?: string
   description?: string

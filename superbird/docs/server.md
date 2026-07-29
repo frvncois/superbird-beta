@@ -95,7 +95,14 @@ in the `media` table, served at `/media/:id` (see Media above).
 
 - Client: `src/composables/useProjectPersistence.ts` — `load()` fetches the
   document and hydrates every store; a debounced (800 ms) watcher autosaves any
-  change via `PUT /api/project`.
+  change via `PUT /api/project` (returns `SaveResult { ok, savedAt }`,
+  server-stamped). **Autosave is the save** (Figma/Webflow model): there is one
+  write path, `save()`, called by the debounced autosave, the first-run seed,
+  `publish()` (to flush before snapshotting), and manual snapshots — it persists
+  and advances `draftSavedAt`. There is **no manual Save button**. Exposes a
+  module-level `saveState` ref (`'idle' | 'saving'`) — the brief in-flight
+  transient behind the badge's "Saving…"; the resting badge is purely
+  draft-vs-published (Draft / Saved / Live).
 - `load()` runs after sign-in (boot if already authed, and after login/install).
   A fresh project (`design:null`) persists the current demo seed as its starting
   point, so a new install shows a real site.
@@ -145,8 +152,9 @@ editor SPA stays on Vite (`5173`). In production they're different domains.
   plus **live entries filtered to `status:published`**. So content publishes
   instantly/independently while design changes stay private until Publish. An
   unpublished site shows a placeholder. Editor: the header **Publish** button
-  (`useProjectPersistence().publish()`); `SessionState.publishedAt` drives the
-  dashboard's published badge.
+  (`useProjectPersistence().publish()`); `SessionState.publishedAt` +
+  `SessionState.draftSavedAt` (draft `updated_at`) seed the header status badge
+  (Live / Saved / Draft) on boot; autosave keeps `draftSavedAt` current in-session.
 - Media resolves via `/media/:id` (see **Media** below), so published-site
   images render.
 

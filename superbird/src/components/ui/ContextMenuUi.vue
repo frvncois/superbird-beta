@@ -3,7 +3,6 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { isSeparator, type ContextMenuItem } from '@/types/contextMenu'
 import IconUi from '@/components/ui/IconUi.vue'
 
-// Menu icon names that differ from their registry key
 const ICON_ALIASES: Record<string, string> = {
   expand: 'chevron-down',
   collapse: 'chevron-down',
@@ -65,20 +64,16 @@ function handleAction(item: ContextMenuItem) {
 
 <template>
   <Teleport to="body">
-    <!-- Backdrop -->
     <div class="fixed inset-0 z-[9998]" @click="emit('close')" @contextmenu.prevent="emit('close')" />
 
-    <!-- Menu -->
     <div
       ref="menuRef"
       class="fixed z-[9999] min-w-44 rounded-xl border bg-background p-1 shadow-lg animate-modal-in origin-top-left"
       :style="{ left: `${adjustedX}px`, top: `${adjustedY}px` }"
     >
       <template v-for="(item, i) in items" :key="i">
-        <!-- Separator -->
         <div v-if="isSeparator(item)" class="my-1 border-t border-foreground/8" />
 
-        <!-- Action row (icon box reserved so labels align across the list) -->
         <button
           v-else
           type="button"

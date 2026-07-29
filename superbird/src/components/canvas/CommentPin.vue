@@ -9,7 +9,7 @@ const props = withDefaults(
   defineProps<{
     x: number
     y: number
-    comment?: Comment | null // null → draft/compose pin
+    comment?: Comment | null
     focused?: boolean
   }>(),
   { comment: null, focused: false },
@@ -24,7 +24,6 @@ const emit = defineEmits<{
 
 const isDraft = computed(() => !props.comment)
 const resolved = computed(() => props.comment?.resolved ?? false)
-// Anchor the thread to whichever side has more room.
 const align = computed<'left' | 'right'>(() => (props.x > 600 ? 'right' : 'left'))
 
 const markerClass = computed(() => {

@@ -7,12 +7,9 @@ import type { CanvasNode } from '@/types/canvas'
 import IconUi from '@/components/ui/IconUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 
-// Maps every node type to an icon registry key so nothing renders iconless.
-// (`body` reuses the layers glyph; icon keys otherwise match the type name.)
 const TYPE_ICONS: Record<string, string> = {
   component: 'component',
   body: 'layers',
-  container: 'container',
   section: 'section',
   div: 'div',
   heading: 'heading',
@@ -82,7 +79,6 @@ function toggleExpand(e: MouseEvent) {
   expanded.value = !expanded.value
 }
 
-// Row hover actions — same behaviour as the context menu (delete shows an Undo toast).
 function duplicate(e: MouseEvent) {
   e.stopPropagation()
   store.duplicateNode(props.node.id)
@@ -95,10 +91,8 @@ function remove(e: MouseEvent) {
 
 <template>
   <div :class="['transition-opacity duration-150', isDragged && 'opacity-30']">
-    <!-- Drop indicator: before -->
     <div v-if="!isBody && dropPosition === 'before'" class="h-0.5 mr-2 rounded-[1px] bg-primary pointer-events-none" :style="{ marginLeft: `${indent + 16}px` }" />
 
-    <!-- Row -->
     <div
       :data-layer-id="node.id"
       :class="[
@@ -122,7 +116,6 @@ function remove(e: MouseEvent) {
       @dragleave="emit('dragleave-node', $event)"
       @drop="emit('drop-node', $event, node)"
     >
-      <!-- Expand/collapse chevron -->
       <ButtonUi
         v-if="hasChildren"
         variant="bare"
@@ -137,26 +130,18 @@ function remove(e: MouseEvent) {
       </ButtonUi>
       <span v-else class="size-4 shrink-0" />
 
-      <!-- Type icon -->
       <span class="ml-0.5 mr-1.5 shrink-0">
-        <!-- Collection list -->
         <IconUi v-if="node.type === 'collection-list'" name="collection-list" size="size-3.5" class="text-amber-fg" />
-        <!-- Collection item -->
         <IconUi v-else-if="node.type === 'collection-item'" name="collection-item" size="size-3.5" class="text-amber-fg/70" />
-        <!-- Component instance -->
         <IconUi v-else-if="node.type === 'component'" name="component" size="size-3.5" class="text-green-fg" />
-        <!-- Other node types -->
         <IconUi v-else-if="TYPE_ICONS[node.type]" :name="TYPE_ICONS[node.type]!" size="size-3.5" class="text-secondary" />
       </span>
 
-      <!-- Label -->
       <span :class="['truncate text-xs', isSelected && 'font-medium', isHiddenAtBreakpoint && 'line-through opacity-50']">
         {{ node.label }}
       </span>
 
-      <!-- Right rail: status indicators, swapped for actions on row hover -->
       <div class="ml-auto flex shrink-0 items-center gap-0.5 pl-1">
-        <!-- Hidden indicator -->
         <IconUi
           v-if="isHiddenAtBreakpoint"
           name="eye-slash"
@@ -165,7 +150,6 @@ function remove(e: MouseEvent) {
           title="Hidden at this breakpoint"
         />
 
-        <!-- Dynamic field indicator -->
         <IconUi
           v-else-if="isDynamic"
           name="link"
@@ -174,7 +158,6 @@ function remove(e: MouseEvent) {
           title="Dynamic field"
         />
 
-        <!-- Hover actions -->
         <span v-if="!isBody" class="hidden items-center gap-0.5 group-hover:flex">
           <ButtonUi variant="bare" square size="xs" icon="duplicate" title="Duplicate" @click="duplicate" />
           <ButtonUi variant="bare" square size="xs" icon="delete" title="Delete" @click="remove" />
@@ -182,10 +165,8 @@ function remove(e: MouseEvent) {
       </div>
     </div>
 
-    <!-- Drop indicator: after -->
     <div v-if="!isBody && dropPosition === 'after'" class="h-0.5 mr-2 rounded-[1px] bg-primary pointer-events-none" :style="{ marginLeft: `${indent + 16}px` }" />
 
-    <!-- Children -->
     <div v-if="expanded && hasChildren">
       <LayerTreeItem
         v-for="child in node.children"

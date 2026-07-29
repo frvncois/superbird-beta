@@ -17,8 +17,6 @@ const collections = useCollectionsStore()
 
 const open = ref(false)
 
-// What the settings edit: the active item, else the active collection template,
-// else the active page.
 const kind = computed<'entry' | 'collection' | 'page'>(() => {
   if (store.activeEntry) return 'entry'
   if (store.isCollectionTemplate && store.activeCollection) return 'collection'
@@ -70,7 +68,6 @@ const status = computed({
 
 const slugPrefix = computed(() => (kind.value === 'collection' ? '' : '/'))
 
-// Per-page SEO (pages only).
 const seo = computed(() => store.activePage.seo ?? {})
 function updateSeo(patch: Partial<PageSeo>) {
   store.updatePage(store.activePageId, { seo: { ...(store.activePage.seo ?? {}), ...patch } })
@@ -91,7 +88,6 @@ function updateSeo(patch: Partial<PageSeo>) {
 
     <PopoverUi v-model:open="open" align="left" panel-class="w-72 rounded-2xl p-3">
       <div class="space-y-3">
-        <!-- Status -->
         <div class="flex items-center justify-between gap-2">
           <LabelUi>Status</LabelUi>
           <SegmentedControlUi
@@ -101,13 +97,11 @@ function updateSeo(patch: Partial<PageSeo>) {
           />
         </div>
 
-        <!-- Title -->
         <div class="space-y-1">
           <LabelUi>Title</LabelUi>
           <InputUi v-model="title" placeholder="Title" />
         </div>
 
-        <!-- Slug -->
         <div class="space-y-1">
           <LabelUi>{{ kind === 'collection' ? 'Base path' : 'Slug' }}</LabelUi>
           <div class="flex items-center gap-1">
@@ -116,7 +110,6 @@ function updateSeo(patch: Partial<PageSeo>) {
           </div>
         </div>
 
-        <!-- SEO (pages only) -->
         <template v-if="kind === 'page'">
           <div class="border-t border-foreground/8 pt-3 space-y-3">
             <LabelUi>SEO</LabelUi>

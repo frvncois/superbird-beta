@@ -34,8 +34,6 @@ const folderOptions = computed(() => [
 
 const fmtDate = (iso: string) => formatDate(iso, '—')
 
-// Where this media is used: image elements whose content references its id,
-// grouped by page (across every page's node tree).
 const usage = computed(() => {
   const out: { pageId: string; pageName: string; count: number }[] = []
   const visit = (node: CanvasNode, tally: { n: number }) => {
@@ -75,13 +73,11 @@ function doDelete() {
       <span class="text-xs font-semibold">Details</span>
     </div>
     <div class="flex-1 overflow-y-auto p-3 space-y-3">
-      <!-- Preview -->
       <div class="aspect-square rounded-lg bg-secondary/5 flex items-center justify-center overflow-hidden">
         <img v-if="item.type === 'image' && item.url" :src="item.url" class="w-full h-full object-contain" />
         <span v-else class="text-xs text-secondary font-mono">{{ item.mimeType }}</span>
       </div>
 
-      <!-- Info -->
       <div class="space-y-1.5">
         <div class="space-y-0.5">
           <LabelUi size="xs">Name</LabelUi>
@@ -109,7 +105,6 @@ function doDelete() {
             @update:model-value="store.moveMediaToFolder(item.id, $event || undefined)"
           />
         </div>
-        <!-- Metadata -->
         <div class="space-y-1 pt-1 text-[10px]">
           <div class="flex items-center justify-between gap-2">
             <span class="text-secondary">Weight</span>
@@ -126,7 +121,6 @@ function doDelete() {
         </div>
       </div>
 
-      <!-- Used on -->
       <div class="space-y-1">
         <LabelUi size="xs">Used on</LabelUi>
         <div v-if="usage.length" class="space-y-0.5">
@@ -151,7 +145,6 @@ function doDelete() {
         <p v-else class="text-[10px] text-secondary">Not used on any page yet.</p>
       </div>
 
-      <!-- Privacy -->
       <div class="rounded-lg bg-secondary/5 p-2.5 space-y-1.5">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-1.5">
@@ -169,7 +162,6 @@ function doDelete() {
       </div>
     </div>
 
-    <!-- Actions -->
     <div class="p-3 border-t">
       <ButtonUi variant="danger" size="sm" class="w-full text-[10px]" @click="deleteItem">
         Delete

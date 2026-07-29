@@ -58,7 +58,6 @@ function removeCustomAttribute(key: string) {
         />
       </FieldRowUi>
 
-      <!-- Custom key/value attributes -->
       <FieldColUi label="Custom Attributes">
         <div class="space-y-1">
           <div
@@ -73,7 +72,6 @@ function removeCustomAttribute(key: string) {
               <IconUi name="close" size="size-3" />
             </IconButtonUi>
           </div>
-          <!-- Add new -->
           <InputUi v-model="newAttrKey" size="xs" placeholder="key" />
           <div class="flex items-center gap-1">
             <InputUi

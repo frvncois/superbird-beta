@@ -6,7 +6,7 @@ import { requireAuth } from '../lib/session'
 import { hit, clientIp } from '../lib/rateLimit'
 import { getInstalledProject, publishDesign, setWorkingDocument } from '../lib/project'
 import { maybeAutoBackup } from '../lib/backup'
-import type { ProjectDocument, PublishResult } from '../../shared/types'
+import type { ProjectDocument, PublishResult, SaveResult } from '../../shared/types'
 
 const project = new Hono()
 
@@ -38,10 +38,10 @@ project.put('/project', async (c) => {
   if (!proj) return c.json({ error: 'Not installed.' }, 409)
   const body = (await c.req.json()) as ProjectDocument
   // Persists + keeps the working-doc cache coherent (avoids a re-parse on read).
-  setWorkingDocument(proj.id, body)
+  const savedAt = setWorkingDocument(proj.id, body)
   // Lazily take an automatic backup (at most once/day; prunes old autos).
   maybeAutoBackup(proj.id)
-  return c.json({ ok: true })
+  return c.json({ ok: true, savedAt } satisfies SaveResult)
 })
 
 // Publish: snapshot the working design into the published slot (the public

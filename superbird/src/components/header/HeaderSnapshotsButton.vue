@@ -20,12 +20,10 @@ const creating = ref(false)
 const pendingRestore = ref<Snapshot | null>(null)
 const pendingDelete = ref<Snapshot | null>(null)
 
-// Refresh on open so server-created snapshots (e.g. AI before/after) show up.
 watch(isOpen, (open) => {
   if (open) void snapshots.load()
 })
 
-// Color dot by trigger, for quick scanning.
 const DOT: Record<SnapshotReason, string> = {
   publish: 'bg-green-fg',
   manual: 'bg-primary',
@@ -39,7 +37,7 @@ async function createManual() {
   if (creating.value) return
   creating.value = true
   try {
-    await useProjectPersistence().save() // flush so the server has the latest
+    await useProjectPersistence().save()
     const res = await snapshots.create({ reason: 'manual' })
     toast.success(res.deduped ? 'No changes since the last snapshot' : 'Snapshot created')
   } catch {
@@ -78,7 +76,6 @@ async function doDelete() {
 
     <PopoverUi v-model:open="isOpen" align="right" panel-class="w-80 rounded-2xl p-1.5">
       <div class="space-y-1.5">
-        <!-- Header -->
         <div class="flex items-center justify-between px-1 pt-0.5">
           <span class="font-mono text-[10px] uppercase tracking-wider text-secondary/60">Version history</span>
           <ButtonUi variant="ghost" size="xs" icon="plus" :disabled="creating" @click="createManual">
@@ -86,7 +83,6 @@ async function doDelete() {
           </ButtonUi>
         </div>
 
-        <!-- Grouped list -->
         <div class="max-h-[60vh] space-y-2 overflow-y-auto">
           <div v-for="group in snapshots.grouped" :key="group.key">
             <div class="px-2 pb-0.5 pt-1 font-mono text-[9px] uppercase tracking-wider text-secondary/50">
@@ -104,7 +100,6 @@ async function doDelete() {
                   <span class="text-[10px] text-secondary/70">{{ s.authorName }} · {{ timeAgoShort(s.createdAt) }}</span>
                 </TooltipUi>
               </div>
-              <!-- Pinned indicator (hidden on hover to make room for actions) -->
               <IconUi v-if="s.pinned" name="pin" size="size-3" class="shrink-0 text-primary group-hover:hidden" title="Pinned" />
               <div class="hidden shrink-0 items-center gap-0.5 group-hover:flex">
                 <ButtonUi variant="bare" square size="xs" icon="eye" title="Preview" @click="preview(s)" />

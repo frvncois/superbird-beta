@@ -48,7 +48,6 @@ const areaPath = computed(() => {
   return `${start} ${line} ${end}`
 })
 
-// ─── Draw-on animation ───
 const lineEl = ref<SVGPathElement | null>(null)
 const pathLength = ref(1000)
 const drawn = ref(false)
@@ -66,7 +65,6 @@ function replay() {
 onMounted(replay)
 watch(() => props.data, replay)
 
-// X-axis labels: first, middle, last
 const xLabels = computed(() => {
   const n = props.data.length
   const indices = [0, Math.floor(n / 2), n - 1]
@@ -83,14 +81,12 @@ const xLabels = computed(() => {
       </linearGradient>
     </defs>
 
-    <!-- Area fill -->
     <path
       :d="areaPath"
       fill="url(#chartui-area-fill)"
       :style="{ opacity: drawn ? 1 : 0, transition: 'opacity 0.6s ease 0.4s' }"
     />
 
-    <!-- Line -->
     <path
       ref="lineEl"
       :d="linePath"
@@ -104,7 +100,6 @@ const xLabels = computed(() => {
       style="transition: stroke-dashoffset 0.7s cubic-bezier(0.16, 1, 0.3, 1)"
     />
 
-    <!-- X-axis labels -->
     <text
       v-for="(l, i) in xLabels"
       :key="l.label"

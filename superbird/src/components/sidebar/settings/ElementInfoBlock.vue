@@ -19,7 +19,7 @@ const tagOptions = computed(() => {
         { value: 'span', label: 'Span' },
         { value: 'blockquote', label: 'Blockquote' },
       ]
-    case 'container':
+    case 'div':
     case 'section':
       return [
         { value: 'div', label: 'Div' },

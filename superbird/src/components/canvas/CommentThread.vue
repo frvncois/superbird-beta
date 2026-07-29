@@ -13,7 +13,6 @@ import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 
 const props = withDefaults(
   defineProps<{
-    // null → compose (draft) mode.
     comment?: Comment | null
     align?: 'left' | 'right'
   }>(),
@@ -64,7 +63,7 @@ async function toggleResolved() {
   const c = props.comment
   if (!c) return
   await store.setResolved(c.id, !c.resolved)
-  if (!c.resolved) open.value = false // just resolved → close the popover
+  if (!c.resolved) open.value = false
 }
 
 async function doDelete() {
@@ -75,7 +74,6 @@ async function doDelete() {
   open.value = false
 }
 
-// Reset transient fields whenever the popover closes.
 watch(open, (v) => {
   if (!v) {
     draftBody.value = ''
@@ -91,7 +89,6 @@ watch(open, (v) => {
     :backdrop="false"
     panel-class="w-72 rounded-2xl p-0 shadow-xl"
   >
-    <!-- Compose (new comment) -->
     <div v-if="isCompose" class="p-3 space-y-2">
       <p class="text-[11px] font-mono uppercase tracking-wider text-secondary">New comment</p>
       <TextareaUi v-model="draftBody" placeholder="Write a comment…" :rows="3" @keydown.meta.enter="submitDraft" @keydown.ctrl.enter="submitDraft" />
@@ -101,9 +98,7 @@ watch(open, (v) => {
       </div>
     </div>
 
-    <!-- Existing thread -->
     <div v-else-if="comment" class="flex max-h-[70vh] flex-col">
-      <!-- Root comment -->
       <div class="space-y-2 p-3">
         <div class="flex items-center gap-2">
           <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-[10px] font-mono font-medium text-secondary">
@@ -118,7 +113,6 @@ watch(open, (v) => {
         <p class="whitespace-pre-wrap break-words text-sm text-foreground">{{ comment.body }}</p>
       </div>
 
-      <!-- Replies -->
       <div v-if="comment.replies.length" class="space-y-2 border-t border-foreground/8 p-3">
         <div v-for="reply in comment.replies" :key="reply.id" class="group flex gap-2">
           <span class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-[9px] font-mono font-medium text-secondary">
@@ -144,12 +138,10 @@ watch(open, (v) => {
         </div>
       </div>
 
-      <!-- Reply composer -->
       <div class="border-t border-foreground/8 p-2">
         <TextareaUi v-model="replyBody" placeholder="Reply…" :rows="2" @keydown.meta.enter="postReply" @keydown.ctrl.enter="postReply" />
       </div>
 
-      <!-- Actions -->
       <div class="flex items-center gap-1.5 border-t border-foreground/8 p-2">
         <ButtonUi
           :variant="comment.resolved ? 'ghost' : 'outline'"

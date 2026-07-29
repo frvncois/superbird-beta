@@ -71,10 +71,20 @@ export interface SessionState {
   user: User | null
   // When the site was last published (design snapshot), or null if never.
   publishedAt: string | null
+  // When the working draft was last saved, or null if never. Compared against
+  // publishedAt to derive the "unpublished changes" status.
+  draftSavedAt: string | null
 }
 
 export interface PublishResult {
   publishedAt: string
+}
+
+// PUT /api/project result — savedAt is server-stamped so status comparisons
+// never mix client and server clocks.
+export interface SaveResult {
+  ok: true
+  savedAt: string
 }
 
 // ── Fonts ──

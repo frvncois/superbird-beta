@@ -12,9 +12,6 @@ const globalStyles = useGlobalStylesStore()
 
 const DRAFT = '__draft__'
 
-// Artboard-space coordinates per comment id (+ the draft). Because pins live
-// inside .canvas-artboard, these coords are scroll-invariant — we only recompute
-// on layout changes, not on scroll.
 const positions = ref<Record<string, { x: number; y: number }>>({})
 const draft = ref<{ anchor: CommentAnchor } | null>(null)
 const openId = ref<string | null>(null)
@@ -22,8 +19,6 @@ const focusedId = ref<string | null>(null)
 const revealResolvedId = ref<string | null>(null)
 let focusTimer: ReturnType<typeof setTimeout> | null = null
 
-// Open (unresolved) comments on the active page, plus a temporarily-revealed
-// resolved one (when jumped to from the inbox).
 const candidates = computed(() => {
   const pid = canvas.activePageId
   const open = store.items.filter((c) => c.pageId === pid && !c.resolved)
@@ -49,7 +44,7 @@ function reposition() {
   const next: Record<string, { x: number; y: number }> = {}
   const place = (key: string, anchor: CommentAnchor) => {
     const el = artboard.querySelector(`[data-node-id="${CSS.escape(anchor.nodeId)}"]`)
-    if (!el) return // node deleted or on another page → pin not shown (data kept)
+    if (!el) return
     const nr = el.getBoundingClientRect()
     next[key] = { x: nr.left - ar.left + anchor.nx * nr.width, y: nr.top - ar.top + anchor.ny * nr.height }
   }
@@ -67,7 +62,6 @@ function scheduleReposition() {
   })
 }
 
-// Called by EditorCanvas on ⌘-click.
 function startDraft(anchor: CommentAnchor) {
   draft.value = { anchor }
   openId.value = null
@@ -86,14 +80,10 @@ function setOpen(id: string, v: boolean) {
   openId.value = v ? id : null
 }
 
-// Close reveal when its thread closes.
 watch(openId, (id) => {
   if (revealResolvedId.value && id !== revealResolvedId.value) revealResolvedId.value = null
 })
 
-// Header inbox → scroll to + open a thread. State is set inside nextTick so it
-// runs AFTER the page-change watcher below (which clears openId when the page
-// switches during a cross-page jump) — otherwise the thread wouldn't open.
 watch(
   () => store.focusRequest,
   (req) => {
@@ -111,12 +101,11 @@ watch(
       scheduleReposition()
       const el = document.querySelector(`.canvas-artboard [data-node-id="${CSS.escape(c.anchor.nodeId)}"]`)
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setTimeout(scheduleReposition, 350) // after smooth-scroll settles
+      setTimeout(scheduleReposition, 350)
     })
   },
 )
 
-// Recompute when comments change or the page/viewport changes.
 watch(() => store.items, scheduleReposition, { deep: true })
 watch(
   () => [canvas.activePageId, globalStyles.activeViewportWidth],

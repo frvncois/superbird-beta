@@ -3,14 +3,10 @@ import { useMcpStore } from '@/stores/mcp'
 import IconUi from '@/components/ui/IconUi.vue'
 import ButtonUi from '@/components/ui/ButtonUi.vue'
 
-// Locks the editor while the MCP assistant is actively editing, so the user
-// can't fight its changes. "Take over" pauses the assistant (it's told to stop);
-// a small banner then lets the user resume.
 const mcp = useMcpStore()
 </script>
 
 <template>
-  <!-- Blocking lock while the assistant is editing -->
   <Transition
     enter-active-class="transition duration-150 ease-out"
     enter-from-class="opacity-0"
@@ -43,7 +39,6 @@ const mcp = useMcpStore()
     </div>
   </Transition>
 
-  <!-- Paused: user is in control; the assistant is refused until resumed -->
   <Transition
     enter-active-class="transition duration-150 ease-out"
     enter-from-class="opacity-0 translate-y-2"

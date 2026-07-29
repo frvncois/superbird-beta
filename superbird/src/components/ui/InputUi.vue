@@ -5,8 +5,6 @@ import IconUi from './IconUi.vue'
 
 type InputSize = 'default' | 'sm' | 'xs'
 
-// inheritAttrs:false so extra attrs (name, autocomplete, aria-*, …) land on the
-// <input>, not the <label> wrapper we add when `label` is set.
 defineOptions({ inheritAttrs: false })
 
 const props = withDefaults(
@@ -24,13 +22,9 @@ const props = withDefaults(
 
 const model = defineModel<string>({ default: '' })
 
-// Expose focus() so callers can focus the field programmatically (the template
-// ref points at this component, not the inner <input>).
 const inputEl = ref<HTMLInputElement | null>(null)
 defineExpose({ focus: () => inputEl.value?.focus() })
 
-// Password fields get a show/hide eye toggle; the actual input type flips while
-// the declared `type` stays 'password'.
 const isPassword = computed(() => props.type === 'password')
 const revealed = ref(false)
 const resolvedType = computed(() => (isPassword.value ? (revealed.value ? 'text' : 'password') : props.type))

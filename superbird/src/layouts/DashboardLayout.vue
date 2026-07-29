@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// Dashboard body grid (sidebar | canvas). Header is owned by AppShell. The
-// sidebar widens for the "View all" detail panel.
 withDefaults(defineProps<{ wide?: boolean }>(), { wide: false })
 </script>
 

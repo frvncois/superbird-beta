@@ -7,6 +7,8 @@ export interface Tab {
   label: string
 }
 
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps<{
   tabs: Tab[]
 }>()
@@ -33,15 +35,15 @@ function selectTab(key: string) {
 </script>
 
 <template>
-  <div>
-    <!-- Tab bar -->
-    <div class="flex items-center justify-between gap-1 mb-1.5">
+  <div class="flex h-full min-h-0 flex-col">
+    <div class="flex shrink-0 items-center justify-between gap-1 mb-1.5">
       <ButtonUi
         v-for="tab in tabs"
         :key="tab.key"
         variant="ghost"
         size="sm"
         :active="activeTab === tab.key"
+        class="!px-2.5"
         :class="activeTab !== tab.key && '!text-secondary hover:!text-foreground'"
         @click="selectTab(tab.key)"
       >
@@ -49,14 +51,10 @@ function selectTab(key: string) {
       </ButtonUi>
     </div>
 
-    <!-- Tab content -->
-    <div class="relative overflow-hidden">
-      <!--
-        Directional slide + fade. `transition` (v4 catch-all) is used because it
-        covers `opacity` AND `translate` — `transition-[…,transform]` would miss
-        the translate utilities, which animate the `translate` property in v4.
-        Forward (right): new tab enters from the right, old leaves to the left.
-      -->
+    <div
+      v-bind="$attrs"
+      class="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]"
+    >
       <Transition
         mode="out-in"
         enter-active-class="transition duration-[250ms] ease-out"

@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// A flat settings section: a title (+ optional description) above its content.
-// Default wraps the slot in a bordered, divided card (for SettingsRow lists).
-// `bare` drops that card so the content can bring its own containers (e.g. a
-// stack of cards or an empty state). Always visible — never an accordion.
 withDefaults(
   defineProps<{
     title: string

@@ -2,20 +2,12 @@
 import { useSlots } from 'vue'
 import IconUi from './IconUi.vue'
 
-// Card surface with three regions: Header, Content (default slot), and an
-// optional Actions footer. The header defaults to the dashboard-card layout
-// (inverted icon chip + title + header-action), or pass a `#header` slot for
-// full control (e.g. a title + subtitle).
 withDefaults(
   defineProps<{
     icon?: string
     title?: string
-    // Optional subtitle under the title in the header.
     description?: string
-    // 'sm' is a compact card (tighter padding + region gap) for dense stacks.
     size?: 'default' | 'sm'
-    // Content padding/typography. Defaults to the dashboard-card look; screens
-    // that need a plainer body override it.
     bodyClass?: string
   }>(),
   {
@@ -34,7 +26,6 @@ const slots = useSlots()
       size === 'sm' ? 'gap-3.5 p-3.5' : 'gap-6 p-6',
     ]"
   >
-    <!-- Header -->
     <header v-if="slots.header || title || description || icon || slots.icon || slots['header-action']">
       <slot name="header">
         <div class="flex items-center gap-3.5">
@@ -55,12 +46,10 @@ const slots = useSlots()
       </slot>
     </header>
 
-    <!-- Content -->
     <div :class="bodyClass">
       <slot />
     </div>
 
-    <!-- Actions -->
     <footer v-if="slots.actions" class="flex items-center gap-2">
       <slot name="actions" />
     </footer>

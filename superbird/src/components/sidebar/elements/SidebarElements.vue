@@ -16,9 +16,6 @@ const store = useCanvasStore()
 const localesStore = useLocalesStore()
 const ctx = useContextMenu()
 
-// `prebuilt` marks a ready-made "System" element (lang) — dragged with a
-// different MIME so the drop inserts a whole tree instead of a single node.
-// `requires` gates an element on a site capability being on (multilang).
 interface ElementDef { type: NodeType; label: string; icon: string; prebuilt?: PrebuiltElementKey; requires?: 'multilang' }
 interface ElementCategory { label: string; elements: ElementDef[] }
 
@@ -27,7 +24,6 @@ const categories: ElementCategory[] = [
     label: 'Layout',
     elements: [
       { type: 'section', label: 'Section', icon: 'section' },
-      { type: 'container', label: 'Container', icon: 'container' },
       { type: 'div', label: 'Div', icon: 'container' },
     ],
   },
@@ -41,7 +37,7 @@ const categories: ElementCategory[] = [
       { type: 'button', label: 'Button', icon: 'button' },
       { type: 'span', label: 'Span', icon: 'span' },
       { type: 'list', label: 'List', icon: 'list' },
-      { type: 'blockquote', label: 'Blockquote', icon: 'blockquote' },
+      { type: 'blockquote', label: 'Quote', icon: 'blockquote' },
       { type: 'image', label: 'Image', icon: 'image' },
       { type: 'video', label: 'Video', icon: 'video' },
       { type: 'embed', label: 'Embed', icon: 'embed' },
@@ -75,7 +71,6 @@ const categories: ElementCategory[] = [
   },
 ]
 
-// Multilang on ⇔ more than the default locale is configured.
 const multilangEnabled = computed(() => localesStore.locales.length > 1)
 
 function isAvailable(el: ElementDef): boolean {
@@ -83,7 +78,6 @@ function isAvailable(el: ElementDef): boolean {
   return true
 }
 
-// ── Search / filter ──
 const query = ref('')
 const q = computed(() => query.value.trim().toLowerCase())
 

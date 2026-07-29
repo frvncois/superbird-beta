@@ -60,7 +60,7 @@ export const useUserComponentsStore = defineStore('userComponents', () => {
     const body = canvas.bodyNode
     const node = findNode(body.children, nodeId)
     if (!node || node.type !== 'component') return
-    node.type = 'container'
+    node.type = 'div'
     delete node.componentId
     delete node.contentOverrides
   }

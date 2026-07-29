@@ -11,17 +11,13 @@ import { timeAgo } from '@/lib/datetime'
 const setup = useSetupStore()
 const siteSettings = useSiteSettingsStore()
 
-// Project provisioned at setup is the source of truth; fall back to site settings.
 const name = computed(() => setup.project?.name ?? siteSettings.siteSettings.identity.title)
 
-// Where the deployment actually lives: the URL configured in Settings › General,
-// or the runtime origin when unset. Ensure a scheme so copy/open work.
 const fullUrl = computed(() => {
   const configured = siteSettings.siteSettings.deployment.url.trim()
   const raw = configured || window.location.origin
   return /:\/\//.test(raw) ? raw : `https://${raw}`
 })
-// Shown without the scheme / trailing slash.
 const displayUrl = computed(() => fullUrl.value.replace(/^https?:\/\//, '').replace(/\/$/, ''))
 
 const isPublished = computed(() => setup.isPublished)
@@ -49,7 +45,6 @@ async function copyUrl() {
     <div class="flex flex-col">
       <p class="truncate text-sm font-medium text-foreground">{{ name }}</p>
 
-      <!-- Copyable deployment URL with slide swap + quick actions -->
       <div class="flex items-center gap-2">
         <div class="relative h-5 min-w-0 flex-1 overflow-hidden">
           <button
@@ -70,7 +65,6 @@ async function copyUrl() {
         </div>
         <ButtonUi variant="bare" size="sm" icon="copy" title="Copy URL" @click="copyUrl" />
         <ButtonUi variant="bare" size="sm" icon="settings" title="Deployment settings" to="/settings?tab=general" />
-        <!-- External link → real anchor (native new-tab / ⌘-click); ButtonUi has no external href. Styled to match `bare`. -->
         <a
           :href="fullUrl"
           target="_blank"

@@ -3,7 +3,6 @@ import { useCanvasStore } from '@/stores/canvas'
 import { useGlobalStylesStore } from '@/stores/globalStyles'
 import CanvasNodeRenderer from './CanvasNodeRenderer.vue'
 
-// Read-only render of the current page, for the dashboard preview.
 const store = useCanvasStore()
 const globalStylesStore = useGlobalStylesStore()
 </script>

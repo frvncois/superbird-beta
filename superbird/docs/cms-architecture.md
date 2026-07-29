@@ -1,13 +1,5 @@
 # CMS & standalone architecture (design direction)
 
-> **Status: agreed design direction — NOT yet implemented.** This is the target for turning Superbird from a WordPress plugin into a standalone app that owns its own CMS. The builder core (canvas, nodes, styles, components) is unchanged. When we build, this is the reference; update it as reality lands and delete the "planned" hedging per section as it ships.
-
-## The shift
-
-WordPress silently did two jobs Superbird never had to build: it was the **content database** (posts, products, categories, authors, custom fields) *and* the **admin UI** for editing that content. Superbird was only the presentation layer — templates binding to fields WP handed over.
-
-Standalone, the builder core stays the same, but Superbird must now own the CMS half: content types, entries, taxonomies, storage, and — because it also **serves the published site** — a render runtime.
-
 ## Core model: everything is a collection
 
 One unifying abstraction replaces today's hardcoded template/source split:

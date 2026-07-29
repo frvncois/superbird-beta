@@ -17,8 +17,6 @@ const props = withDefaults(
 )
 
 const activeState = defineModel<StyleState>('activeState', { default: 'default' })
-// Parent sets this to a class name to open it directly in inline-rename mode
-// (used right after Duplicate). Cleared back to null once consumed.
 const renameTarget = defineModel<string | null>('renameTarget', { default: null })
 
 const emit = defineEmits<{
@@ -34,9 +32,6 @@ const query = ref('')
 const isFocused = ref(false)
 const inputRef = ref<HTMLInputElement | null>(null)
 
-// Per-chip menu + inline rename (transient interaction state). The menu is
-// teleported to <body> and fixed-positioned from the toggle button, so the
-// sidebar's overflow can't clip it.
 const menuFor = ref<string | null>(null)
 const menuPos = ref<{ top: number; right: number } | null>(null)
 const menuIsCustom = computed(() => (menuFor.value ? isCustomClass(menuFor.value) : false))
@@ -47,8 +42,6 @@ function setRenameRef(el: HTMLInputElement | null) {
   renameRef.value = el
 }
 
-// A chip is a real, editable style class iff it's in the registry. Tailwind
-// utilities never are — they can only be removed, not deleted/duplicated/renamed.
 function isCustomClass(cls: string): boolean {
   return props.allClassNames.includes(cls)
 }
@@ -88,14 +81,12 @@ function cancelRename() {
   renaming.value = null
 }
 
-// Consume a rename request from the parent (post-duplicate).
 watch(renameTarget, (t) => {
   if (!t) return
   renameTarget.value = null
   startRename(t)
 })
 
-// Matches while typing (existing classes not already applied).
 const suggestions = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return []
@@ -108,10 +99,8 @@ const canCreate = computed(() => {
   return !props.allClassNames.some((n) => n.toLowerCase() === q)
 })
 
-// A recognized Tailwind utility is "added", not "created" as a custom class.
 const isTwUtil = computed(() => isTailwindUtility(query.value.trim()))
 
-// Recently-used classes not already applied (shown when not typing).
 const recentSelectable = computed(() =>
   props.recentClasses.filter((n) => !props.classes.includes(n)).slice(0, 8),
 )
@@ -142,7 +131,6 @@ function focusInput() {
   inputRef.value?.focus()
 }
 function handleBlur() {
-  // Delay so dropdown mousedown handlers run first.
   setTimeout(() => {
     isFocused.value = false
   }, 150)
@@ -154,7 +142,6 @@ function selectState(state: StyleState) {
 
 <template>
   <div class="relative">
-    <!-- Chips + input -->
     <div
       :class="[
         'flex flex-wrap items-center gap-1 min-h-8 px-1 py-1 rounded-xl border cursor-text transition-colors duration-150',
@@ -163,7 +150,6 @@ function selectState(state: StyleState) {
       @click="focusInput"
     >
       <div v-for="cls in classes" :key="cls" class="relative flex items-center gap-0.5">
-        <!-- Inline rename -->
         <input
           v-if="renaming === cls"
           :ref="(el) => setRenameRef(el as HTMLInputElement | null)"
@@ -176,7 +162,6 @@ function selectState(state: StyleState) {
           @click.stop
         />
 
-        <!-- Chip -->
         <div
           v-else
           :class="[
@@ -208,9 +193,7 @@ function selectState(state: StyleState) {
       />
     </div>
 
-    <!-- Dropdown (on focus; no backdrop — the field stays typable) -->
     <PopoverUi v-model:open="isFocused" align="full" :backdrop="false" panel-class="p-1">
-        <!-- Create / suggestions (top) -->
         <template v-if="query.trim()">
           <button
             v-for="s in suggestions"
@@ -243,7 +226,6 @@ function selectState(state: StyleState) {
             <span>Create a class</span>
           </div>
 
-          <!-- Recently used -->
           <template v-if="recentSelectable.length">
             <div class="px-2.5 pb-0.5 pt-1.5 text-[9px] font-mono uppercase tracking-wider text-secondary/50">Recent</div>
             <button
@@ -258,7 +240,6 @@ function selectState(state: StyleState) {
           </template>
         </template>
 
-        <!-- State selector -->
         <div class="mt-1 border-t border-foreground/8 pt-1.5">
           <div class="px-2.5 pb-1 text-[9px] font-mono uppercase tracking-wider text-secondary/50">State</div>
           <div class="flex flex-wrap gap-1 px-1.5 pb-0.5">
@@ -277,8 +258,6 @@ function selectState(state: StyleState) {
         </div>
     </PopoverUi>
 
-    <!-- Chip options menu — teleported + fixed so the sidebar overflow can't
-         clip it and it stacks above the canvas. -->
     <Teleport to="body">
       <div v-if="menuFor" class="fixed inset-0 z-[84]" @click="closeMenu" />
       <div

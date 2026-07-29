@@ -73,7 +73,6 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
 </script>
 
 <template>
-    <!-- User components -->
     <div v-if="userComponentsList.length > 0">
       <div class="space-y-0.5">
         <div
@@ -96,7 +95,6 @@ function handleUserComponentContextMenu(e: MouseEvent, compId: string) {
       </div>
     </div>
 
-    <!-- Empty state -->
     <div v-if="userComponentsList.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
       <div class="text-xs text-secondary">No blocks yet</div>
       <div class="text-[10px] text-secondary/50 mt-1">Right-click an element and select "Create Block"</div>

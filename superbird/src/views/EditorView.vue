@@ -27,11 +27,8 @@ import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useSelectionSync } from '@/composables/useSelectionSync'
 
 useKeyboardShortcuts()
-// Scroll canvas + tree to the selected node; reset properties scroll to top.
 useSelectionSync()
 
-// While the editor is open, connect the live MCP bridge so an external MCP
-// client (Claude Code, …) can drive the canvas.
 onMounted(startMcpBridge)
 onUnmounted(stopMcpBridge)
 
@@ -39,12 +36,10 @@ const canvasStore = useCanvasStore()
 const snapshots = useSnapshotsStore()
 const contentMode = computed(() => canvasStore.editorMode === 'content')
 
-// Snapshot on editor open (deduped server-side — no row when nothing changed).
 onMounted(() => {
   void snapshots.create({ reason: 'open' }).catch(() => {})
 })
 
-// "Restore this version" from the snapshot preview overlay.
 async function restoreFromPreview() {
   const id = snapshots.previewMeta?.id
   if (!id) return
@@ -53,8 +48,6 @@ async function restoreFromPreview() {
   toast.success('Snapshot restored')
 }
 
-// Create-component name prompt — hosted once here so canvas + layers context
-// menus share a single declarative dialog (see CreateComponentPromptKey).
 const componentsStore = useUserComponentsStore()
 const toast = useToast()
 const createComponentNodeId = ref<string | null>(null)
@@ -110,7 +103,7 @@ const rightTabs = [
         side="left"
         @toggle="leftCollapsed = !leftCollapsed"
       >
-        <TabsUi v-model="leftTab" :tabs="leftTabs">
+        <TabsUi v-model="leftTab" :tabs="leftTabs" data-sidebar-scroll="left">
           <template #layers><SidebarLayers /></template>
           <template #elements><SidebarElements /></template>
           <template #components><SidebarComponents /></template>
@@ -133,7 +126,7 @@ const rightTabs = [
         side="right"
         @toggle="rightCollapsed = !rightCollapsed"
       >
-        <TabsUi v-model="rightTab" :tabs="rightTabs">
+        <TabsUi v-model="rightTab" :tabs="rightTabs" data-sidebar-scroll="right">
           <template #properties><SidebarProperties /></template>
           <template #settings><SidebarSettings /></template>
           <template #interactions><SidebarInteractions /></template>
@@ -149,7 +142,6 @@ const rightTabs = [
 
   <PreviewOverlay v-if="canvasStore.previewOpen" />
 
-  <!-- Read-only preview of a past snapshot's document. -->
   <SnapshotPreviewOverlay
     v-if="snapshots.previewDoc"
     :document="snapshots.previewDoc"
@@ -158,10 +150,8 @@ const rightTabs = [
     @restore="restoreFromPreview"
   />
 
-  <!-- Locks the editor while the MCP assistant is actively editing. -->
   <McpOverlay />
 
-  <!-- Create component from a node (canvas + layers context menus) -->
   <ModalUi
     :open="!!createComponentNodeId"
     variant="dialog"

@@ -14,7 +14,7 @@ const site = useSiteSettingsStore()
       <SettingsRow label="Head" description="Inside <head> — analytics, fonts, meta tags." stacked>
         <TextareaUi
           :model-value="site.siteSettings.customCode.headCode"
-          placeholder="<!-- Analytics, fonts, meta tags -->"
+          placeholder=""
           :rows="4"
           mono
           @update:model-value="site.updateCustomCode({ headCode: $event })"
@@ -23,7 +23,7 @@ const site = useSiteSettingsStore()
       <SettingsRow label="Body start" description="Right after <body> opens." stacked>
         <TextareaUi
           :model-value="site.siteSettings.customCode.bodyStartCode"
-          placeholder="<!-- GTM noscript, etc -->"
+          placeholder=""
           :rows="3"
           mono
           @update:model-value="site.updateCustomCode({ bodyStartCode: $event })"
@@ -32,7 +32,7 @@ const site = useSiteSettingsStore()
       <SettingsRow label="Body end" description="Before </body> closes." stacked>
         <TextareaUi
           :model-value="site.siteSettings.customCode.bodyEndCode"
-          placeholder="<!-- Chat widgets, scripts -->"
+          placeholder=""
           :rows="3"
           mono
           @update:model-value="site.updateCustomCode({ bodyEndCode: $event })"

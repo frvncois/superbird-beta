@@ -9,7 +9,6 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
 
 <template>
   <div class="space-y-5">
-    <!-- Visitors + chart -->
     <div class="rounded-xl bg-muted-bg p-3">
       <div class="flex items-baseline justify-between">
         <div>
@@ -24,7 +23,6 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
       <ChartUi :data="analytics.series" :height="120" class="mt-2" />
     </div>
 
-    <!-- Stat grid -->
     <div class="grid grid-cols-2 gap-2">
       <div v-for="s in analyticsDetail.stats" :key="s.label" class="rounded-xl border border-border/70 p-3">
         <p class="text-[10px] text-secondary">{{ s.label }}</p>
@@ -35,7 +33,6 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
       </div>
     </div>
 
-    <!-- Top pages -->
     <div>
       <LabelUi class="mb-2 block text-secondary">Top pages</LabelUi>
       <div class="space-y-2">
@@ -51,7 +48,6 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
       </div>
     </div>
 
-    <!-- Traffic sources -->
     <div>
       <LabelUi class="mb-2 block text-secondary">Traffic sources</LabelUi>
       <div class="space-y-2">
@@ -64,7 +60,6 @@ const topMax = Math.max(...analyticsDetail.topPages.map((p) => p.views))
       </div>
     </div>
 
-    <!-- Devices -->
     <div>
       <LabelUi class="mb-2 block text-secondary">Devices</LabelUi>
       <div class="space-y-2">

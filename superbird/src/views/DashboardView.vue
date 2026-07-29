@@ -22,14 +22,12 @@ function back() { detail.value = null }
   <AppShell>
     <DashboardLayout :wide="detail !== null">
       <template #sidebar>
-      <!-- Card stack -->
       <div v-if="!detail" class="flex h-full flex-col gap-3.5">
         <ProjectInfoCard />
         <AnalyticsCard style="animation-delay: 60ms" @view="open('analytics')" />
         <FormSubmissionsCard style="animation-delay: 120ms" @view="open('submissions')" />
       </div>
 
-      <!-- Detail -->
       <DashboardDetailPanel v-else-if="detail === 'submissions'" icon="submissions" title="Form submissions" @back="back">
         <template #action>
           <ButtonUi variant="outline" size="sm" to="/settings?tab=forms"><IconUi name="settings" size="size-3.5" /> Form settings</ButtonUi>

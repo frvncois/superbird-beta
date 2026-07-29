@@ -81,6 +81,7 @@ import {
   ScaleIcon,
   SunIcon,
   MoonIcon,
+  RocketLaunchIcon,
 } from '@heroicons/vue/24/outline'
 
 // Heroicons has no letterform, so draw a proper "H" for the Heading element.
@@ -122,6 +123,7 @@ export const ICONS: Record<string, Component> = {
   globe: GlobeAltIcon,
   'arrow-right': ArrowRightIcon,
   'external-link': ArrowTopRightOnSquareIcon,
+  rocket: RocketLaunchIcon,
 
   // Dashboard
   analytics: ChartBarIcon,

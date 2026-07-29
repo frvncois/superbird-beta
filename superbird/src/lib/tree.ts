@@ -73,7 +73,7 @@ export function countInstances(node: CanvasNode, compId: string): number {
 export function detachAllInstances(node: CanvasNode, compId: string): void {
   walkTree(node, (n) => {
     if (n.componentId === compId && n.type === 'component') {
-      n.type = 'container'
+      n.type = 'div'
       delete n.componentId
       delete n.contentOverrides
     }

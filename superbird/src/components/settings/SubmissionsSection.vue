@@ -14,7 +14,6 @@ import ConfirmDialogUi from '@/components/ui/ConfirmDialogUi.vue'
 import SegmentedControlUi from '@/components/ui/SegmentedControlUi.vue'
 import EmptyStateUi from '@/components/ui/EmptyStateUi.vue'
 
-// `embedded` hides the internal title (the dashboard panel supplies its own).
 defineProps<{ embedded?: boolean }>()
 
 const store = useSubmissionsStore()
@@ -69,7 +68,6 @@ function summary(s: Submission): string {
   return vals.slice(0, 3).join(' · ') || '—'
 }
 
-// Delivery + read state collapsed into one badge.
 function badge(s: Submission): { label: string; cls: string } {
   if (s.seen) return { label: 'Seen', cls: 'bg-muted-bg text-muted-fg' }
   if (s.emailStatus === 'sent') {
@@ -102,7 +100,6 @@ function doRemove() {
   pendingDelete.value = null
 }
 
-// ── Export ──
 const exportOpen = ref(false)
 const exporting = ref(false)
 const exFormId = ref('')
@@ -115,7 +112,6 @@ const formatOptions = [
 ]
 
 function openExport() {
-  // Prefill from the current filter bar as a convenience.
   exFormId.value = formId.value
   exFrom.value = from.value
   exTo.value = to.value
@@ -154,7 +150,6 @@ async function runExport() {
       </ButtonUi>
     </div>
 
-    <!-- Filter bar -->
     <div class="flex flex-wrap items-center gap-2">
       <div class="relative min-w-40 flex-1">
         <IconUi name="search" size="size-3.5" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-secondary" />
@@ -166,14 +161,12 @@ async function runExport() {
       <InputUi v-model="to" type="date" class="w-36 shrink-0" />
     </div>
 
-    <!-- List -->
     <div class="overflow-hidden rounded-xl border border-border/70 bg-background">
       <p v-if="store.loading && !store.items.length" class="px-4 py-8 text-center text-xs text-secondary">Loading…</p>
       <EmptyStateUi v-else-if="!store.items.length" compact message="No submissions match." class="py-10" />
 
       <div v-else class="divide-y divide-border/60">
         <div v-for="s in store.items" :key="s.id">
-          <!-- Row -->
           <div class="group flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors duration-100 hover:bg-secondary/5" @click="onRow(s)">
             <span class="size-1.5 shrink-0 rounded-full" :class="s.seen ? 'bg-transparent' : 'bg-amber-fg'" />
             <div class="min-w-0 flex-1">
@@ -187,7 +180,6 @@ async function runExport() {
             </IconButtonUi>
           </div>
 
-          <!-- Detail -->
           <div v-if="expandedId === s.id" class="space-y-2 border-t border-border/60 bg-secondary/5 px-4 py-3">
             <div v-for="(v, k) in s.data" :key="k" class="grid grid-cols-[8rem_1fr] gap-3 text-xs">
               <span class="truncate font-mono text-secondary">{{ k }}</span>
@@ -201,7 +193,6 @@ async function runExport() {
       </div>
     </div>
 
-    <!-- Export scope modal -->
     <ModalUi
       v-model:open="exportOpen"
       variant="dialog"
@@ -235,7 +226,6 @@ async function runExport() {
       </template>
     </ModalUi>
 
-    <!-- Delete confirm dialog -->
     <ConfirmDialogUi
       :open="!!pendingDelete"
       title="Delete submission"

@@ -16,7 +16,6 @@ const toast = useToast()
 const node = computed(() => store.selectedNode)
 const interactions = computed(() => node.value?.interactions ?? [])
 
-// The interaction currently open for editing (master-detail).
 const openInteraction = computed(
   () => interactions.value.find((ix) => ix.id === store.openInteractionId) ?? null,
 )
@@ -38,7 +37,6 @@ function removeInteraction(id: string) {
   })
 }
 
-// Add interaction → drill straight into it.
 const showAddTrigger = ref(false)
 function addInteraction(trigger: TriggerType) {
   if (!node.value) return
@@ -51,7 +49,6 @@ function addInteraction(trigger: TriggerType) {
 <template>
   <EmptyStateUi v-if="!node" message="Select an element to edit" />
 
-  <!-- Detail: editing a single interaction -->
   <InteractionDetail
     v-else-if="openInteraction"
     :node-id="node.id"
@@ -59,8 +56,7 @@ function addInteraction(trigger: TriggerType) {
     @back="store.setOpenInteraction(null)"
   />
 
-  <!-- List -->
-  <div v-else class="space-y-2 p-3">
+  <div v-else class="space-y-2">
     <div v-if="interactions.length" class="space-y-1.5">
       <div
         v-for="ix in interactions"
@@ -85,7 +81,6 @@ function addInteraction(trigger: TriggerType) {
     </div>
     <EmptyStateUi v-else compact message="No interactions yet" />
 
-    <!-- Add interaction -->
     <ButtonUi
       v-if="!showAddTrigger"
       variant="outline"
@@ -97,7 +92,6 @@ function addInteraction(trigger: TriggerType) {
       Add interaction
     </ButtonUi>
 
-    <!-- Trigger picker -->
     <div v-else class="space-y-1 rounded-xl border border-foreground/10 p-2">
       <div class="flex items-center justify-between px-1 pb-1">
         <LabelUi>Choose trigger</LabelUi>

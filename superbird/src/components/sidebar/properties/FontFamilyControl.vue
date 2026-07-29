@@ -7,10 +7,6 @@ import { DEFAULT_FONTS } from '@/data/defaultFonts'
 import DropdownUi, { type DropdownOption } from '@/components/ui/DropdownUi.vue'
 import IconUi from '@/components/ui/IconUi.vue'
 
-// Font-family picker. This is a thin, store-aware wrapper: it builds the grouped
-// option list (global font variables / uploaded font sets / built-in defaults)
-// from the styles store and hands it to the store-free DropdownUi, then adds the
-// "Manage fonts" footer via the #footer slot. Each row previews in its own family.
 const model = defineModel<string>({ default: '' })
 
 const store = useGlobalStylesStore()

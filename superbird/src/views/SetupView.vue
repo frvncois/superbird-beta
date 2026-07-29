@@ -24,8 +24,6 @@ const email = ref('')
 const password = ref('')
 const confirm = ref('')
 
-// The public handle is derived from the project name (no separate field).
-
 const emailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value))
 const passwordValid = computed(() => password.value.length >= 8)
 const confirmValid = computed(() => confirm.value.length > 0 && confirm.value === password.value)
@@ -47,16 +45,12 @@ async function submit() {
       project: { name: projectName.value.trim(), handle },
       admin: { name: adminName.value.trim(), email: email.value.trim(), password: password.value },
     })
-    // Reflect the project name in site settings for the rest of the app.
     siteSettings.updateSiteIdentity({ title: result.project.name })
-    // Install opened a session server-side — adopt the returned admin user.
     auth.hydrate(result.user)
-    // Fresh project: persist the current demo seed as the starting point.
     await useProjectPersistence().load()
     await useMediaStore().load()
     router.push('/')
   } catch {
-    // setup.error is shown inline
   }
 }
 </script>
@@ -64,10 +58,8 @@ async function submit() {
 <template>
   <AuthShell>
       <CardUi title="Superbird" description="Setup your project and create the admin account.">
-        <!-- Header icon (in CardUi's chip span) -->
         <template #icon><div class="size-4"><SuperbirdIcon /></div></template>
 
-        <!-- Content -->
         <form @submit.prevent="submit" class="space-y-4">
           <InputUi v-model="projectName" label="Project name" size="default" placeholder="My Website" />
           <InputUi v-model="adminName" label="Name" size="default" placeholder="Jane Doe" />
@@ -82,7 +74,6 @@ async function submit() {
           <p v-if="setup.error" class="rounded-lg bg-red-bg px-3 py-2 text-xs text-red-fg">{{ setup.error }}</p>
         </form>
 
-        <!-- Actions -->
         <template #actions>
           <ButtonUi variant="default" class="w-full" :disabled="!canSubmit || setup.installing" @click="submit">
             {{ setup.installing ? 'Creating…' : 'Create project' }}

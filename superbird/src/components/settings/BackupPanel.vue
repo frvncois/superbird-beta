@@ -24,12 +24,10 @@ const busy = ref(false)
 const label = ref('')
 const importInput = ref<HTMLInputElement | null>(null)
 
-// ── Confirm dialogs ──
 const pendingRestore = ref<BackupMeta | null>(null)
 const pendingDelete = ref<BackupMeta | null>(null)
 const pendingImport = ref<File | null>(null)
 
-// ── Status process modal (busy → success/error), driven locally ──
 interface ProcState {
   open: boolean
   title: string
@@ -94,7 +92,6 @@ async function load() {
   }
 }
 onMounted(load)
-
 
 async function onCreate() {
   busy.value = true
@@ -173,7 +170,6 @@ async function doImport() {
   const p = startProcess({ title: 'Importing site', message: 'Uploading…', progress: { loaded: 0, total: file.size } })
   try {
     await importBackup(file, (loaded, total) => {
-      // Once the upload finishes the server is applying — switch the message.
       p.progress(loaded, total)
       if (loaded >= total) p.update('Applying import on the server…')
     })
@@ -232,7 +228,6 @@ async function doImport() {
       </p>
     </SettingsSection>
 
-    <!-- Restore confirm -->
     <ConfirmDialogUi
       :open="!!pendingRestore"
       title="Restore backup"
@@ -246,7 +241,6 @@ async function doImport() {
       @confirm="doRestore"
     />
 
-    <!-- Delete confirm -->
     <ConfirmDialogUi
       :open="!!pendingDelete"
       title="Delete backup"
@@ -256,7 +250,6 @@ async function doImport() {
       @confirm="doDelete"
     />
 
-    <!-- Import confirm -->
     <ConfirmDialogUi
       :open="!!pendingImport"
       title="Import site"
@@ -270,7 +263,6 @@ async function doImport() {
       @confirm="doImport"
     />
 
-    <!-- Status process dialog (busy → success/error) -->
     <ProcessDialogUi
       :open="proc.open"
       :phase="proc.phase"

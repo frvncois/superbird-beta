@@ -9,7 +9,6 @@ defineProps<{
   position: { x: number; y: number }
 }>()
 
-// Emit either an animate property or a class operation.
 const emit = defineEmits<{
   select: [choice: { kind: 'animate'; property: ActionProperty } | { kind: 'class'; op: ClassOp }]
   close: []
@@ -30,10 +29,6 @@ const classOps: { op: ClassOp; label: string }[] = [
 ]
 </script>
 
-<!--
-  Teleported dropdown of animate properties (grouped) plus class operations.
-  Rendered to <body> so it layers above the sidebar overflow.
--->
 <template>
   <Teleport to="body">
     <div class="fixed inset-0 z-[9998]" @click="emit('close')" />
@@ -56,7 +51,6 @@ const classOps: { op: ClassOp; label: string }[] = [
         </ButtonUi>
       </template>
 
-      <!-- Class operations (purple, like other class affordances) -->
       <LabelUi size="xs" class="block px-2 pt-1.5 pb-0.5 text-purple-fg/70">Class</LabelUi>
       <ButtonUi
         v-for="c in classOps"

@@ -29,7 +29,6 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
 <template>
   <PropertySectionUi v-if="node" title="Visibility" icon="effects" :default-open="false">
     <div class="space-y-2">
-      <!-- Breakpoint toggles -->
         <FieldRowUi label="Hide on Desktop">
           <ToggleUi
             class="justify-self-end"
@@ -52,7 +51,6 @@ function updateVisibility(partial: Partial<NodeVisibility>) {
           />
         </FieldRowUi>
 
-      <!-- Conditional logic -->
       <FieldColUi v-if="hasFields" label="Conditional Logic" class="pt-1">
         <div class="space-y-1.5">
           <DropdownUi

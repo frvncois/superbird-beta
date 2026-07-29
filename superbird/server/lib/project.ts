@@ -52,8 +52,9 @@ export function getDeploymentOrigin(projectId: string): string | null {
 /**
  * Overwrite the working document (autosave + headless MCP editor). Callers must
  * not mutate `doc` after this returns — it becomes the shared cached object.
+ * Returns the save timestamp.
  */
-export function setWorkingDocument(projectId: string, doc: ProjectDocument): void {
+export function setWorkingDocument(projectId: string, doc: ProjectDocument): string {
   const now = new Date().toISOString()
   const json = JSON.stringify(doc)
   const exists = db.select({ projectId: projectState.projectId }).from(projectState).where(eq(projectState.projectId, projectId)).get()
@@ -64,6 +65,7 @@ export function setWorkingDocument(projectId: string, doc: ProjectDocument): voi
   }
   // Keep the cache coherent with what we just persisted.
   workingCache = { key: `${projectId}:${now}`, doc }
+  return now
 }
 
 /** The published design snapshot, or null if never published. */
@@ -81,6 +83,11 @@ export function getPublishedDesign(projectId: string): ProjectDesign | null {
 
 export function getPublishedAt(projectId: string): string | null {
   return db.select({ publishedAt: projectState.publishedAt }).from(projectState).where(eq(projectState.projectId, projectId)).get()?.publishedAt ?? null
+}
+
+/** When the working draft was last saved, or null if never. */
+export function getDraftSavedAt(projectId: string): string | null {
+  return db.select({ updatedAt: projectState.updatedAt }).from(projectState).where(eq(projectState.projectId, projectId)).get()?.updatedAt ?? null
 }
 
 /** Snapshot the working design into the published slot. Returns publishedAt. */

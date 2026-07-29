@@ -17,24 +17,19 @@ import HeaderPageSettings from './HeaderPageSettings.vue'
 import HeaderViewportSwitch from './HeaderViewportSwitch.vue'
 import HeaderLocaleSwitch from './HeaderLocaleSwitch.vue'
 import HeaderCommentsButton from './HeaderCommentsButton.vue'
-import HeaderSnapshotsButton from './HeaderSnapshotsButton.vue'
 
 const store = useCanvasStore()
 const { undo, redo, canUndo, canRedo } = useHistory()
 const collections = useCollectionsStore()
 
-// Pages / collections navigation dropdown.
 const pagesOpen = ref(false)
 
-// Trigger label reflects the active page / collection / item.
 const label = computed(() => {
   if (store.activeEntry) return store.activeEntry.title
   if (store.isCollectionTemplate) return store.activeCollection?.name ?? store.activePage.name
   return store.activePage.name
 })
 
-// User-created pages get the "New page" affordance directly under them. Other
-// page types (System) are auto-generated — listed, but never created here.
 const pagePages = computed(() => store.pagesByType['page'] ?? [])
 const otherSections = computed(() =>
   PAGE_TYPE_CONFIGS.filter((c) => c.key !== 'page')
@@ -42,7 +37,6 @@ const otherSections = computed(() =>
     .filter((s) => s.pages.length > 0),
 )
 
-// The only system page is the 404 / not-found page.
 function systemIcon(_page: Page): string {
   return 'alert'
 }
@@ -63,7 +57,6 @@ function openEntry(entryId: string) {
   store.openEntry(entryId)
   close()
 }
-// New item is an inline title flow inside the flyout (mirrors New page/collection).
 const addingItem = ref(false)
 const newItemTitle = ref('')
 const newItemInput = ref<{ focus: () => void } | null>(null)
@@ -85,7 +78,6 @@ function onItemKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') addingItem.value = false
 }
 
-// Add page
 const isAdding = ref(false)
 const newPageName = ref('')
 const inputRef = ref<{ focus: () => void } | null>(null)
@@ -102,7 +94,6 @@ function confirmAdd() {
   close()
 }
 
-// Add collection
 const isAddingCollection = ref(false)
 const newCollectionName = ref('')
 const collectionInputRef = ref<{ focus: () => void } | null>(null)
@@ -128,9 +119,6 @@ function handleKeydown(e: KeyboardEvent, confirm: () => void) {
   if (e.key === 'Escape') close()
 }
 
-// Collection → items flyout. Teleported to <body> so it escapes DropdownUi's
-// clipped panel; positioned from the hovered row's viewport rect. A short close
-// delay (hover-intent) lets the pointer cross the gap into the flyout.
 const hovered = ref<string | null>(null)
 const flyoutStyle = ref<Record<string, string>>({})
 const hoveredCollection = computed(() => collections.collections.find((c) => c.id === hovered.value) ?? null)
@@ -147,7 +135,7 @@ function openFlyout(e: MouseEvent, colId: string) {
   hovered.value = colId
 }
 function scheduleCloseFlyout() {
-  if (addingItem.value) return // pinned open while naming a new item
+  if (addingItem.value) return
   if (closeTimer) clearTimeout(closeTimer)
   closeTimer = setTimeout(() => {
     hovered.value = null
@@ -160,7 +148,6 @@ function keepFlyout() {
   }
 }
 
-// Reset transient state whenever the dropdown closes.
 watch(pagesOpen, (open) => {
   if (!open) {
     isAdding.value = false
@@ -173,13 +160,11 @@ watch(pagesOpen, (open) => {
   }
 })
 
-// Design / Content editor mode (icon-only; hover tooltips label them).
 const editorModeOptions = [
   { value: 'design', icon: 'swatch', title: 'Design', tooltip: 'Design mode' },
   { value: 'content', icon: 'text', title: 'Content', tooltip: 'Content mode' },
 ]
 
-// Back to the collection template (only while editing an item).
 function backToTemplate() {
   if (store.activeCollection) store.openCollection(store.activeCollection.id)
 }
@@ -187,7 +172,6 @@ function backToTemplate() {
 
 <template>
   <div class="relative flex w-full items-center justify-center gap-2">
-    <!-- Pages / collections navigation -->
     <DropdownUi v-model:open="pagesOpen" class="w-64" panel-class="!max-h-[80vh]">
       <template #trigger="{ open, toggle }">
         <TooltipUi content="Pages & collections" placement="bottom" :disabled="open" class="w-full">
@@ -206,7 +190,6 @@ function backToTemplate() {
         </TooltipUi>
       </template>
 
-      <!-- Pages (user-created) -->
       <div class="px-2.5 pb-1 pt-0.5">
         <LabelUi size="xs" class="text-secondary/50">Pages</LabelUi>
       </div>
@@ -224,7 +207,6 @@ function backToTemplate() {
         <span class="truncate">{{ page.name }}</span>
       </ButtonUi>
 
-      <!-- New page (regular pages only — System pages are auto-generated) -->
       <template v-if="isAdding">
         <div class="flex items-center gap-1.5 px-1 py-1">
           <InputUi
@@ -250,7 +232,6 @@ function backToTemplate() {
         New page
       </ButtonUi>
 
-      <!-- Other page types (System — auto-generated) -->
       <template v-for="section in otherSections" :key="section.config.key">
         <div class="px-2.5 pb-1 pt-0.5">
           <LabelUi size="xs" class="text-secondary/50">{{ section.config.plural }}</LabelUi>
@@ -272,7 +253,6 @@ function backToTemplate() {
 
       <div class="my-1 border-t border-foreground/8" />
 
-      <!-- Collections -->
       <div class="px-2.5 pb-1 pt-0.5">
         <LabelUi size="xs" class="text-secondary/50">Collections</LabelUi>
       </div>
@@ -319,9 +299,6 @@ function backToTemplate() {
       </ButtonUi>
     </DropdownUi>
 
-    <!-- Collection items flyout — teleported out of the clipped dropdown panel.
-         `data-dropdown-keep` tells DropdownUi's outside-click to ignore presses
-         in here, so its buttons/input don't close the parent dropdown. -->
     <Teleport to="body">
       <div
         v-if="hovered && hoveredCollection"
@@ -350,7 +327,6 @@ function backToTemplate() {
 
           <div class="my-1 border-t border-foreground/8" />
 
-          <!-- New item: inline title flow (mirrors New page / New collection) -->
           <div v-if="addingItem" class="flex items-center gap-1.5 px-1 py-1">
             <InputUi
               ref="newItemInput"
@@ -382,7 +358,6 @@ function backToTemplate() {
     <HeaderCommentsButton />
     <HeaderPageSettings />
 
-    <!-- Back to the collection template (only while editing an item) -->
     <ButtonUi
       v-if="store.activeEntry"
       variant="ghost"
@@ -392,8 +367,6 @@ function backToTemplate() {
       <IconUi name="chevron-down" size="size-3" class="rotate-90" /> Template
     </ButtonUi>
 
-
-    <!-- Left: Design / Content mode toggle -->
     <SegmentedControlUi
       :model-value="store.editorMode"
       :options="editorModeOptions"
@@ -406,7 +379,6 @@ function backToTemplate() {
       </template>
     </SegmentedControlUi>
 
-    <!-- Right: undo / redo + version history -->
     <div class="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
       <TooltipUi content="Undo" placement="bottom">
         <ButtonUi variant="outline" size="sm" square icon="undo" :disabled="!canUndo" @click="undo" />
@@ -414,7 +386,6 @@ function backToTemplate() {
       <TooltipUi content="Redo" placement="bottom">
         <ButtonUi variant="outline" size="sm" square icon="redo" :disabled="!canRedo" @click="redo" />
       </TooltipUi>
-      <HeaderSnapshotsButton />
     </div>
   </div>
 </template>
